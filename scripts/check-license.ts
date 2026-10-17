@@ -15,10 +15,20 @@ export function licenseFindings(root: string): string[] {
 		const start = source.indexOf(
 			"Permission is hereby granted, free of charge,",
 		);
+		const header = source
+			.slice(0, start)
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.filter(Boolean);
 		const grant = source.slice(start).replace(/\s+/g, " ").trim();
 		if (
-			!source.startsWith("MIT License\n") ||
-			!/^Copyright \(c\) \d{4}(?:-\d{4})? \S.+$/m.test(source) ||
+			header[0] !== "MIT License" ||
+			header.length < 2 ||
+			header
+				.slice(1)
+				.some(
+					(line) => !/^Copyright \(c\) \d{4}(?:-\d{4})? \S.+$/.test(line),
+				) ||
 			/<[^>]+>/.test(source.slice(0, start)) ||
 			start < 0 ||
 			createHash("sha256").update(grant).digest("hex") !== mitGrantSha256

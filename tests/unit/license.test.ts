@@ -47,6 +47,17 @@ const invalidCases: ReadonlyArray<{
 	mutate: (root: string) => void;
 }> = [
 	{
+		name: "a restriction inserted before the grant",
+		mutate: (root) =>
+			writeFileSync(
+				path.join(root, "LICENSE"),
+				license.replace(
+					"Permission is hereby granted,",
+					"No commercial use.\n\nPermission is hereby granted,",
+				),
+			),
+	},
+	{
 		name: "a commercial restriction appended to MIT",
 		mutate: (root) =>
 			writeFileSync(
