@@ -33,6 +33,8 @@ test("catalog rejects drift, escapes, malformed metadata and stale commands", ()
 			"contracts",
 			"README.md",
 			"CONTRIBUTING.md",
+			"LICENSE",
+			"THIRD_PARTY_NOTICES.md",
 			"Dockerfile",
 		])
 			cpSync(name, path.join(root, name), {
