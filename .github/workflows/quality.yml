@@ -43,7 +43,7 @@ jobs:
       - name: Enforce architecture and test authorization, operations and contracts
         run: npm test
       - name: Scan public files and documentation links
-        run: npm run security:check && npm run docs:check && npm run skills:check
+        run: npm run security:check && npm run docs:check && npm run license:check && npm run skills:check
       - name: Verify dependency protection access or mandatory disabled state
         run: node scripts/dependency-automation.ts
         env:

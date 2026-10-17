@@ -1,5 +1,7 @@
 # Licensing and attribution
 
+## Scope
+
 The application source code and engineering documentation are licensed under [MIT](LICENSE).
 The MIT grant
 does not include Gonzalo's likeness, personal identity assets or third-party materials.
@@ -30,5 +32,5 @@ No font, icon, portrait or model-provider rights are implied by public repositor
 ## Dashboard charts
 
 [Recharts](https://github.com/recharts/recharts) 3.10.1 is MIT licensed. Its dependency
-license is distributed with the installed package. React-is 19.3.0 is MIT licensed by Meta.
+license is distributed with the installed package. React-is 19.3.1 is MIT licensed by Meta.
 No paid chart components or external dashboard scripts are loaded.

@@ -317,9 +317,6 @@ proxy headers, API pairing, backup/restore and physical-device behavior remain e
 | Work with agents | [Codex/Claude skills](docs/agent-skills.md) |
 | Review remaining acceptance | [Checklist](docs/work-checklist.md) |
 
-Application code retains the [MIT license](LICENSE). Fonts, identity assets and external
-code retain their own [attribution and terms](THIRD_PARTY_NOTICES.md).
-
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
 
 Cross-session ownership, verified toolchain baselines and Google/Microsoft adaptations
@@ -339,3 +336,11 @@ it does not claim compliance certification or erase backup/retention limitations
 explain what the optional summary measures and what it deliberately does not collect.
 [Executed evidence](docs/verification/product-feedback-2026-10-17.md) includes current
 browser results, inspected screenshots and dated image-resource observations.
+
+## Software license
+
+Application code retains the [MIT license](LICENSE). Fonts, identity assets and external
+code retain their own [attribution and terms](THIRD_PARTY_NOTICES.md).
+
+`npm run license:check` checks the standard grant, package/lock metadata and these
+links. It does not audit dependency licenses or grant rights over personal content.
