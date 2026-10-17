@@ -106,7 +106,7 @@ layout and measurement choices.
 ## Architecture and trust boundaries
 
 <p align="center">
-  <a href="docs/assets/architecture-overview.svg"><img src="docs/assets/architecture-overview.svg" width="1100" alt="Invited OAuth access, protected Next.js composition, separate IAM and private API reads feeding accessible aggregate views — click for the full-size diagram"></a>
+  <a href="docs/assets/architecture-overview.svg"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-overview.svg"><source media="(prefers-color-scheme: light)" srcset="docs/assets/architecture-overview.svg"><img src="docs/assets/architecture-overview.svg" width="1100" alt="Invited OAuth access, protected Next.js composition, separate IAM and private API reads feeding accessible aggregate views — click for the full-size diagram"></picture></a>
 </p>
 
 Solid arrows show requests or synchronization; dashed arrows show returned data.
@@ -117,9 +117,9 @@ explain the symbols and review procedure.
 
 
 <details>
-<summary>Editable Mermaid view</summary>
+<summary>Editable Mermaid source</summary>
 
-```mermaid
+```text
 flowchart LR
     U[Owner or invited viewer] --> AUTH[Google / GitHub OAuth]
     AUTH --> IAM[(Private PostgreSQL IAM)]
@@ -142,7 +142,10 @@ The backoffice server holds the operational read token. Browsers receive allowli
 data, never that token, an internal service URL or a raw backend error. Every protected
 page, action and API checks current membership; hiding an action does not authorize it.
 
-```mermaid
+<details>
+<summary>Editable Mermaid source · Dependency directions</summary>
+
+```text
 flowchart TB
     C[Server composition] --> P[Presentation · pages and controls]
     C --> T[Adapters · private HTTP validation]
@@ -151,6 +154,8 @@ flowchart TB
     A --> D[Domain · feature models]
     C --> AUTH[Authentication · membership and sessions]
 ```
+
+</details>
 
 | Location | Responsibility |
 | --- | --- |
