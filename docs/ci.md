@@ -8,7 +8,7 @@ skip verification. Repository rules remain authoritative; no admin bypass or bot
 
 | Job | Evidence |
 | --- | --- |
-| static | Frozen main/isolated contract installs, audits, format/lint/type checking, unit/contract/architecture, public-file/docs/skills checks and contract drift |
+| static | Frozen main/isolated contract installs, audits, format/lint/type checking, unit/contract/architecture, public-file/docs/skills/license consistency checks and contract drift |
 | browser | Pinned Trixie builder/distroless runtime; full HIGH/CRITICAL scanner gate; PostgreSQL18.6; exact-image migrations/readiness/resource/anonymous workload checks; real database IAM plus fake OAuth; Chromium/Firefox/WebKit operations/accessibility; bounded SIGTERM |
 | checks | Fail-closed aggregate, required by repository protections |
 

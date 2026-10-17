@@ -66,3 +66,8 @@ For README overview diagrams read [the owned diagram source and review rules](..
 Keep the first-party SVG and Mermaid semantics aligned. Inspect both palettes, card
 text bounds and narrow/full-size rendering; never substitute a deployment claim for
 an architecture view or add scripts/remote resources to the documentation graphic.
+
+For licensing edits run `npm run license:check` and the license regression tests.
+Keep the standard MIT grant unchanged; personal identity, fonts and third-party
+content remain governed by [separate notices](../../../THIRD_PARTY_NOTICES.md).
+The consistency check is not a dependency-license or legal audit.

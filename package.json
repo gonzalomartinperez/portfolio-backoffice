@@ -15,6 +15,7 @@
 		"format:check": "biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts tsconfig.json tooling/api-contract/package.json",
 		"security:check": "node scripts/check-public-files.ts",
 		"docs:check": "node scripts/check-docs.ts",
+		"license:check": "node scripts/check-license.ts",
 		"preview:fixture": "node scripts/test-server.ts",
 		"skills:check": "node scripts/check-skills.ts",
 		"auth:migrate": "node scripts/auth-migrate.ts",
