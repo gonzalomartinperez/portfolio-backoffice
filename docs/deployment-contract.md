@@ -211,3 +211,11 @@ and the independent operations/product contract pins remain unchanged. Set
 This is an aggregate-only read using the existing private token/origin. It adds no
 migration, persistent path, service, host port or provider access. API-side deployment
 is still blocked by the documented Neo4j vendor findings; source CI does not waive them.
+
+## Proposed PostgreSQL consolidation within Portfolio
+
+The API-owned [pending compatibility blueprint](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/85addbec7476713cc55fcef10a4ecbe008a6c1d7/docs/adrs/005-project-postgres-consolidation.md)
+considers one engine for distinct assistant and IAM databases, with separate restricted
+identities. This topology is not implemented or jointly tested. Existing IAM fixtures,
+image and migrations remain authoritative until its isolation, migration, resource and
+restore gates pass. No cross-project container/data reuse or production change follows.
