@@ -219,3 +219,39 @@ considers one engine for distinct assistant and IAM databases, with separate res
 identities. This topology is not implemented or jointly tested. Existing IAM fixtures,
 image and migrations remain authoritative until its isolation, migration, resource and
 restore gates pass. No cross-project container/data reuse or production change follows.
+
+## Optional project-scoped PostgreSQL allocation
+
+The API-owned application bootstrap is committed at
+[`dc49b8ef2750af0d3e306e9a9958b819b07f6690`](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/dc49b8ef2750af0d3e306e9a9958b819b07f6690/docs/adrs/005-project-postgres-consolidation.md).
+It prepares a common engine with **separate** `portfolio_assistant` and
+`portfolio_iam` databases. This is a local application compatibility handoff,
+not approval to replace production resources. Keep this repository's legacy
+PostgreSQL fixture recipe until vps-ops accepts the replacement.
+
+Use `portfolio_iam_migrator` only for the explicit image task:
+
+```sh
+# Deliver the migrator URL via a protected environment/secret file, never argv.
+node scripts/auth-migrate.ts --project-grants
+```
+
+The same `BACKOFFICE_DATABASE_URL` variable points to the migrator for this one-off
+task and to **`portfolio_iam_runtime`** for the normal server. No new public build
+variable or secret format is introduced. The CLI executes the official Better
+Auth migration and repository access migration, then applies the exact
+`migrations/runtime-grants.sql` resource from the image. Runtime has DML on eight
+named tables (including the database-backed `rateLimit`) and one audit sequence;
+it has no owner membership, DDL, TEMP or cross-database CONNECT. It cannot migrate.
+Do not grant all tables or use the provisioning identity to run the web server.
+
+A local dual-application proof ran the existing fake-OAuth membership/revocation
+flows against this restricted runtime, tested its actual five-connection pool,
+and recovered both databases independently and into a fresh cluster. API owns
+that maintained fixture runner; this source checkout remains an explicit input,
+not a runtime cross-repository import. Source/fixture evidence and remaining
+production gates are recorded in the pinned ADR. Reapply exact grants after
+logical restore and review every new migration's required object privileges.
+
+Origin and CSRF enforcement are explicitly enabled even when Better Auth detects
+a test environment. Test fixtures do not authorize live OAuth or production TLS.
