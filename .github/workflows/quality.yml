@@ -1,15 +1,27 @@
 name: Quality
-on:
+'on':
   pull_request:
-    branches: [develop, main]
-  merge_group:
-  workflow_dispatch:
-  workflow_call:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    branches:
+      - develop
+      - main
+  merge_group: null
+  workflow_dispatch: null
+  workflow_call: null
+  push:
+    branches:
+      - develop
+      - main
 permissions:
   contents: read
 env:
   PLAYWRIGHT_SKIP_BROWSER_GC: '1'
   DOCKER_BUILD_RECORD_UPLOAD: 'false'
+  CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}
+  CI_WORKFLOW_SHA: ${{ github.workflow_sha }}
+  AI_PROVIDER: fixture
+  EMBEDDINGS_PROVIDER: fixture
+  ALLOW_PAID_AI: 'false'
 defaults:
   run:
     shell: bash
@@ -17,15 +29,52 @@ concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  workflows:
+    name: Workflow validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate paired profile, events and security policy
+        run: node scripts/check-ci-profile.ts
+      - name: Run checksum-verified official actionlint
+        run: node scripts/check-workflows.ts
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked scanner dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Scan candidate and reachable history with redacted output
+        run: npm run security:check
   static:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -42,8 +91,8 @@ jobs:
         run: npm run format:check && npm run lint && npm run typecheck
       - name: Enforce architecture and test authorization, operations and contracts
         run: npm test
-      - name: Scan public files and documentation links
-        run: npm run security:check && npm run docs:check && npm run license:check && npm run skills:check
+      - name: Validate documentation, licenses and repository skills
+        run: npm run docs:check && npm run license:check && npm run skills:check
       - name: Verify dependency protection access or mandatory disabled state
         run: node scripts/dependency-automation.ts
         env:
@@ -53,7 +102,12 @@ jobs:
           DEPENDABOT_POLICY_READY: ${{ vars.DEPENDABOT_POLICY_READY }}
       - name: Reject generated contract drift
         run: npm run contract:generate && git diff --exit-code contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/product-analytics-v2.types.d.ts contracts/feedback.types.d.ts
-  browser:
+    name: Static checks
+  database:
+    name: Database tests
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
@@ -63,9 +117,7 @@ jobs:
           POSTGRES_PASSWORD: public-fixture-only
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
-          --health-interval 5s --health-timeout 5s --health-retries 12
+        options: --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test" --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       BACKOFFICE_ORIGIN: http://localhost:3107
       BACKOFFICE_DATABASE_URL: postgres://backoffice_fixture:public-fixture-only@127.0.0.1:5432/backoffice_test
@@ -75,49 +127,37 @@ jobs:
       GOOGLE_CLIENT_SECRET: public-fixture-secret
       GITHUB_CLIENT_ID: public-fixture-client
       GITHUB_CLIENT_SECRET: public-fixture-secret
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
+      CI_JOB_ID: database
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - name: Bind build start to this candidate
+        run: node scripts/ci-build-provenance.ts start
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
         with:
           context: .
           file: infra/docker/app/Dockerfile
+          platforms: linux/amd64
           load: true
           tags: portfolio-backoffice:rc
           cache-from: type=gha,scope=backoffice-node24-amd64
-          cache-to: type=gha,mode=max,scope=backoffice-node24-amd64
-      - name: Verify pinned image scanner
-        run: |
-          mkdir -p /tmp/image-scanner
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz \
-            --output /tmp/image-scanner/trivy.tar.gz
-          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check
-          tar -xzf /tmp/image-scanner/trivy.tar.gz -C /tmp/image-scanner trivy
-      - name: Scan the complete runtime and reject high or critical vulnerabilities
-        run: |
-          /tmp/image-scanner/trivy --config '' image --image-src docker \
-            --ignorefile '' --scanners vuln --format json --output /tmp/image-vulnerabilities.json \
-            portfolio-backoffice:rc
-          /tmp/image-scanner/trivy --config '' convert --ignorefile '' --scanners vuln \
-            --exit-code 1 --severity HIGH,CRITICAL --table-mode detailed /tmp/image-vulnerabilities.json
+      - name: Verify and record private source-bound image provenance
+        run: node scripts/ci-build-provenance.ts record
       - name: Verify the project-owned PostgreSQL18.6 IAM artifact
         run: |
           docker build -f infra/docker/postgres/Dockerfile -t portfolio-backoffice-postgres:rc .
           node scripts/verify-postgres.ts portfolio-backoffice:rc portfolio-backoffice-postgres:rc
       - name: Read the committed project-engine application handoff
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: gonzalomartinperez/portfolio-assistant-api
           ref: defe16a855a13401292257d337ce5dd937b00d23
@@ -125,7 +165,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
         with:
-          version: '0.13.1'
+          version: 0.13.1
           enable-cache: true
           cache-dependency-glob: |
             .artifacts/api-compatibility/uv.lock
@@ -164,20 +204,107 @@ jobs:
             --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
             --cap-drop ALL --security-opt no-new-privileges \
             portfolio-backoffice:rc node scripts/auth-migrate.ts
-      - name: Verify database authorization and prepare browsers independently
+      - name: Verify real PostgreSQL authorization and OAuth boundaries
+        run: node --test tests/integration/auth.test.ts
+      - name: Retain safe synthetic database recovery receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: project-database-verification
+          path: .artifacts/project-databases.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Remove only synthetic database configuration
+        if: always()
+        run: rm -f /tmp/backoffice-fixture.env
+  container:
+    name: Container verification
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
+        env:
+          POSTGRES_DB: backoffice_test
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      BACKOFFICE_ORIGIN: http://localhost:3107
+      BACKOFFICE_DATABASE_URL: postgres://backoffice_fixture:public-fixture-only@127.0.0.1:5432/backoffice_test
+      BETTER_AUTH_SECRET: public-fixture-only-at-least-32-characters
+      BACKOFFICE_OWNER_EMAIL: owner@example.test
+      GOOGLE_CLIENT_ID: public-fixture-client
+      GOOGLE_CLIENT_SECRET: public-fixture-secret
+      GITHUB_CLIENT_ID: public-fixture-client
+      GITHUB_CLIENT_SECRET: public-fixture-secret
+      CI_JOB_ID: container
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - name: Bind build start to this candidate
+        run: node scripts/ci-build-provenance.ts start
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+        with:
+          context: .
+          file: infra/docker/app/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: portfolio-backoffice:rc
+          cache-from: type=gha,scope=backoffice-node24-amd64
+          cache-to: type=gha,mode=max,scope=backoffice-node24-amd64
+      - name: Verify and record private source-bound image provenance
+        run: node scripts/ci-build-provenance.ts record
+      - name: Verify pinned image scanner
         run: |
-          node --test tests/integration/auth.test.ts &
-          auth_pid=$!
-          npx --no-install playwright install --with-deps --only-shell chromium firefox webkit &
-          browsers_pid=$!
-          auth_status=0
-          browsers_status=0
-          wait "$auth_pid" || auth_status=$?
-          wait "$browsers_pid" || browsers_status=$?
-          if [ "$auth_status" -ne 0 ] || [ "$browsers_status" -ne 0 ]; then
-            echo "Authorization verification or browser preparation failed"
-            exit 1
-          fi
+          mkdir -p /tmp/image-scanner
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz \
+            --output /tmp/image-scanner/trivy.tar.gz
+          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check
+          tar -xzf /tmp/image-scanner/trivy.tar.gz -C /tmp/image-scanner trivy
+      - name: Scan the complete runtime and reject high or critical vulnerabilities
+        run: |
+          /tmp/image-scanner/trivy --config '' image --image-src docker \
+            --ignorefile '' --scanners vuln --format json --output /tmp/image-vulnerabilities.json \
+            portfolio-backoffice:rc
+          /tmp/image-scanner/trivy --config '' convert --ignorefile '' --scanners vuln \
+            --exit-code 1 --severity HIGH,CRITICAL --table-mode detailed /tmp/image-vulnerabilities.json
+      - name: Write synthetic container configuration
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const names = ['BACKOFFICE_ORIGIN', 'BETTER_AUTH_SECRET', 'BACKOFFICE_OWNER_EMAIL',
+            'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'];
+          const values = names.map(name => `${name}=${process.env[name]}`);
+          values.push('OPERATIONS_API_ORIGIN=http://host.docker.internal:8117');
+          values.push('OPERATIONS_READ_TOKEN=public-loopback-operations-fixture');
+          values.push('OPERATIONS_SOURCE_MODE=fixture');
+          values.push('PRODUCT_ANALYTICS_ENABLED=true');
+          values.push('FEEDBACK_OVERVIEW_ENABLED=true');
+          values.push('BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@host.docker.internal:5432/backoffice_test');
+          writeFileSync('/tmp/backoffice-fixture.env', values.join('\n') + '\n', { mode: 0o600 });
+          NODE
+      - name: Migrate the isolated authentication database
+        run: |
+          docker run --rm --add-host host.docker.internal:host-gateway \
+            --env-file /tmp/backoffice-fixture.env \
+            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
+            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            portfolio-backoffice:rc node scripts/auth-migrate.ts
       - name: Start the exact image with isolated fixture configuration
         run: |
           docker run -d --name assistant-browser --add-host host.docker.internal:host-gateway \
@@ -190,6 +317,97 @@ jobs:
             -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
       - name: Verify bounded resources, readiness, isolation and anonymous workload
         run: node scripts/verify-container.ts measure assistant-browser http://127.0.0.1:3108
+      - name: Measure bounded idle SIGTERM termination
+        run: node scripts/verify-container.ts shutdown assistant-browser
+      - name: Remove only this job's container
+        if: always()
+        run: |
+          docker rm -f assistant-browser
+          rm -f /tmp/backoffice-fixture.env
+  browser:
+    name: Browser tests
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
+        env:
+          POSTGRES_DB: backoffice_test
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      BACKOFFICE_ORIGIN: http://localhost:3107
+      BACKOFFICE_DATABASE_URL: postgres://backoffice_fixture:public-fixture-only@127.0.0.1:5432/backoffice_test
+      BETTER_AUTH_SECRET: public-fixture-only-at-least-32-characters
+      BACKOFFICE_OWNER_EMAIL: owner@example.test
+      GOOGLE_CLIENT_ID: public-fixture-client
+      GOOGLE_CLIENT_SECRET: public-fixture-secret
+      GITHUB_CLIENT_ID: public-fixture-client
+      GITHUB_CLIENT_SECRET: public-fixture-secret
+      CI_JOB_ID: browser
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - name: Bind build start to this candidate
+        run: node scripts/ci-build-provenance.ts start
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+        with:
+          context: .
+          file: infra/docker/app/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: portfolio-backoffice:rc
+          cache-from: type=gha,scope=backoffice-node24-amd64
+      - name: Verify and record private source-bound image provenance
+        run: node scripts/ci-build-provenance.ts record
+      - name: Write synthetic container configuration
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const names = ['BACKOFFICE_ORIGIN', 'BETTER_AUTH_SECRET', 'BACKOFFICE_OWNER_EMAIL',
+            'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'];
+          const values = names.map(name => `${name}=${process.env[name]}`);
+          values.push('OPERATIONS_API_ORIGIN=http://host.docker.internal:8117');
+          values.push('OPERATIONS_READ_TOKEN=public-loopback-operations-fixture');
+          values.push('OPERATIONS_SOURCE_MODE=fixture');
+          values.push('PRODUCT_ANALYTICS_ENABLED=true');
+          values.push('FEEDBACK_OVERVIEW_ENABLED=true');
+          values.push('BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@host.docker.internal:5432/backoffice_test');
+          writeFileSync('/tmp/backoffice-fixture.env', values.join('\n') + '\n', { mode: 0o600 });
+          NODE
+      - name: Migrate the isolated authentication database
+        run: |
+          docker run --rm --add-host host.docker.internal:host-gateway \
+            --env-file /tmp/backoffice-fixture.env \
+            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
+            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            portfolio-backoffice:rc node scripts/auth-migrate.ts
+      - name: Prepare all reviewed browser engines
+        run: npx --no-install playwright install --with-deps --only-shell chromium firefox webkit
+      - name: Start the exact image with isolated fixture configuration
+        run: |
+          docker run -d --name assistant-browser --add-host host.docker.internal:host-gateway \
+            --env-file /tmp/backoffice-fixture.env \
+            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
+            --tmpfs /app/.next/cache:uid=65532,gid=65532,mode=0700,size=32m \
+            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
+            --stop-timeout=20 --log-driver=local --log-opt max-size=10m --log-opt max-file=3 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
       - name: Verify real-database authorization, operations and accessibility
         run: npm run test:browser -- backoffice.spec.ts --grep-invert "operational failure" --output test-results/available
         env:
@@ -201,22 +419,12 @@ jobs:
           WEB_UPSTREAM: http://127.0.0.1:3108
           OPERATIONS_FIXTURE_MODE: unavailable
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/unavailable
-      - name: Measure bounded idle SIGTERM termination
-        run: node scripts/verify-container.ts shutdown assistant-browser
       - name: Retain synthetic UI screenshots (never session files or traces)
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: backoffice-ui-screenshots
           path: test-results/**/*.png
-          retention-days: 7
-          if-no-files-found: ignore
-      - name: Retain safe synthetic database recovery receipt
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: project-database-verification
-          path: .artifacts/project-databases.json
           retention-days: 7
           if-no-files-found: ignore
       - name: Remove only this job's container
@@ -226,14 +434,20 @@ jobs:
           rm -f /tmp/backoffice-fixture.env
   checks:
     if: always()
-    needs: [static, browser]
+    needs:
+      - workflows
+      - secrets
+      - static
+      - database
+      - container
+      - browser
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
           package-manager-cache: false
@@ -241,3 +455,4 @@ jobs:
         env:
           CI_RESULTS: ${{ toJSON(needs) }}
         run: node scripts/check-ci-results.ts
+    name: Required checks

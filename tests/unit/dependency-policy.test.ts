@@ -100,7 +100,7 @@ function gate() {
 				enabled: true,
 				strict: true,
 				checks: [
-					{ context: "checks" },
+					{ context: "Required checks" },
 					{ context: "dependency-policy", app_id: 15368 },
 				],
 			},
@@ -123,9 +123,15 @@ function gate() {
 			status: "completed",
 			conclusion: "success",
 		},
-		jobs: ["static", "image", "browser", "live-fixture", "checks"].map(
-			(name) => ({ name, status: "completed", conclusion: "success" }),
-		),
+		jobs: [
+			"Workflow validation",
+			"Secret scan",
+			"Static checks",
+			"Database tests",
+			"Container verification",
+			"Browser tests",
+			"Required checks",
+		].map((name) => ({ name, status: "completed", conclusion: "success" })),
 	};
 }
 function setVersion(f: ReturnType<typeof fixture>, value: string) {

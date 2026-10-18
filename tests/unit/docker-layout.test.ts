@@ -117,7 +117,8 @@ test("CI and dependency discovery select owned recipes and preserve pinned forei
 	);
 	assert.equal(field(build, "with", "context"), ".");
 	assert.equal(field(build, "with", "file"), app);
-	const ownedDatabase = steps.find(
+	const databaseSteps = list(field(workflow, "jobs", "database", "steps"));
+	const ownedDatabase = databaseSteps.find(
 		(step) =>
 			field(step, "name") ===
 			"Verify the project-owned PostgreSQL18.6 IAM artifact",
@@ -126,7 +127,7 @@ test("CI and dependency discovery select owned recipes and preserve pinned forei
 		text(field(ownedDatabase, "run")),
 		/docker build -f infra\/docker\/postgres\/Dockerfile .+ \./,
 	);
-	const checkout = steps.find(
+	const checkout = databaseSteps.find(
 		(step) =>
 			field(step, "name") ===
 			"Read the committed project-engine application handoff",
@@ -135,7 +136,7 @@ test("CI and dependency discovery select owned recipes and preserve pinned forei
 		field(checkout, "with", "ref"),
 		"defe16a855a13401292257d337ce5dd937b00d23",
 	);
-	const foreign = steps.find(
+	const foreign = databaseSteps.find(
 		(step) =>
 			field(step, "name") ===
 			"Verify restricted IAM with both real applications and this exact image",
