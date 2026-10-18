@@ -134,3 +134,28 @@ and performs any separately authorized Coolify deployment.
 Record actual run URLs, merge/base/workflow revisions, job timings, cache behavior and remaining
 limitations in [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md).
 Success on an older PR or develop commit is not acceptance of a new main merge SHA.
+
+## Finite dependency review · 2026-10-18
+
+The manually reviewed cohort preserves Dependabot87/88/89 commits. PostgreSQL's
+new OCI index74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+contains the exact previously pinned Linux/amd64 manifest885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b,
+config and13layers. This changes pin representation, not supported-platform bytes;
+it establishes neither a security upgrade nor multiarchitecture acceptance.
+
+The @types/node24.19.2 patch only widens util.styleText hexadecimal array formats,
+plus documentation/metadata; the runtime and undici-types dependency remain unchanged.
+The setup-uv10.3 action uses the same reviewed1c37ad07a6a961277cf70c0d37d6f313000f5884
+as the API; actual uv remains0.13.1 and cache/permissions remain unchanged. Primary
+review sources are [DefinitelyTyped75656](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/75656)
+and [setup-uv10.3](https://github.com/astral-sh/setup-uv/releases/tag/v10.3.0).
+Official Docker Registry index/platform/config bytes were compared without starting
+containers. All three PRs authenticated as Dependabot49699333 with their complete
+expected file scopes; passing separate older runs does not accept the combined cohort.
+
+The actual combined frozen install, primary TypeScript7/generated routes, real IAM/
+restore/restart, PostgreSQL inventory policy, application image and66browser cases
+must pass on the final source head. Local tests before merging the declaration patch
+used the existing installed types; hosted frozen installation is the acceptance of
+the changed lockfile. No local install/build/browser, paid model or production action
+is inferred from this review. Unknown future dependency changes need a new review.

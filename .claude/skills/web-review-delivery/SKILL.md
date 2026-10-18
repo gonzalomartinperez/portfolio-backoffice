@@ -76,3 +76,10 @@ For licensing edits run `npm run license:check` and the license regression tests
 Keep the standard MIT grant unchanged; personal identity, fonts and third-party
 content remain governed by [separate notices](../../../THIRD_PARTY_NOTICES.md).
 The consistency check is not a dependency-license or legal audit.
+
+The database job also inventories the exact IAM PostgreSQL image. Read the maintained
+CI policy before accepting an image refresh: all CRITICAL and fixable HIGH block;
+unfixed HIGH remains explicit for production assessment. The application image's
+all-HIGH/CRITICAL gate is unchanged. Raw inventories and diagnostics stay ephemeral;
+only bounded counts enter public logs. A new OCI index can reference the exact old
+amd64 manifest, so compare platform bytes before claiming a runtime/security upgrade.
