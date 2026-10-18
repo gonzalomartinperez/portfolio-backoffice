@@ -724,6 +724,29 @@ test("product and privacy content reflow with doubled text on a narrow viewport"
 				path: `test-results/product-${test.info().project.name}-grid-text-200.png`,
 				fullPage: false,
 			});
+			const actions = page.getByRole("region", {
+				name: "Acciones semánticas · todas las páginas",
+				exact: true,
+			});
+			await actions.focus();
+			await expect(actions).toBeFocused();
+			const before = await actions.evaluate((element) => element.scrollLeft);
+			await page.keyboard.press("ArrowRight");
+			await expect
+				.poll(() => actions.evaluate((element) => element.scrollLeft))
+				.toBeGreaterThan(before);
+			const firstAction = actions.locator("tbody th").first();
+			expect(
+				await firstAction.evaluate(
+					(element) =>
+						element.getBoundingClientRect().height /
+						parseFloat(getComputedStyle(element).lineHeight),
+				),
+			).toBeLessThan(8);
+			await page.screenshot({
+				path: `test-results/product-${test.info().project.name}-actions-text-200.png`,
+				fullPage: false,
+			});
 			const coverage = page.locator("details summary").last();
 			await coverage.focus();
 			await page.keyboard.press("Enter");

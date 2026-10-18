@@ -90,7 +90,7 @@
 .table {
 	width: 100%;
 	border-collapse: collapse;
-	table-layout: fixed;
+	table-layout: auto;
 	font-size: 0.875rem;
 }
 .table caption {
@@ -105,7 +105,8 @@
 	padding: 0.75rem 0.4rem;
 	text-align: start;
 	vertical-align: top;
-	overflow-wrap: anywhere;
+	overflow-wrap: normal;
+	min-inline-size: 6ch;
 	font-variant-numeric: tabular-nums;
 }
 .table th {
@@ -189,4 +190,10 @@
 
 .navigation {
 	flex-wrap: wrap;
+}
+
+.tableViewport {
+	min-width: 0;
+	max-width: 100%;
+	overflow: auto;
 }

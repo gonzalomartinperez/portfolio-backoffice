@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { ProductReport } from "../domain/report";
 import type { ProductTarget } from "../domain/models";
 import { productCopy } from "./copy";
@@ -88,7 +89,7 @@ export function CalendarReport({
 					{report.days.length > 0 && (
 						<DailyViewsChart days={report.days} locale={locale} />
 					)}
-					<table className={styles.table}>
+					<ReportTable label={t.dailyTable}>
 						<caption>{t.dailyTable}</caption>
 						<thead>
 							<tr>
@@ -108,7 +109,7 @@ export function CalendarReport({
 								</tr>
 							))}
 						</tbody>
-					</table>
+					</ReportTable>
 				</section>
 				<section className="operation-card" aria-labelledby="report-countries">
 					<h2 id="report-countries">{t.countries}</h2>
@@ -118,31 +119,26 @@ export function CalendarReport({
 							? t.countryOff
 							: t.countryOn}
 					</p>
-					<section
-						className={styles.scroll}
-						tabIndex={report.countries.length > 5 ? 0 : undefined}
-						aria-label={t.country}
-					>
-						<table className={styles.table}>
-							<caption>{t.allPages}</caption>
-							<thead>
-								<tr>
-									<th scope="col">{t.country}</th>
-									<th scope="col">{t.views}</th>
-								</tr>
-							</thead>
-							<tbody>
-								{[...report.countries]
-									.sort((a, b) => b.views - a.views)
-									.map((row) => (
-										<tr key={row.country}>
-											<th scope="row">{countryName(row.country)}</th>
-											<td>{format.format(row.views)}</td>
-										</tr>
-									))}
-							</tbody>
-						</table>
-					</section>
+
+					<ReportTable label={t.country} bounded>
+						<caption>{t.allPages}</caption>
+						<thead>
+							<tr>
+								<th scope="col">{t.country}</th>
+								<th scope="col">{t.views}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{[...report.countries]
+								.sort((a, b) => b.views - a.views)
+								.map((row) => (
+									<tr key={row.country}>
+										<th scope="row">{countryName(row.country)}</th>
+										<td>{format.format(row.views)}</td>
+									</tr>
+								))}
+						</tbody>
+					</ReportTable>
 				</section>
 			</div>
 			<section className="operation-card" aria-labelledby="report-grid">
@@ -200,7 +196,7 @@ export function CalendarReport({
 						{report.cells.length === 0 ? (
 							<p>{t.gridEmpty}</p>
 						) : (
-							<table className={styles.table}>
+							<ReportTable label={t.gridTable}>
 								<caption>{t.gridTable}</caption>
 								<thead>
 									<tr>
@@ -218,7 +214,7 @@ export function CalendarReport({
 										</tr>
 									))}
 								</tbody>
-							</table>
+							</ReportTable>
 						)}
 					</div>
 				</div>
@@ -226,7 +222,7 @@ export function CalendarReport({
 			<div className={styles.twoColumns}>
 				<section className="operation-card">
 					<h2>{t.pages}</h2>
-					<table className={styles.table}>
+					<ReportTable label={t.pages}>
 						<caption>{t.allPages}</caption>
 						<thead>
 							<tr>
@@ -246,11 +242,11 @@ export function CalendarReport({
 								</tr>
 							))}
 						</tbody>
-					</table>
+					</ReportTable>
 				</section>
 				<section className="operation-card">
 					<h2>{t.regions}</h2>
-					<table className={styles.table}>
+					<ReportTable label={t.regions}>
 						<caption>
 							{common.sections[report.selection.section]} ·{" "}
 							{t.viewports[report.selection.viewport]}
@@ -271,7 +267,7 @@ export function CalendarReport({
 								</tr>
 							))}
 						</tbody>
-					</table>
+					</ReportTable>
 				</section>
 			</div>
 			<section className="operation-card">
@@ -280,7 +276,7 @@ export function CalendarReport({
 				{report.actions.length === 0 ? (
 					<p>{t.noActions}</p>
 				) : (
-					<table className={styles.table}>
+					<ReportTable label={t.actions}>
 						<caption>{t.allPages}</caption>
 						<thead>
 							<tr>
@@ -306,7 +302,7 @@ export function CalendarReport({
 								</tr>
 							))}
 						</tbody>
-					</table>
+					</ReportTable>
 				)}
 			</section>
 			<details className="operation-card">
@@ -343,5 +339,25 @@ export function CalendarReport({
 				</dl>
 			</details>
 		</div>
+	);
+}
+
+function ReportTable({
+	label,
+	children,
+	bounded = false,
+}: {
+	label: string;
+	children: ReactNode;
+	bounded?: boolean;
+}) {
+	return (
+		<section
+			className={`${styles.tableViewport} ${bounded ? styles.scroll : ""}`}
+			tabIndex={0}
+			aria-label={label}
+		>
+			<table className={styles.table}>{children}</table>
+		</section>
 	);
 }
