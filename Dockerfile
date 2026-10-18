@@ -7,6 +7,7 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --no-audit --no-f
 COPY next.config.ts next-env.d.ts tsconfig.json ./
 COPY src ./src
 COPY contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/feedback.types.d.ts ./contracts/
+COPY contracts/product-analytics-v2.types.d.ts contracts/product-analytics-v2.schema.json ./contracts/
 COPY public ./public
 COPY scripts/auth-migrate.ts scripts/prepare-runtime.ts ./scripts/
 COPY migrations ./migrations

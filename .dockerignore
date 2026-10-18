@@ -16,6 +16,8 @@
 !contracts/types.d.ts
 !contracts/operations.types.d.ts
 !contracts/product-analytics.types.d.ts
+!contracts/product-analytics-v2.types.d.ts
+!contracts/product-analytics-v2.schema.json
 !contracts/feedback.types.d.ts
 !scripts/
 !scripts/auth-migrate.ts

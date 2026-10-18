@@ -145,6 +145,26 @@ test("owned application, fixtures and tooling remain type-checked TypeScript", (
 	}
 });
 
+test("platform guards distinguish model properties from browser globals", () => {
+	for (const layer of ["domain", "application"]) {
+		const file = `src/features/analytics/${layer}/example.ts`;
+		assert.deepEqual(
+			boundaryErrors(
+				file,
+				"interface Report { window: string } function period(report: Report) { return report.window; }",
+			),
+			[],
+		);
+		for (const source of [
+			"const current = window.location;",
+			"const current = globalThis.window;",
+			"interface Report { window: typeof window }",
+			"const { location } = window;",
+		])
+			assert.ok(boundaryErrors(file, source).length > 0, source);
+	}
+});
+
 test("client boundaries reject authentication infrastructure imports", () => {
 	for (const module of ["server", "config", "database", "runtime", "store"]) {
 		assert.notEqual(

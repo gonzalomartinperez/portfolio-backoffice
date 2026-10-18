@@ -2,6 +2,7 @@ import type { components } from "../../../../contracts/product-analytics.types";
 import {
 	eventNames,
 	sections,
+	validSemanticDimensions,
 	type ProductSnapshot,
 } from "../domain/models.ts";
 function object(value: unknown): Record<string, unknown> {
@@ -59,25 +60,7 @@ export function parseProductSnapshot(value: unknown): ProductSnapshot {
 			const eventName = member(eventNames, row.event_name);
 			const section = member(sections, row.section);
 			const locale = member(["en", "es"], row.locale);
-			const targets: Record<typeof eventName, readonly string[]> = {
-				page_view: [""],
-				navigation_click: [""],
-				section_open: [
-					"rampy",
-					"teamcubation",
-					"cooperativa-obrera",
-					"independent",
-				],
-				cv_link_open: ["en", "es"],
-				contact_link_open: ["email", "linkedin", "github"],
-				company_link_open: ["rampy", "teamcubation", "cooperativa-obrera"],
-			};
-			if (
-				!targets[eventName].includes(row.target) ||
-				(["section_open", "company_link_open"].includes(eventName) &&
-					section !== "work") ||
-				(eventName === "cv_link_open" && section !== "cv")
-			)
+			if (!validSemanticDimensions(eventName, section, row.target))
 				throw new Error("Invalid analytics combination");
 			const key = [row.day, eventName, section, locale, row.target].join("|");
 			if (keys.has(key)) throw new Error("Duplicate analytics cell");
