@@ -86,3 +86,26 @@ At enlarged text sizes, WebKit's native select painting is contained within the 
 field, with a 6px clip margin for the focus outline/offset. This is scoped to those
 fields; reading surfaces keep natural overflow/scrolling and the choice menu stays native.
 The dedicated WebKit zoom regression must remain enabled.
+
+## Calendar interaction report
+
+The product report reuses the operations surfaces, typography, focus and button
+variants. Two native fieldsets distinguish whole-report period/language controls
+from grid-only page/region/viewport controls; one explicit submit avoids request
+churn. Primary button variants retain their accent under the operations shell's
+button rules, including hover and keyboard focus.
+
+Three count cards precede daily/country panels and a thresholded 8×8 region grid.
+A semantic table accompanies every chart; grid coordinates are numbered 1–8 for
+readers while the wire contract remains 0–7. Withheld cells use a neutral surface
+and no count. The grid is illustrative and aria-hidden; its table supplies data.
+Coverage details use native disclosure, and chart animation remains off. Mobile
+layout wraps labels and gives tables named, keyboard-scrollable regions instead of
+splitting words into narrow columns. Enlarged-text QA captures
+individual viewport sections because a full month can exceed browser bitmap limits.
+
+The named table viewport has a narrowly scoped Biome exception for `tabIndex=0`.
+It is required for keyboard scrolling in browsers that do not focus overflow
+containers automatically; it does not add an invented interactive role. See
+[MDN overflow accessibility](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overflow#accessibility).
+The browser regression focuses the region and uses ArrowRight at200% text.

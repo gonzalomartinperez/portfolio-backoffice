@@ -354,6 +354,7 @@ function ReportTable({
 	return (
 		<section
 			className={`${styles.tableViewport} ${bounded ? styles.scroll : ""}`}
+			// biome-ignore lint/a11y/noNoninteractiveTabindex: Safari requires focus to keyboard-scroll this named overflow region.
 			tabIndex={0}
 			aria-label={label}
 		>
