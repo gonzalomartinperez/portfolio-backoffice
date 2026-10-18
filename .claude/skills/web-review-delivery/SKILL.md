@@ -13,7 +13,9 @@ networks, release selection and recovery on Hostinger KVM 4. This repository own
 image, IAM migrations and runtime contract. The portfolio remains on Business. Do not
 create another controller, SSH deployment or canonical production stack here.
 
-Preserve one exact production image across migration/browser checks, frozen installs,
+Bind isolated database/container/browser checks to the same exact source and build configuration.
+The paired CI profile rebuilds in isolated jobs instead of publishing private fixture
+images; capture each actual image ID and never claim byte-identical cross-job builds. Preserve frozen installs,
 SHA-pinned actions, scoped caches, read-only PR tokens, meaningful artifacts and an
 always-running required check aggregator. Do not execute PR code with privileged policy
 permissions. Required checks must fail closed for missing/skipped/cancelled results.

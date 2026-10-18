@@ -67,3 +67,17 @@ and source snapshots require independent committed-artifact verification before 
 The portfolio review of commit `8974932c57a52f1dc6c7eef726d00b6bca465d38` found an
 `.mts`/`.cts` source-enumeration gap. The owner received a reproduced negative case; the
 analogous backoffice collector was corrected locally, without edits to the portfolio.
+
+## Current canonical layout · 2026-10-18
+
+PR79 merged developf08189eab68d0c0b585d2806710dad936ff17004 with full CI.
+Actual folders are src/server, feature domain/application/adapters/presentation and
+src/shared/ui. Auth config/runtime factories stay CLI-safe; request modules stay
+server-only. Negative AST and exact trace-closure tests protect both requirements.
+See [architecture](architecture.md) and [ADR007](adrs/007-canonical-server-composition.md).
+
+Initial cross-project version observations above remain historical; each owner
+maintains its current lock and [runtime baseline](runtime-baseline.md). No common
+parser, provider/storage stack or patch version is imposed without compatibility
+verification. Main protection readback on 2026-10-18 retains `Required checks`, strict target
+freshness, admin enforcement and force-push denial. No protection was weakened.

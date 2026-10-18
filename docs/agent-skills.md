@@ -82,3 +82,28 @@ with a read-only request, then repeat the natural and nearby-negative requests a
 Inspect which skill is loaded, ensure missing prerequisites stop dependent work, and compare
 `git status --porcelain` before/after. Test an authorized fixture-only change separately.
 This requires an approved model-usage budget and was not run as an extra paid CLI session.
+
+## Refreshed discovery and automatic selection · 2026-10-18
+
+Codex CLI 0.163.0 actually discovered all four current repository skills through
+app-server skills/list with forceReload, including the relative links. Claude Code
+2.1.292 returned all four commands in its stream-JSON initialize response with
+project settings enabled. Both probes submitted zero model turns; Claude's model
+endpoint was unreachable loopback and extra MCP configuration was empty. Only
+safe skill names/counts are retained in [the discovery receipt](verification/skill-discovery-2026-10-18.json),
+never raw initialization payloads.
+
+All skills remain eligible for automatic selection from the task. Explicit commands
+above are optional, never prerequisites. Portable frontmatter stays name/description
+only; disabling Claude model invocation is rejected. Optional Codex policy metadata
+may omit allow_implicit_invocation or set it to true, never false. Negative fixtures
+enforce that invariant and redact malformed metadata rather than printing its values.
+Descriptions stay focused; automatic discovery/selection grants no mutation authority.
+
+Discovery does not prove model-driven selection or execution. The documented positive,
+nearby-negative, read-only and scope-escalation scenarios remain the behavioral review
+procedure. No paid model campaign or new global client configuration was introduced.
+Official references were rechecked:
+[Codex skills](https://developers.openai.com/codex/skills),
+[app-server skills/list](https://developers.openai.com/codex/app-server) and
+[Claude project skills](https://code.claude.com/docs/en/skills).
