@@ -23,8 +23,14 @@ permissions. Required checks must fail closed for missing/skipped/cancelled resu
 Verify non-root read-only image, assets, health/readiness distinction, isolated database
 migration and graceful termination. Do not upload fixture sessions or environment files.
 Runtime is distroless, UID65532, without shell/npm. Migration runs directly with Node.
-Use repository-root build context with explicit `-f infra/docker/app/Dockerfile` or
-`-f infra/docker/postgres/Dockerfile`. Each recipe owns `Dockerfile.dockerignore`;
+Use repository-root build context with explicit `-f infra/docker/app/Dockerfile`.
+The API owns the canonical PostgreSQL/pgvector recipe. Consume only the committed
+revision in [the database handoff](../../../docs/verification/shared-postgres-adoption-2026-10-18.md),
+with that checkout's root as context; do not recreate an IAM-only recipe here.
+Runtime CI must use that exact compiled artifact for IAM, browser and full image
+verification, with scoped managed cleanup. UID70 requires fresh data; never reuse
+or chown Debian PGDATA. The API's bootstrap/HBA and this repository's IAM migrations
+keep separate owners. Each owned recipe has `Dockerfile.dockerignore`;
 the root ignore file is a deny-default fallback. Preserve the narrow application build
 context and explicit migration dependency trace; unknown
 required imports fail packaging. Review the full image scan, not only npm audit: CI rejects

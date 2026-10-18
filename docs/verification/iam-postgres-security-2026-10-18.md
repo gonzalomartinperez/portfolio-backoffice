@@ -1,9 +1,11 @@
 # IAM PostgreSQL security gate · 2026-10-18
 
-**Blocked:** PR90 and its dependency cohort are not accepted. The newly added full
+**Original failure:** the initial PR90 candidate and dependency cohort could not be accepted. The newly added full
 IAM image inventory exposed a critical finding; the required aggregate correctly
 failed. Passing functional checks or the previously green source release does not
-override this result. No image was published or deployed.
+override this result. No image was published or deployed. The original image remains
+rejected; the later [common-engine replacement](shared-postgres-adoption-2026-10-18.md)
+has separate source, ownership and exact-image acceptance requirements.
 
 ## Actual hosted result
 
@@ -20,7 +22,7 @@ creation to final update; this is an observation, not a performance improvement.
 
 The reviewed PostgreSQL index update in Dependabot87 refers to the exact previous
 amd64 image manifest, config and layers. It does not remediate this finding.
-Dependabot88/89 and their combined PR90 remain held; individual older green runs
+Dependabot88/89 and their combined PR90 were held at this revision; individual older green runs
 are not acceptance of the combined source. Main/develop were not changed by PR90.
 
 ## Isolated local diagnosis
@@ -65,10 +67,10 @@ the existing migration, authorization, restore/restart and browser checks.
 
 The [official PostgreSQL image catalog](https://github.com/docker-library/official-images/blob/master/library/postgres)
 also provides maintained Alpine variants. These are evaluation options only,
-not accepted replacements: libc, locales/collations, UID/GID70 rather than999,
+not accepted replacements based on this diagnostic alone: libc, locales/collations, UID/GID70 rather than999,
 volume ownership, startup and logical restoration require deliberate review and
 complete compatibility verification. Never reuse a Debian PGDATA directory on
-that assumption. No alternative base or production allocation was adopted.
+that assumption. This diagnostic did not adopt an alternative base or production allocation.
 
 The existing API Neo4j vendor blocker remains separate. Neither this report nor
 source promotion authorizes publication, deployment, live OAuth or assistant

@@ -15,8 +15,8 @@ const report = (vulnerabilities: unknown[] = []) => ({
 	Results: [
 		{
 			Class: "os-pkgs",
-			Type: "debian",
-			Target: "portfolio-backoffice-postgres:rc (debian 13.3)",
+			Type: "alpine",
+			Target: "portfolio-backoffice-postgres:rc (alpine 3.24)",
 			Packages: [{ Name: "postgresql-18", Version: "18.6" }],
 			Vulnerabilities: vulnerabilities,
 		},
@@ -72,11 +72,11 @@ test("database inventory fails closed for missing OS results, malformed findings
 		{ ...report(), ArtifactName: "portfolio-backoffice:rc" },
 		{ ...report(), Metadata: { ImageID: `sha256:${"b".repeat(64)}` } },
 		{ ...report(), SchemaVersion: 1 },
-		{ ...report(), Results: [{ ...report().Results[0], Type: "alpine" }] },
+		{ ...report(), Results: [{ ...report().Results[0], Type: "debian" }] },
 		{
 			...report(),
 			Results: [
-				{ ...report().Results[0], Target: "other-image (debian 13.3)" },
+				{ ...report().Results[0], Target: "other-image (alpine 3.24)" },
 			],
 		},
 		{ ...report(), Results: [{ ...report().Results[0], Packages: [{}] }] },
@@ -92,6 +92,36 @@ test("database inventory fails closed for missing OS results, malformed findings
 	])
 		assert.throws(() => assessPostgresImage(value, image));
 	assert.throws(() => assessPostgresImage(report(), "not-an-image-id"));
+});
+
+test("only the reviewed Alpine branch and exact backoffice scan alias are accepted", () => {
+	for (const version of ["3.24", "3.24.0", "3.24.2"]) {
+		const candidate = report();
+		const os = candidate.Results[0];
+		assert.ok(os);
+		os.Target = `portfolio-backoffice-postgres:rc (alpine ${version})`;
+		assert.equal(assessPostgresImage(candidate, image).blocked, false);
+	}
+	for (const target of [
+		"portfolio-backoffice-postgres:rc (debian 13.3)",
+		"portfolio-backoffice-postgres:rc (alpine 3.23.4)",
+		"portfolio-backoffice-postgres:rc (alpine 3.25.0)",
+		"portfolio-backoffice-postgres:rc (alpine 3.240)",
+		"portfolio-backoffice-postgres:rc (alpine 3.24.0-extra)",
+		"portfolio-assistant-postgres:project-ci (alpine 3.24)",
+	]) {
+		const candidate = report();
+		const os = candidate.Results[0];
+		assert.ok(os);
+		os.Target = target;
+		assert.throws(() => assessPostgresImage(candidate, image));
+	}
+	assert.throws(() =>
+		assessPostgresImage(
+			{ ...report(), ArtifactName: "portfolio-assistant-postgres:project-ci" },
+			image,
+		),
+	);
 });
 
 test("database CLI fails closed and prints only aggregate counts without raw package metadata", () => {

@@ -39,9 +39,10 @@ manifest digest. Base revision can be the all-zero GitHub marker for a newly cre
 it must not be reported as an existing commit. PR merge-ref validation and a later branch
 merge have different source identities and need their own successful runs.
 
-Recipes have colocated `Dockerfile.dockerignore` policies. The app allowlists required build
-inputs; PostgreSQL excludes all repository inputs. Root `.dockerignore` denies everything
-as a fallback. No secrets, fixture sessions or database dumps enter image contexts.
+The application recipe has a colocated `Dockerfile.dockerignore` allowlist; root
+`.dockerignore` denies everything as a fallback. PostgreSQL is built from the pinned
+API checkout and its own deny-default context, admitting only reviewed bootstrap/HBA
+resources. No secrets, fixture sessions or database dumps enter either image context.
 
 ## Events, gating and trust
 
@@ -72,19 +73,27 @@ build configuration. Syntax/policy validation is not an executed image or browse
 Frozen installs remain mandatory. Setup-node caches npm downloads by lockfile/runner inputs;
 static includes the isolated contract-generator lockfile. Node follows `.nvmrc`; runtime
 images pin their own version and digest. BuildKit uses the Node24/amd64 scope and validated
-content-addressed layers. Only the container job writes the shared BuildKit cache; database
-and browser jobs restore it without racing writers. Browser binaries are not cached; the job installs all reviewed
+content-addressed layers. Only the container job writes the application BuildKit cache;
+database and browser jobs restore it without racing writers. Only the database job
+writes the separate canonical PostgreSQL cache. Browser binaries are not cached; the job installs all reviewed
 engines and OS dependencies. Shared local Playwright caches must never be cleaned; set
 `PLAYWRIGHT_SKIP_BROWSER_GC=1` or use an owned browser cache.
 
 ## Fixture privacy and retained evidence
 
-The database job preserves the real scoped-role/recovery check against immutable API source
-`633b7ecbe8141ddf505deba42c21e418c460f5c2`. This reviewed handoff includes the final-postmaster
-readiness correction, preventing the temporary initdb socket from being mistaken for
-the final server. Its actual recipe is `infra/docker/postgres/Dockerfile`; the test
-pins both revision and path. No mutable sibling working tree is consumed. The API
-cohort passed all six jobs in run39094247058 before this compatibility refresh.
+All three runtime jobs build the canonical database recipe from immutable API source
+`f77c8d878401cc2a5bcea63716396b4bbcc1fc18`, using that checkout's repository-root context.
+The database job reuses its exact compiled image for IAM verification, the complete
+security inventory and the real dual-application scoped-role/recovery check; its
+second local tag is an alias, not another build. Container and browser fixtures use
+their own independently built images from the same source. Do not claim byte-identical
+independent builds. No mutable sibling working tree or private image transfer is used.
+
+The selected PostgreSQL18.6/pgvector0.8.7 Alpine artifact runs UID70 with fresh data.
+Managed fixtures bind their reviewed source and actual image ID, use TCP readiness,
+and clean up only matching owned identities even on failure. GitHub service containers
+cannot consume an image built later in their job; no legacy Debian service fixture is
+silently substituted. See [source and acceptance evidence](verification/shared-postgres-adoption-2026-10-18.md).
 
 Each runtime job uses an isolated synthetic PostgreSQL database and independently migrates
 its actual image. The container job verifies read-only/nonroot operation, bounded memory,
@@ -104,7 +113,7 @@ up only its own application/fixture resources, even after failure. Trivy0.75.0 r
 reviewed checksum. The application-image gate still rejects all HIGH/CRITICAL findings,
 including unfixed ones.
 
-The existing database job separately inventories locally built
+The database job inventories the canonical artifact through local alias
 `portfolio-backoffice-postgres:rc` with all package types/severities and `--list-all-pkgs`.
 It reuses the exact checksum-verified scanner installer and binds the report to the actual
 local image ID. Missing, malformed or mismatched inventories fail closed. Every CRITICAL
@@ -112,8 +121,8 @@ and fixable HIGH blocks database acceptance; unfixed HIGH remains explicitly cou
 the aggregate log summary and requires production assessment, never a blanket waiver.
 No ignore file or severity filter is applied to inventory collection. Full JSON/package
 inventory and scanner diagnostics stay on the ephemeral runner and are never uploaded.
-Only bounded aggregate counts/policy status enter the new gate's logs; no new public
-artifact or receipt is added. Scanner DB freshness is not certified by those counts.
+Only bounded aggregate counts/policy status and synthetic source/image identity enter
+logs; no raw public artifact is added. Scanner DB freshness is not certified by those counts.
 Negative tests protect the actual commands, image/report binding and artifact privacy.
 This adds no job or dependency and preserves IAM/recovery tests. Local checks do not
 establish a clean image: the hosted scan can still block on current findings.
@@ -159,3 +168,9 @@ must pass on the final source head. Local tests before merging the declaration p
 used the existing installed types; hosted frozen installation is the acceptance of
 the changed lockfile. No local install/build/browser, paid model or production action
 is inferred from this review. Unknown future dependency changes need a new review.
+
+Dependabot87's metadata change remains preserved in Git history but its legacy IAM-only
+recipe is superseded by the explicitly coordinated common-engine replacement. Its
+retirement does not suppress a security alert or make the original image acceptable.
+The Docker ecosystem entry now follows only this repository's application recipe;
+the API owner maintains dependency discovery for the canonical database artifact.

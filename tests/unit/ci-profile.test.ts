@@ -124,6 +124,52 @@ test("database acceptance rejects missing, substituted or bypassed PostgreSQL in
 	record(override.env).TRIVY_IGNORE_UNFIXED = "true";
 	assert.throws(() => validateCiProfile(override));
 });
+test("all runtime jobs reject mutable PostgreSQL source, wrong builds and skipped cleanup", () => {
+	for (const job of ["database", "container", "browser"]) {
+		for (const mutate of [
+			(step: Record<string, unknown>) => {
+				record(step.with).ref = "develop";
+			},
+			(step: Record<string, unknown>) => {
+				step.if = "false";
+			},
+		]) {
+			const workflow = profile();
+			const steps = list(field(workflow, "jobs", job, "steps")).map(record);
+			const checkout = steps.find(
+				(step) => step.name === "Read the canonical PostgreSQL source",
+			);
+			mutate(record(checkout));
+			assert.throws(() => validateCiProfile(workflow));
+		}
+		for (const fieldName of ["context", "file", "tags", "platforms"]) {
+			const workflow = profile();
+			const steps = list(field(workflow, "jobs", job, "steps")).map(record);
+			const build = record(
+				steps.find(
+					(step) => step.name === "Build the canonical PostgreSQL artifact",
+				),
+			);
+			record(build.with)[fieldName] = "unreviewed";
+			assert.throws(() => validateCiProfile(workflow));
+		}
+		const workflow = profile();
+		const steps = list(field(workflow, "jobs", job, "steps")).map(record);
+		const stop = record(
+			steps.find(
+				(step) =>
+					step.name === "Remove only this job's canonical PostgreSQL fixture",
+			),
+		);
+		delete stop.if;
+		assert.throws(() => validateCiProfile(workflow));
+		const legacy = profile();
+		record(field(legacy, "jobs", job)).services = {
+			postgres: { image: "postgres:18.6-trixie" },
+		};
+		assert.throws(() => validateCiProfile(legacy));
+	}
+});
 test("paired profile rejects cosmetic parity, bypasses and missing prerequisite edges", () => {
 	const changes: Array<(workflow: Record<string, unknown>) => void> = [
 		(w) => {

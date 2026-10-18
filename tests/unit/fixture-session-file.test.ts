@@ -18,6 +18,7 @@ test("session artifacts reject existing files and symlinks before minting creden
 		const target = join(directory, "existing");
 		const link = join(directory, "symlink");
 		await writeFile(target, "preserve", { mode: 0o644 });
+		const originalMode = (await stat(target)).mode & 0o777;
 		await symlink(target, link);
 		let calls = 0;
 		const produce = async (): Promise<never> => {
@@ -30,7 +31,7 @@ test("session artifacts reject existing files and symlinks before minting creden
 			});
 		assert.equal(calls, 0);
 		assert.equal(await readFile(target, "utf8"), "preserve");
-		assert.equal((await stat(target)).mode & 0o777, 0o644);
+		assert.equal((await stat(target)).mode & 0o777, originalMode);
 		const fresh = join(directory, "fresh");
 		await assert.rejects(
 			writeFixtureSessions(fresh, async () => {

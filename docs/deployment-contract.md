@@ -7,11 +7,12 @@ are not authorized by a source merge. The portfolio remains on Hostinger Busines
 
 ## Artifact and startup
 
-Recipes live at `infra/docker/app/Dockerfile` and `infra/docker/postgres/Dockerfile`.
-Always use repository-root build context (`.`) with an explicit `-f` path. Each recipe
-has a colocated `Dockerfile.dockerignore`, which takes precedence over the deny-default
-root `.dockerignore`. The IAM PostgreSQL recipe sends no application source; the app
-recipe allowlists only its build inputs. Neither context admits environment files or keys.
+This repository owns `infra/docker/app/Dockerfile`. Always use repository-root build
+context (`.`) with its explicit `-f` path. Its colocated `Dockerfile.dockerignore`
+takes precedence over the deny-default root `.dockerignore` and admits only application
+build inputs. The API owns the separate canonical PostgreSQL/pgvector recipe and its
+reviewed context; this repository consumes an immutable source handoff for tests.
+Neither context admits environment files or keys.
 See [Docker build-context precedence](https://docs.docker.com/build/concepts/context/#filename-and-location).
 
 Build `docker buildx build --load -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:rc .`.
@@ -175,12 +176,20 @@ See [runtime-baseline.md](runtime-baseline.md) for the2026-10-13 shared cohort a
 acceptance. Actual committed locks and Dockerfiles supersede historical version/size samples;
 no production publication, deployment or live OAuth/provider check is implied.
 
-## Project-owned IAM artifact
+## Shared project PostgreSQL artifact
 
-`infra/docker/postgres/Dockerfile` selects PostgreSQL18.6 Trixie with signed security packages and UID999.
+The canonical database recipe is owned by
+[API source f77c8d8](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/f77c8d878401cc2a5bcea63716396b4bbcc1fc18/infra/docker/postgres/Dockerfile).
+It supplies PostgreSQL18.6 and portable pgvector0.8.7 on immutable Alpine3.24,
+with UID/GID70. The API also owns the unchanged bootstrap and HBA resources;
+this repository retains its IAM migrations and grants. Private vps-ops confirmed
+replacement source ownership before the two legacy IAM recipe files and their
+Dependabot discovery were retired. This is not production artifact selection.
+There is one vector-capable engine per production project, with separate assistant
+and IAM databases and roles; no second IAM-only engine is introduced.
 The persistent parent mount is `/var/lib/postgresql`, PGDATA `/var/lib/postgresql/18/docker`.
 Initialize only a NEW volume's ownership before nonroot startup; no automatic recursive
-repair or reuse of PostgreSQL17 data directories. Existing data needs separately verified
+repair or reuse of PostgreSQL17 or Debian-owned data directories. Existing data needs separately verified
 logical migration/restore, libc/locale/collation review and independent IAM secret recovery.
 
 `node scripts/verify-postgres.ts exact-app-test-image exact-db-test-image` creates only fresh
@@ -191,7 +200,8 @@ never accepts caller DATABASE_URL or a production volume. Tested fixture ceiling
 Coolify owns real resource/volume lifecycle; vps-ops coordinates isolated allocation and
 recovery. Production runtime roles must not use the fixture's superuser privileges.
 
-Database CI inventories the full locally built IAM image with checksum-verified
+Each runtime CI job builds the same pinned canonical source and uses its actual
+image for its managed PostgreSQL fixture. Database CI inventories that full image with checksum-verified
 Trivy0.75.0 and checks the report against its actual image ID. Every CRITICAL and fixable
 HIGH blocks acceptance. Unfixed HIGH is explicitly counted for production assessment,
 never silently waived. Full inventory and diagnostics remain ephemeral; only aggregate
@@ -199,11 +209,14 @@ policy counts are logged, with no raw report upload. Missing or mismatched repor
 closed. This does not relax the application image's all-HIGH/CRITICAL gate, and passing
 either gate is not production approval or a guarantee of scanner DB freshness.
 
-**Current security hold (2026-10-18):** the new complete IAM image scan fails for
-a critical libxml2 finding. PR90 and its dependency cohort are not accepted;
-previously green source checks do not establish database-image acceptance. See the
-[exact hosted result and bounded diagnosis](verification/iam-postgres-security-2026-10-18.md).
-Do not select or publish this artifact for production while the gate remains red.
+The original Debian image remains rejected for CVE-2026-6653; its
+[hosted failure and bounded diagnosis](verification/iam-postgres-security-2026-10-18.md)
+are preserved. The replacement's [source and acceptance handoff](verification/shared-postgres-adoption-2026-10-18.md)
+separates API verification from this repository's exact-image/66-browser acceptance.
+Alpine3.24 main support ends2028-06-01, independently of PostgreSQL18's support
+window; community packages have their own shorter cadence. No LTS or zero-vulnerability
+claim follows from the base choice. Publication, live OAuth, cross-distribution
+data migration and production selection remain separate requirements.
 
 ## Optional private product counts
 

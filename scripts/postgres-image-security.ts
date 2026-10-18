@@ -27,8 +27,8 @@ export function assessPostgresImage(value: unknown, imageId: string) {
 			throw new Error("Invalid PostgreSQL result metadata");
 		if (category === "os-pkgs") {
 			if (
-				field(result, "Type") !== "debian" ||
-				!/^portfolio-backoffice-postgres:rc \(debian [0-9]+(?:\.[0-9]+)*\)$/.test(
+				field(result, "Type") !== "alpine" ||
+				!/^portfolio-backoffice-postgres:rc \(alpine 3\.24(?:\.[0-9]+)?\)$/.test(
 					text(field(result, "Target")),
 				)
 			)

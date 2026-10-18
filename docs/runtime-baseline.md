@@ -27,7 +27,7 @@ and image bases are digest-pinned. Private registry visibility and immutable rel
 remain prerequisites for publication and deployment; local image identifiers are not registry
 provenance. Images are built in application verification, never rebuilt on the VPS.
 
-The image uses UID/GID65532, exec-form Node probes, no shell/npm/global installer, and read-only root with UID65532-owned tmpfs paths. Migration dependencies remain in the same artifact. Changing old UID1000 cache ownership does not authorize changing persistent database ownership; those data use PostgreSQL UID999 separately.
+The image uses UID/GID65532, exec-form Node probes, no shell/npm/global installer, and read-only root with UID65532-owned tmpfs paths. Migration dependencies remain in the same artifact. Changing old UID1000 cache ownership does not authorize changing persistent database ownership. The API-owned shared PostgreSQL candidate uses UID70 on fresh data only; no existing UID999 data is reused or chowned. Its independently reviewed source, shorter Alpine lifecycle and acceptance gates are in the [database handoff](verification/shared-postgres-adoption-2026-10-18.md).
 
 Databases and writable data stay isolated by project. Secret values are excluded from Git,
 images, source build arguments and diagnostics. Runtime credentials are delivered by Coolify;

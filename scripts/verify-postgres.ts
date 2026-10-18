@@ -23,6 +23,29 @@ function docker(...args: string[]): Buffer {
 		stdio: ["pipe", "pipe", "pipe"],
 	});
 }
+const databaseImageId = docker(
+	"image",
+	"inspect",
+	databaseImage,
+	"--format",
+	"{{.Id}}",
+)
+	.toString()
+	.trim();
+if (!/^sha256:[a-f0-9]{64}$/.test(databaseImageId))
+	throw new Error("Invalid local IAM PostgreSQL image identity");
+if (
+	docker(
+		"image",
+		"inspect",
+		databaseImageId,
+		"--format",
+		'{{index .Config.Labels "org.opencontainers.image.source"}}',
+	)
+		.toString()
+		.trim() !== "https://github.com/gonzalomartinperez/portfolio-assistant-api"
+)
+	throw new Error("Unreviewed IAM PostgreSQL image source");
 function query(sql: string, name = "fixture"): string {
 	return docker(
 		"exec",
@@ -103,9 +126,9 @@ try {
 		`${volume}:/var/lib/postgresql`,
 		"--entrypoint",
 		"sh",
-		databaseImage,
+		databaseImageId,
 		"-c",
-		"chown 999:999 /var/lib/postgresql",
+		"chown 70:70 /var/lib/postgresql",
 	);
 	docker(
 		"run",
@@ -115,16 +138,16 @@ try {
 		"--network",
 		network,
 		"--user",
-		"999:999",
+		"70:70",
 		"--read-only",
 		"--cap-drop",
 		"ALL",
 		"--security-opt",
 		"no-new-privileges",
 		"--tmpfs",
-		"/tmp:uid=999,gid=999,size=16m",
+		"/tmp:uid=70,gid=70,nosuid,nodev,size=16m",
 		"--tmpfs",
-		"/var/run/postgresql:uid=999,gid=999,size=16m",
+		"/var/run/postgresql:uid=70,gid=70,mode=3775,nosuid,nodev,size=16m",
 		"-v",
 		`${volume}:/var/lib/postgresql`,
 		"--memory",
@@ -151,7 +174,7 @@ try {
 		"POSTGRES_DB=fixture",
 		"-e",
 		"PGDATA=/var/lib/postgresql/18/docker",
-		databaseImage,
+		databaseImageId,
 		"postgres",
 		"-c",
 		"shared_buffers=32MB",
@@ -228,6 +251,9 @@ try {
 			persistent_restart: true,
 			migrations_idempotent: true,
 			database_image: databaseImage,
+			database_image_id: databaseImageId,
+			database_image_source:
+				"https://github.com/gonzalomartinperez/portfolio-assistant-api",
 			application_image: appImage,
 			dump_bytes: dump.length,
 		}) + "\n",
