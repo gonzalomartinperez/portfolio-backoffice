@@ -10,7 +10,7 @@ The public application keeps its own commands and tests; this selection is not d
 | workflows | Workflow validation | none | Checksum-verified actionlint and paired DAG/events/trust policy |
 | secrets | Secret scan | none | Redacted candidate and full reachable Git-history scan |
 | static | Static checks | none | Frozen main/generator installs, both audits, formatting, lint, TypeScript 7/route types, architecture/unit/contracts, documentation, licensing, skills and generated drift |
-| database | Database tests | static | Owned PostgreSQL artifact, real IAM/OAuth, scoped project roles, migration/isolation and backup/restoration against both applications |
+| database | Database tests | static | Owned PostgreSQL artifact and full image inventory/gate, real IAM/OAuth, scoped project roles, migration/isolation and backup/restoration against both applications |
 | container | Container verification | static | Image build and complete vulnerability gate, migrated-database readiness, bounded runtime/anonymous workload and SIGTERM |
 | browser | Browser tests | static | Real image and isolated PostgreSQL; all existing 66 Chromium/Firefox/WebKit cases across available/unavailable operational fixtures |
 | checks | Required checks | all six jobs above | Always-evaluated, fail-closed aggregate |
@@ -101,8 +101,22 @@ Ordinary public CI uploads only existing safe synthetic UI screenshots and the b
 project-database recovery receipt, for seven days. Images, logs, environment files, session
 files, invitation links, traces and database backups are not uploaded. Each runner cleans
 up only its own application/fixture resources, even after failure. Trivy0.75.0 retains its
-reviewed checksum and rejects HIGH/CRITICAL findings without suppression, including unfixed
-findings. No scanner coverage or severity threshold is weakened by the split.
+reviewed checksum. The application-image gate still rejects all HIGH/CRITICAL findings,
+including unfixed ones.
+
+The existing database job separately inventories locally built
+`portfolio-backoffice-postgres:rc` with all package types/severities and `--list-all-pkgs`.
+It reuses the exact checksum-verified scanner installer and binds the report to the actual
+local image ID. Missing, malformed or mismatched inventories fail closed. Every CRITICAL
+and fixable HIGH blocks database acceptance; unfixed HIGH remains explicitly counted in
+the aggregate log summary and requires production assessment, never a blanket waiver.
+No ignore file or severity filter is applied to inventory collection. Full JSON/package
+inventory and scanner diagnostics stay on the ephemeral runner and are never uploaded.
+Only bounded aggregate counts/policy status enter the new gate's logs; no new public
+artifact or receipt is added. Scanner DB freshness is not certified by those counts.
+Negative tests protect the actual commands, image/report binding and artifact privacy.
+This adds no job or dependency and preserves IAM/recovery tests. Local checks do not
+establish a clean image: the hosted scan can still block on current findings.
 
 ## Context transition and publication
 

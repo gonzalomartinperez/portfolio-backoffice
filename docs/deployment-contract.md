@@ -191,6 +191,14 @@ never accepts caller DATABASE_URL or a production volume. Tested fixture ceiling
 Coolify owns real resource/volume lifecycle; vps-ops coordinates isolated allocation and
 recovery. Production runtime roles must not use the fixture's superuser privileges.
 
+Database CI inventories the full locally built IAM image with checksum-verified
+Trivy0.75.0 and checks the report against its actual image ID. Every CRITICAL and fixable
+HIGH blocks acceptance. Unfixed HIGH is explicitly counted for production assessment,
+never silently waived. Full inventory and diagnostics remain ephemeral; only aggregate
+policy counts are logged, with no raw report upload. Missing or mismatched reports fail
+closed. This does not relax the application image's all-HIGH/CRITICAL gate, and passing
+either gate is not production approval or a guarantee of scanner DB freshness.
+
 ## Optional private product counts
 
 `PRODUCT_ANALYTICS_ENABLED=false` (runtime boolean) gates only the `/analytics`

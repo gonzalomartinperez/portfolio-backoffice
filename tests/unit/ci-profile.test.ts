@@ -11,11 +11,118 @@ import {
 	validateBuildIdentity,
 } from "../../scripts/ci-build-provenance.ts";
 import { field, list, record } from "../../scripts/json.ts";
+
 const profile = () =>
 	record(load(readFileSync(".github/workflows/quality.yml", "utf8")));
 test("committed paired workflow has exact names, DAG, events and real job adapters", () => {
 	validateCiProfile(profile());
 	validateWorkflowTrust(profile());
+});
+test("database acceptance rejects missing, substituted or bypassed PostgreSQL inventory gates", () => {
+	const changes: Array<(steps: Record<string, unknown>[]) => void> = [
+		(steps) => {
+			const index = steps.findIndex(
+				(step) => step.name === "Verify pinned PostgreSQL image scanner",
+			);
+			if (index >= 0) steps.splice(index, 1);
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) => step.name === "Inventory the exact PostgreSQL image",
+			);
+			if (step)
+				step.run = String(step.run).replace(
+					"portfolio-backoffice-postgres:rc",
+					"portfolio-backoffice:rc",
+				);
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) => step.name === "Inventory the exact PostgreSQL image",
+			);
+			if (step)
+				step.run = String(step.run).replace(
+					"--list-all-pkgs",
+					"--ignore-unfixed",
+				);
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) =>
+					step.name === "Gate PostgreSQL critical and fixable high findings",
+			);
+			if (step) step.if = "false";
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) =>
+					step.name === "Gate PostgreSQL critical and fixable high findings",
+			);
+			if (step) step.run = `${step.run} || true`;
+		},
+		(steps) => {
+			steps.push({
+				uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+				with: { path: "/tmp/postgres-image-vulnerabilities.json" },
+			});
+		},
+		...[
+			"Inventory the exact PostgreSQL image",
+			"Gate PostgreSQL critical and fixable high findings",
+		].map((name) => (steps: Record<string, unknown>[]) => {
+			const index = steps.findIndex((step) => step.name === name);
+			if (index >= 0) steps.splice(index, 1);
+		}),
+		(steps) => {
+			const step = steps.find(
+				(step) => step.name === "Verify pinned PostgreSQL image scanner",
+			);
+			if (step)
+				step.run = String(step.run).replace(
+					"c6e65abddb348e25f",
+					"0000000000000000",
+				);
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) => step.name === "Inventory the exact PostgreSQL image",
+			);
+			if (step) step.env = { TRIVY_IGNORE_UNFIXED: "true" };
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) => step.name === "Inventory the exact PostgreSQL image",
+			);
+			if (step)
+				step.run = String(step.run).replace(
+					"--scanners vuln",
+					"--scanners vuln --severity CRITICAL",
+				);
+		},
+		(steps) => {
+			const step = steps.find(
+				(step) =>
+					step.name === "Gate PostgreSQL critical and fixable high findings",
+			);
+			if (step)
+				step.run = String(step.run).replace(
+					"docker image inspect portfolio-backoffice-postgres:rc",
+					"docker image inspect portfolio-backoffice:rc",
+				);
+		},
+	];
+	for (const change of changes) {
+		const workflow = profile();
+		const steps = list(field(workflow, "jobs", "database", "steps")).map(
+			record,
+		);
+		change(steps);
+		record(field(workflow, "jobs", "database")).steps = steps;
+		assert.throws(() => validateCiProfile(workflow));
+	}
+	const override = profile();
+	record(override.env).TRIVY_IGNORE_UNFIXED = "true";
+	assert.throws(() => validateCiProfile(override));
 });
 test("paired profile rejects cosmetic parity, bypasses and missing prerequisite edges", () => {
 	const changes: Array<(workflow: Record<string, unknown>) => void> = [

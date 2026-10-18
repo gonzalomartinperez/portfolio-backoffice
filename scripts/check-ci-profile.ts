@@ -1,9 +1,9 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { load } from "js-yaml";
-import { field, list, record, text } from "./json.ts";
 import { requiredJobs } from "./check-ci-results.ts";
+import { field, list, record, text } from "./json.ts";
 
 export const names = {
 	workflows: "Workflow validation",
@@ -171,6 +171,98 @@ export function validateCiProfile(value: unknown): void {
 	])
 		if (field(workflow, "env", text(key)) !== value)
 			throw new Error("Paid providers must be disabled");
+	validatePostgresSecurity(workflow);
+}
+
+function validatePostgresSecurity(workflow: Record<string, unknown>): void {
+	if (
+		field(workflow, "defaults", "run", "shell") !== "bash" ||
+		field(workflow, "jobs", "database", "defaults") !== undefined
+	)
+		throw new Error(
+			"PostgreSQL security requires the reviewed fail-closed shell",
+		);
+	const steps = list(field(workflow, "jobs", "database", "steps")).map(record);
+	const container = list(field(workflow, "jobs", "container", "steps"));
+	const normalize = (source: unknown) =>
+		text(source)
+			.replace(/[ \t]*\\\n\s*/g, " ")
+			.split("\n")
+			.map((line) => line.trim())
+			.join("\n")
+			.trim();
+	const required = (name: string) => {
+		const found = steps.filter((step) => step.name === name);
+		if (found.length !== 1) throw new Error("Missing PostgreSQL security gate");
+		const step = record(found[0]);
+		if (
+			step.if !== undefined ||
+			step.env !== undefined ||
+			step.shell !== undefined ||
+			step["working-directory"] !== undefined
+		)
+			throw new Error("PostgreSQL security steps may not be bypassed");
+		return step;
+	};
+	const installer = required("Verify pinned PostgreSQL image scanner");
+	const appInstaller = container.find(
+		(step) => field(step, "name") === "Verify pinned image scanner",
+	);
+	if (
+		installer.run !== field(appInstaller, "run") ||
+		!text(installer.run).includes(
+			"https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz",
+		) ||
+		!text(installer.run).includes(
+			"c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check",
+		)
+	)
+		throw new Error(
+			"PostgreSQL scanner must use the reviewed checksum-pinned installer",
+		);
+	const commands = [
+		[
+			"Inventory the exact PostgreSQL image",
+			"umask 077\nif ! /tmp/image-scanner/trivy --config '' image --image-src docker --ignorefile '' --scanners vuln --list-all-pkgs --format json --output /tmp/postgres-image-vulnerabilities.json portfolio-backoffice-postgres:rc > /tmp/postgres-image-scan.log 2>&1; then\necho 'PostgreSQL image inventory failed; raw diagnostics remain ephemeral.'\nexit 1\nfi",
+		],
+		[
+			"Gate PostgreSQL critical and fixable high findings",
+			"postgres_image_id=$(docker image inspect portfolio-backoffice-postgres:rc --format '{{.Id}}')\nnode scripts/postgres-image-security.ts /tmp/postgres-image-vulnerabilities.json \"$postgres_image_id\"",
+		],
+	];
+	const order = [steps.indexOf(installer)];
+	for (const [name, command] of commands) {
+		const step = required(text(name));
+		if (normalize(step.run) !== command)
+			throw new Error("PostgreSQL security command changed or bypassed");
+		order.push(steps.indexOf(step));
+	}
+	const build = steps.findIndex((step) =>
+		/docker build -f infra\/docker\/postgres\/Dockerfile -t portfolio-backoffice-postgres:rc \./.test(
+			String(step.run),
+		),
+	);
+	if (
+		build < 0 ||
+		build >= (order[0] ?? -1) ||
+		order.some(
+			(position, index) => index > 0 && position <= (order[index - 1] ?? -1),
+		)
+	)
+		throw new Error("PostgreSQL security must follow its actual image build");
+	const uploads = steps.filter((step) =>
+		String(step.uses).startsWith("actions/upload-artifact@"),
+	);
+	if (
+		uploads.length !== 1 ||
+		field(uploads[0], "with", "path") !== ".artifacts/project-databases.json"
+	)
+		throw new Error(
+			"Database artifacts may not expose raw image inventories or diagnostics",
+		);
+	for (const env of [workflow.env, field(workflow, "jobs", "database", "env")])
+		if (Object.keys(record(env ?? {})).some((key) => key.startsWith("TRIVY_")))
+			throw new Error("PostgreSQL scanner environment overrides are forbidden");
 }
 export function validateWorkflowTrust(value: unknown): void {
 	const workflow = record(value);

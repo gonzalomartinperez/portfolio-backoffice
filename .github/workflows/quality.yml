@@ -156,6 +156,28 @@ jobs:
         run: |
           docker build -f infra/docker/postgres/Dockerfile -t portfolio-backoffice-postgres:rc .
           node scripts/verify-postgres.ts portfolio-backoffice:rc portfolio-backoffice-postgres:rc
+      - name: Verify pinned PostgreSQL image scanner
+        run: |
+          mkdir -p /tmp/image-scanner
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz \
+            --output /tmp/image-scanner/trivy.tar.gz
+          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check
+          tar -xzf /tmp/image-scanner/trivy.tar.gz -C /tmp/image-scanner trivy
+      - name: Inventory the exact PostgreSQL image
+        run: |
+          umask 077
+          if ! /tmp/image-scanner/trivy --config '' image --image-src docker \
+            --ignorefile '' --scanners vuln --list-all-pkgs --format json \
+            --output /tmp/postgres-image-vulnerabilities.json portfolio-backoffice-postgres:rc \
+            > /tmp/postgres-image-scan.log 2>&1; then
+            echo 'PostgreSQL image inventory failed; raw diagnostics remain ephemeral.'
+            exit 1
+          fi
+      - name: Gate PostgreSQL critical and fixable high findings
+        run: |
+          postgres_image_id=$(docker image inspect portfolio-backoffice-postgres:rc --format '{{.Id}}')
+          node scripts/postgres-image-security.ts /tmp/postgres-image-vulnerabilities.json "$postgres_image_id"
       - name: Read the committed project-engine application handoff
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
