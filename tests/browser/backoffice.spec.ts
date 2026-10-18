@@ -705,9 +705,39 @@ test("product and privacy content reflow with doubled text on a narrow viewport"
 		).toBe(true);
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 		expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+		// Enlarged month tables can exceed WebKit's full-page bitmap limit.
 		await page.screenshot({
 			path: `test-results/product-${test.info().project.name}-${route}-text-200.png`,
-			fullPage: true,
+			fullPage: false,
 		});
+		if (route === "analytics") {
+			const apply = page.getByRole("button", {
+				name: "Aplicar filtros",
+				exact: true,
+			});
+			await apply.focus();
+			await expect(apply).toBeFocused();
+			const grid = page.locator("#report-grid");
+			await grid.scrollIntoViewIfNeeded();
+			await expect(grid).toBeInViewport();
+			await page.screenshot({
+				path: `test-results/product-${test.info().project.name}-grid-text-200.png`,
+				fullPage: false,
+			});
+			const coverage = page.locator("details summary").last();
+			await coverage.focus();
+			await page.keyboard.press("Enter");
+			await expect(coverage.locator("..")).toHaveAttribute("open", "");
+			await expect(coverage).toBeInViewport();
+			expect(
+				await page.evaluate(
+					() => document.documentElement.scrollWidth <= window.innerWidth,
+				),
+			).toBe(true);
+			await page.screenshot({
+				path: `test-results/product-${test.info().project.name}-coverage-text-200.png`,
+				fullPage: false,
+			});
+		}
 	}
 });
