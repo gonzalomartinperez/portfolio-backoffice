@@ -104,7 +104,8 @@ test("architecture detects relative/dynamic cycles and indirect client-to-server
 	assert.deepEqual(
 		moduleGraphErrors({
 			"src/view.tsx": '"use client"; import "./action"',
-			"src/action.ts": '"use server"; import "./private"',
+			"src/action.ts":
+				'"use server"; import "./private"; export async function act(){return {ok:true}}',
 			"src/private.ts": 'import "server-only";',
 		}),
 		[],
@@ -166,11 +167,16 @@ test("platform guards distinguish model properties from browser globals", () => 
 });
 
 test("client boundaries reject authentication infrastructure imports", () => {
-	for (const module of ["server", "config", "database", "runtime", "store"]) {
+	for (const module of [
+		"server/auth/session",
+		"server/auth/config",
+		"server/auth/runtime",
+		"features/auth/adapters/store",
+	]) {
 		assert.notEqual(
 			boundaryErrors(
 				"src/components/example.tsx",
-				`"use client"; import x from "../features/auth/${module}"`,
+				`"use client"; import x from "../${module}"`,
 			).length,
 			0,
 			module,

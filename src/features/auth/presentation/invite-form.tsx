@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Button } from "../../components/ui/button.tsx";
-import { inviteUser } from "./actions.ts";
+import { Button } from "../../../shared/ui/button.tsx";
+import { inviteUser } from "../../../server/auth/actions.ts";
 import { authCopy, type AuthLocale } from "./copy.ts";
 import styles from "./auth.module.css";
 export function InviteForm({ locale = "en" }: { locale?: AuthLocale }) {

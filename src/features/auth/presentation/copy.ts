@@ -1,4 +1,5 @@
-export type AuthLocale = "en" | "es";
+import type { AuthLocale } from "../domain/locale.ts";
+export { authLocale, type AuthLocale } from "../domain/locale.ts";
 const english = {
 	title: "Portfolio backoffice",
 	intro: "Private operational access. Sign in with your invited account.",
@@ -110,6 +111,3 @@ export const authCopy: Record<AuthLocale, AuthCopy> = {
 	en: english,
 	es: spanish,
 };
-export function authLocale(value: unknown): AuthLocale {
-	return value === "es" ? "es" : "en";
-}

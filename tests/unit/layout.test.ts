@@ -56,3 +56,32 @@ test("migration trace admits only the relocated CLI factory closure", () => {
 	])
 		assert.throws(() => runtimeTracePath(path));
 });
+
+for (const source of [
+	'export const act = () => "synthetic"',
+	'"use server"; export const secret = "synthetic"',
+	'"use server"; export * from "./config"',
+	'"use server"; export function act(){return "synthetic"}',
+])
+	test(`a private module cannot impersonate a Server Action: ${source}`, () => {
+		assert.ok(
+			moduleGraphErrors({
+				"src/client.tsx": '"use client"; import "@/server/auth/actions"',
+				"src/server/auth/actions.ts": source,
+			}).some((error) => error.startsWith("client reaches server")),
+		);
+	});
+
+test("type-only and dynamic aliases preserve the private closure", () => {
+	for (const dependency of [
+		'export type {Config} from "@/server/auth/config"',
+		'export const load = () => import("@/server/auth/config")',
+	])
+		assert.ok(
+			moduleGraphErrors({
+				"src/client.tsx": '"use client"; import "./barrel"',
+				"src/barrel.ts": dependency,
+				"src/server/auth/config.ts": "export interface Config {value: string}",
+			}).some((error) => error.startsWith("client reaches server")),
+		);
+});

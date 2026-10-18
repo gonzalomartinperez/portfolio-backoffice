@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { getMigrations } from "better-auth/db/migration";
-import { readAuthConfiguration } from "../src/features/auth/config.ts";
-import { createAuthRuntime } from "../src/features/auth/runtime.ts";
+import { readAuthConfiguration } from "../src/server/auth/config.ts";
+import { createAuthRuntime } from "../src/server/auth/runtime.ts";
 let runtime: ReturnType<typeof createAuthRuntime> | undefined;
 try {
 	const args = process.argv.slice(2);

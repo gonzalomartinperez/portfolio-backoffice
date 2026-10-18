@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Button } from "../../../components/ui/button";
+import { Button } from "../../../shared/ui/button";
 import { sections } from "../domain/models";
 import {
 	eventLocales,

@@ -5,9 +5,9 @@ import { operationsCopy, type OperationsLocale } from "./copy";
 import { SnapshotChart } from "./charts";
 import { TraceExplorer } from "./trace-explorer";
 import { Preferences } from "./preferences";
-import { SignOut } from "../../auth/sign-out";
-import { Button } from "../../../components/ui/button";
-import { ButtonLink } from "../../../components/ui/button-link";
+import { SignOut } from "../../auth/entry";
+import { Button } from "../../../shared/ui/button";
+import { ButtonLink } from "../../../shared/ui/button-link";
 import styles from "./workbench.module.css";
 
 function Timestamp({ value }: { value: string }) {

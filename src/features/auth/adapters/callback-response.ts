@@ -1,4 +1,4 @@
-import { authLocale } from "./copy.ts";
+import { authLocale } from "../domain/locale.ts";
 
 export function callbackResponse(
 	request: Request,

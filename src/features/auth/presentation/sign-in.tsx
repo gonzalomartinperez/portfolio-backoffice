@@ -1,15 +1,17 @@
 "use client";
 import { useState } from "react";
-import { Button } from "../../components/ui/button.tsx";
-import { authClient } from "./client.ts";
+import { Button } from "../../../shared/ui/button.tsx";
+import type { BrowserSessionPort } from "../application/browser-session.ts";
 import { authCopy, type AuthLocale } from "./copy.ts";
 import styles from "./auth.module.css";
 export function SignIn({
 	locale = "en",
 	unavailable = false,
+	session,
 }: {
 	locale?: AuthLocale;
 	unavailable?: boolean;
+	session: BrowserSessionPort;
 }) {
 	const copy = authCopy[locale];
 	const [pending, setPending] = useState(false);
@@ -19,12 +21,8 @@ export function SignIn({
 		setPending(true);
 		setError(false);
 		try {
-			const result = await authClient.signIn.social({
-				provider,
-				callbackURL: `/?locale=${locale}`,
-				errorCallbackURL: `/sign-in?locale=${locale}&error=access`,
-			});
-			if (result.error) {
+			const successful = await session.signIn(provider, locale);
+			if (!successful) {
 				setError(true);
 				setPending(false);
 			}

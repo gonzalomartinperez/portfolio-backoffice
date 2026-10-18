@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Pool } from "pg";
-import type { Access, AccessUser, RevocationKind } from "./domain/access.ts";
-import type { AccessManagementPort } from "./application/manage-access.ts";
+import type { Access, AccessUser, RevocationKind } from "../domain/access.ts";
+import type { AccessManagementPort } from "../application/manage-access.ts";
 const digest = (token: string) =>
 	createHash("sha256").update(token).digest("hex");
 

@@ -2,12 +2,12 @@ import {
 	requireOwner,
 	getAuthRuntime,
 	getAuthLocale,
-} from "../../features/auth/server.ts";
-import { InviteForm } from "../../features/auth/invite-form.tsx";
-import { LinkAccount } from "../../features/auth/link-account.tsx";
-import { RevokeControl } from "../../features/auth/revoke-control.tsx";
-import { authLocale, authCopy } from "../../features/auth/copy.ts";
-import styles from "../../features/auth/auth.module.css";
+} from "../../server/auth/session.ts";
+import { InviteForm } from "../../features/auth/presentation/invite-form.tsx";
+import { LinkAccount } from "../../features/auth/entry.tsx";
+import { RevokeControl } from "../../features/auth/presentation/revoke-control.tsx";
+import { authLocale, authCopy } from "../../features/auth/presentation/copy.ts";
+import styles from "../../features/auth/presentation/auth.module.css";
 export const dynamic = "force-dynamic";
 export const metadata = {
 	title: "Access — Assistant backoffice",

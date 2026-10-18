@@ -18,7 +18,7 @@ an explicit light/dark value. Account and operational dictionaries contain compl
 US English and neutral Latin American Spanish sentences with typed keys/interpolation.
 No credentials or transcripts are stored in browser preferences.
 
-Owned `components/ui/button` uses native semantics, default/outline/ghost variants,
+Owned `shared/ui/button` uses native semantics, default/outline/ghost variants,
 44px targets, visible focus and truthful disabled/loading states. CSS Modules adapt the
 portfolio's shadcn responsibilities without adding Tailwind, CVA, Radix or a competing
 preset to this small application. Auth CSS Modules own account/forms/dialog geometry;

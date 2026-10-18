@@ -1,6 +1,6 @@
-import { authLocale } from "../../../features/auth/copy.ts";
+import { authLocale } from "../../../features/auth/presentation/copy.ts";
 import { NextResponse } from "next/server";
-import { readAuthConfiguration } from "../../../features/auth/config.ts";
+import { readAuthConfiguration } from "../../../server/auth/config.ts";
 export function GET(request: Request) {
 	const token = new URL(request.url).searchParams.get("token");
 	let configuration: ReturnType<typeof readAuthConfiguration>;

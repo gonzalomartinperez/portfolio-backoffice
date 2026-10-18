@@ -1,11 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { authLocale } from "./copy.ts";
+import { authLocale } from "../../features/auth/domain/locale.ts";
 import {
 	inviteViewer,
 	revokeViewerAccess,
-} from "./application/manage-access.ts";
-import { requireOwner, getAuthRuntime } from "./server.ts";
+} from "../../features/auth/application/manage-access.ts";
+import { requireOwner, getAuthRuntime } from "./session.ts";
 export interface InviteResult {
 	link: string | null;
 	error: "invalid-email" | "unavailable" | null;

@@ -1,12 +1,12 @@
 import { FeedbackOverview } from "../features/operations/presentation/feedback";
-import { loadProductAnalytics } from "../features/analytics/entry";
+import { loadProductAnalytics } from "../server/analytics";
 import { ProductOverview } from "../features/analytics/presentation/overview";
-import { getAuthLocale, requireAccess } from "../features/auth/server";
+import { getAuthLocale, requireAccess } from "../server/auth/session";
 import {
 	loadOperations,
 	loadFeedback,
 	loadGrafanaDestination,
-} from "../features/operations/entry";
+} from "../server/operations";
 import { Dashboard } from "../features/operations/presentation/dashboard";
 export const dynamic = "force-dynamic";
 export default async function Page({

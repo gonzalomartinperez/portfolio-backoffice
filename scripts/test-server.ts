@@ -6,7 +6,7 @@ import {
 	fixtureSession,
 	writeFixtureSessions,
 } from "./auth-fixture-session.ts";
-import { readAuthConfiguration } from "../src/features/auth/config.ts";
+import { readAuthConfiguration } from "../src/server/auth/config.ts";
 import { startTestProxy } from "./test-proxy.ts";
 import {
 	startOperationsFixture,

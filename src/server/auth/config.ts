@@ -1,4 +1,4 @@
-import { validEmail } from "./domain/access.ts";
+import { validEmail } from "../../features/auth/domain/access.ts";
 
 export interface AuthConfiguration {
 	origin: string;

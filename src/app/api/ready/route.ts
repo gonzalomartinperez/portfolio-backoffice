@@ -1,4 +1,4 @@
-import { readiness } from "../../../features/auth/server";
+import { readiness } from "../../../server/auth/session";
 export async function GET() {
 	const ready = await readiness();
 	return Response.json(

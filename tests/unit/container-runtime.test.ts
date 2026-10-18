@@ -28,7 +28,7 @@ test("runtime trace rejects private files and escapes while accepting migration 
 		"scripts/auth-migrate.ts",
 		"migrations/001-access.sql",
 		"migrations/runtime-grants.sql",
-		"src/features/auth/runtime.ts",
+		"src/server/auth/runtime.ts",
 		"node_modules/pg/package.json",
 	]) {
 		assert.equal(runtimeTracePath(path), path);
@@ -56,7 +56,7 @@ async function fixture(run: (root: string) => Promise<void>) {
 	try {
 		for (const path of [
 			"scripts",
-			"src/features/auth",
+			"src/server/auth",
 			"migrations",
 			".next/standalone",
 		])
@@ -69,12 +69,12 @@ async function fixture(run: (root: string) => Promise<void>) {
 		await writeFile(join(root, "migrations/001-access.sql"), "SELECT 1;");
 		await writeFile(join(root, "migrations/runtime-grants.sql"), "SELECT 2;");
 		await writeFile(
-			join(root, "src/features/auth/config.ts"),
+			join(root, "src/server/auth/config.ts"),
 			"export const version: number = 1;",
 		);
 		await writeFile(
 			join(root, "scripts/auth-migrate.ts"),
-			'import {readFile} from "node:fs/promises";\nimport {version} from "../src/features/auth/config.ts";\nconst value: number = version;\nawait readFile(new URL("../migrations/001-access.sql", import.meta.url), "utf8");\nif (process.argv.includes("--project-grants")) await readFile(new URL("../migrations/runtime-grants.sql", import.meta.url), "utf8");\nconsole.log(value);',
+			'import {readFile} from "node:fs/promises";\nimport {version} from "../src/server/auth/config.ts";\nconst value: number = version;\nawait readFile(new URL("../migrations/001-access.sql", import.meta.url), "utf8");\nif (process.argv.includes("--project-grants")) await readFile(new URL("../migrations/runtime-grants.sql", import.meta.url), "utf8");\nconsole.log(value);',
 		);
 		await run(root);
 	} finally {
@@ -88,7 +88,7 @@ test("traces native TypeScript and SQL without shipping its build compiler", asy
 		assert.ok(report.added_bytes > 0);
 		assert.match(
 			await readFile(
-				join(root, ".next/standalone/src/features/auth/config.ts"),
+				join(root, ".next/standalone/src/server/auth/config.ts"),
 				"utf8",
 			),
 			/version: number/,

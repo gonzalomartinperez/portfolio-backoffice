@@ -47,7 +47,7 @@ const [{ betterAuth }, { genericOAuth }, { createAuthRuntime }] =
 	await Promise.all([
 		import("better-auth"),
 		import("better-auth/plugins"),
-		import("../../src/features/auth/runtime.ts"),
+		import("../../src/server/auth/runtime.ts"),
 	]);
 const configuration = {
 	origin: "http://localhost:3971",

@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useId } from "react";
-import { Button } from "../../components/ui/button.tsx";
-import { revokeAccess } from "./actions.ts";
+import { Button } from "../../../shared/ui/button.tsx";
+import { revokeAccess } from "../../../server/auth/actions.ts";
 import { authCopy, type AuthLocale } from "./copy.ts";
 import styles from "./auth.module.css";
 export function RevokeControl({
