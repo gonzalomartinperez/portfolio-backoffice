@@ -6,6 +6,57 @@ import {
 	moduleGraphErrors,
 	architectureSourceFile,
 } from "../../scripts/check-boundaries.ts";
+
+test("unknown source placements fail closed even without imports", () => {
+	for (const file of [
+		"src/features/auth/infrastructure/store.ts",
+		"src/features/auth/model.ts",
+		"src/features/auth/domain.ts",
+		"src/features/new-feature/infrastructure/value.mts",
+		"src/features/auth/entry/helper.ts",
+		"src/shared/infrastructure/store.cts",
+		"src/unclassified.ts",
+		"src/unknown/value.tsx",
+	]) {
+		for (const source of [
+			"",
+			"export const value = 1",
+			'import { Pool } from "pg"',
+		]) {
+			assert.ok(
+				boundaryErrors(file, source).includes("unclassified source"),
+				file,
+			);
+			assert.ok(
+				moduleGraphErrors({ [file]: source }).some((error) =>
+					error.startsWith("unclassified source:"),
+				),
+				file,
+			);
+		}
+	}
+});
+
+test("source placement recognizes the owned layers and exact composition entries", () => {
+	for (const file of [
+		"src/features/auth/domain/value.ts",
+		"src/features/auth/application/value.ts",
+		"src/features/auth/adapters/value.ts",
+		"src/features/auth/presentation/value.tsx",
+		"src/features/auth/entry.tsx",
+		"src/features/new-feature/domain/nested/value.mts",
+		"src/app/api/ready/route.ts",
+		"src/server/auth/config.ts",
+		"src/shared/http/value.ts",
+		"src/shared/ui/button.tsx",
+		"src/shared/accessibility/skip-link.tsx",
+		"src/proxy.ts",
+	]) {
+		assert.deepEqual(boundaryErrors(file, "export const value = 1"), [], file);
+		assert.deepEqual(moduleGraphErrors({ [file]: "" }), [], file);
+	}
+});
+
 test("source dependency boundaries and public environment allowlist", () => {
 	const sources: Record<string, string> = {};
 	for (const file of readdirSync("src", {
@@ -103,10 +154,10 @@ test("architecture detects relative/dynamic cycles and indirect client-to-server
 	);
 	assert.deepEqual(
 		moduleGraphErrors({
-			"src/view.tsx": '"use client"; import "./action"',
-			"src/action.ts":
+			"src/app/view.tsx": '"use client"; import "../server/action"',
+			"src/server/action.ts":
 				'"use server"; import "./private"; export async function act(){return {ok:true}}',
-			"src/private.ts": 'import "server-only";',
+			"src/server/private.ts": 'import "server-only";',
 		}),
 		[],
 	);

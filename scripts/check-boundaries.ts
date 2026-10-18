@@ -16,18 +16,58 @@ const actionPath = (file: string) =>
 
 export const architectureSourceFile = (file: string) =>
 	/\.(?:[cm]?ts|tsx)$/.test(file);
+
+type SourcePlacement =
+	| "domain"
+	| "application"
+	| "presentation"
+	| "adapters"
+	| "entry"
+	| "app"
+	| "server"
+	| "shared"
+	| "proxy";
+
+function sourcePlacement(file: string): SourcePlacement | null {
+	const relative = path.relative(path.resolve("src"), file);
+	const [root, name, layer, ...nested] = relative.split(path.sep);
+	if (relative === "proxy.ts") return "proxy";
+	if ((root === "app" || root === "server") && name) return root;
+	if (
+		root === "shared" &&
+		name &&
+		["ui", "http", "accessibility"].includes(name) &&
+		layer
+	)
+		return "shared";
+	if (root !== "features" || !name || !/^[a-z][a-z0-9-]*$/.test(name))
+		return null;
+	if (layer && /^entry\.(?:[cm]?ts|tsx)$/.test(layer) && nested.length === 0)
+		return "entry";
+	if (nested.length === 0) return null;
+	if (
+		layer === "domain" ||
+		layer === "application" ||
+		layer === "presentation" ||
+		layer === "adapters"
+	)
+		return layer;
+	return null;
+}
+
 export function boundaryErrors(file: string, source: string) {
 	const filename = path.resolve(file);
+	const placement = sourcePlacement(filename);
 	const relative = path.relative(path.resolve("src/features"), filename);
 	const name = relative.split(path.sep)[0];
 	const feature = path.resolve(
 		"src/features",
 		name && name !== ".." ? name : "operations",
 	);
-	const domain = within(filename, path.join(feature, "domain"));
-	const application = within(filename, path.join(feature, "application"));
-	const presentation = within(filename, path.join(feature, "presentation"));
-	const adapter = within(filename, path.join(feature, "adapters"));
+	const domain = placement === "domain";
+	const application = placement === "application";
+	const presentation = placement === "presentation";
+	const adapter = placement === "adapters";
 	const tree = ts.createSourceFile(
 		filename,
 		source,
@@ -35,7 +75,7 @@ export function boundaryErrors(file: string, source: string) {
 		true,
 	);
 	const client = hasDirective(tree, "use client");
-	const errors: string[] = [];
+	const errors: string[] = placement === null ? ["unclassified source"] : [];
 	function dependency(specifier: unknown) {
 		if (typeof specifier !== "string") {
 			if (domain || application || presentation)
@@ -261,6 +301,8 @@ export function moduleGraphErrors(sources: Record<string, string>): string[] {
 	const computedModules = new Set<string>();
 	const errors: string[] = [];
 	for (const [file, source] of modules) {
+		if (sourcePlacement(file) === null)
+			errors.push(`unclassified source: ${path.relative(process.cwd(), file)}`);
 		const edges: string[] = [];
 		const tree = ts.createSourceFile(
 			file,
