@@ -1,14 +1,16 @@
 "use client";
 import { useState } from "react";
-import { Button } from "../../components/ui/button.tsx";
-import { authClient } from "./client.ts";
+import { Button } from "../../../shared/ui/button.tsx";
+import type { BrowserSessionPort } from "../application/browser-session.ts";
 import { authCopy, type AuthLocale } from "./copy.ts";
 export function SignOut({
 	label,
 	locale = "en",
+	session,
 }: {
 	label?: string;
 	locale?: AuthLocale;
+	session: BrowserSessionPort;
 }) {
 	const copy = authCopy[locale];
 	const [pending, setPending] = useState(false);
@@ -18,11 +20,11 @@ export function SignOut({
 		setPending(true);
 		setError(false);
 		try {
-			const result = await authClient.signOut();
-			if (result.error) {
+			const successful = await session.signOut(locale);
+			if (!successful) {
 				setPending(false);
 				setError(true);
-			} else window.location.assign(`/sign-in?locale=${locale}`);
+			}
 		} catch {
 			setPending(false);
 			setError(true);

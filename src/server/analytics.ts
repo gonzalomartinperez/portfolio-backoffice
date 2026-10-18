@@ -1,12 +1,12 @@
 import "server-only";
-import { readProductAnalytics } from "./application/read";
-import { createProductHttp } from "./adapters/http";
-import { createProductReportHttp } from "./adapters/report-http";
-import { readProductReport } from "./application/read-report";
-import type { ReportSelection } from "./domain/report";
-import type { ProductReportRead } from "./domain/report";
-import type { ProductRead } from "./domain/models";
-import { reportSelection } from "./presentation/selection";
+import { readProductAnalytics } from "../features/analytics/application/read";
+import { createProductHttp } from "../features/analytics/adapters/http";
+import { createProductReportHttp } from "../features/analytics/adapters/report-http";
+import { readProductReport } from "../features/analytics/application/read-report";
+import type { ReportSelection } from "../features/analytics/domain/report";
+import type { ProductReportRead } from "../features/analytics/domain/report";
+import type { ProductRead } from "../features/analytics/domain/models";
+import { reportSelection } from "../features/analytics/presentation/selection";
 export function loadProductAnalytics() {
 	return readProductAnalytics(
 		createProductHttp({

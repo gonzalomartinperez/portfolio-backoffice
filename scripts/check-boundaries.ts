@@ -2,6 +2,18 @@ import path from "node:path";
 import ts from "@typescript/typescript6";
 const within = (file: string, directory: string) =>
 	file === directory || file.startsWith(directory + path.sep);
+function destinationFor(file: string, specifier: string): string | null {
+	if (specifier.startsWith("."))
+		return path.resolve(path.dirname(file), specifier);
+	if (specifier.startsWith("@/"))
+		return path.resolve("src", specifier.slice(2));
+	return null;
+}
+const serverPath = (file: string) => within(file, path.resolve("src/server"));
+const actionPath = (file: string) =>
+	file.replace(/\.(?:[cm]?ts|tsx)$/, "") ===
+	path.resolve("src/server/auth/actions");
+
 export const architectureSourceFile = (file: string) =>
 	/\.(?:[cm]?ts|tsx)$/.test(file);
 export function boundaryErrors(file: string, source: string) {
@@ -30,18 +42,16 @@ export function boundaryErrors(file: string, source: string) {
 				errors.push("computed dependency");
 			return;
 		}
-		const destination = specifier.startsWith(".")
-			? path.resolve(path.dirname(filename), specifier)
-			: null;
+		const destination = destinationFor(filename, specifier);
 		if (
 			client &&
 			(specifier === "server-only" ||
 				specifier.startsWith("node:") ||
 				specifier === "next/headers" ||
 				(destination &&
-					/features[/\\]auth[/\\](server|config|database|runtime|store)(?:\.|$)/.test(
-						destination,
-					)))
+					((serverPath(destination) && !actionPath(destination)) ||
+						destination.replace(/\.ts$/, "") ===
+							path.resolve("src/features/auth/adapters/store"))))
 		)
 			errors.push("client server dependency");
 		if (
@@ -187,6 +197,56 @@ function hasDirective(tree: ts.SourceFile, directive: string): boolean {
 	return false;
 }
 
+function serverActionModule(tree: ts.SourceFile): boolean {
+	if (!hasDirective(tree, "use server")) return false;
+	let count = 0;
+	for (const statement of tree.statements) {
+		if (ts.isExportDeclaration(statement)) {
+			if (!statement.isTypeOnly) return false;
+			continue;
+		}
+		if (ts.isExportAssignment(statement)) return false;
+		if (
+			!ts.canHaveModifiers(statement) ||
+			!ts
+				.getModifiers(statement)
+				?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+		)
+			continue;
+		if (
+			ts.isInterfaceDeclaration(statement) ||
+			ts.isTypeAliasDeclaration(statement)
+		)
+			continue;
+		if (
+			ts.isFunctionDeclaration(statement) &&
+			statement.modifiers?.some(
+				(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
+			)
+		) {
+			count++;
+			continue;
+		}
+		if (
+			ts.isVariableStatement(statement) &&
+			statement.declarationList.declarations.every(
+				(declaration) =>
+					declaration.initializer &&
+					(ts.isArrowFunction(declaration.initializer) ||
+						ts.isFunctionExpression(declaration.initializer)) &&
+					declaration.initializer.modifiers?.some(
+						(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
+					),
+			)
+		) {
+			count++;
+			continue;
+		}
+		return false;
+	}
+	return count > 0;
+}
+
 export function moduleGraphErrors(sources: Record<string, string>): string[] {
 	const modules = new Map(
 		Object.entries(sources).map(([file, source]) => [
@@ -209,7 +269,8 @@ export function moduleGraphErrors(sources: Record<string, string>): string[] {
 			true,
 		);
 		if (hasDirective(tree, "use client")) clients.add(file);
-		if (hasDirective(tree, "use server")) actions.add(file);
+		if (serverActionModule(tree)) actions.add(file);
+		if (serverPath(file)) serverModules.add(file);
 		function inspect(node: ts.Node) {
 			let specifier: string | undefined;
 			if (
@@ -249,8 +310,8 @@ export function moduleGraphErrors(sources: Record<string, string>): string[] {
 				specifier === "better-auth"
 			)
 				serverModules.add(file);
-			if (specifier?.startsWith(".")) {
-				const base = path.resolve(path.dirname(file), specifier);
+			const base = specifier ? destinationFor(file, specifier) : null;
+			if (base) {
 				const target = [
 					base,
 					`${base}.ts`,

@@ -1,5 +1,5 @@
-import { getAccess } from "../../../features/auth/server";
-import { loadOperations } from "../../../features/operations/entry";
+import { getAccess } from "../../../server/auth/session";
+import { loadOperations } from "../../../server/operations";
 export const dynamic = "force-dynamic";
 export async function GET() {
 	let access: Awaited<ReturnType<typeof getAccess>>;

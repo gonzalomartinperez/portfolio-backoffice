@@ -2,7 +2,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { APIError } from "better-auth/api";
 import { Pool } from "pg";
 import { invitationToken, type AuthConfiguration } from "./config.ts";
-import { createAccessStore } from "./store.ts";
+import { createAccessStore } from "../../features/auth/adapters/store.ts";
 
 export function createAuthRuntime(
 	configuration: AuthConfiguration,

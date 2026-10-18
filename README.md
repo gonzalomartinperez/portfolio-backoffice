@@ -177,8 +177,8 @@ flowchart TB
 | `src/features/operations/domain`, `application` | Pure models, explicit available/unconfigured/unavailable results and a small read port. |
 | `src/features/operations/adapters`, `presentation` | Bounded transport, wire mapping, dashboard and intentional client controls. |
 | `src/features/analytics` | Pure product-count models, a private read port/adapter and accessible project summary/detail views. |
-| `src/features/auth`, `migrations` | OAuth, membership, invitations, revocation and explicit IAM migration. |
-| `src/components/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
+| `src/features/auth`, `src/server/auth`, `migrations` | Pure access/session ports, OAuth and membership adapters, private composition and explicit IAM migration. |
+| `src/shared/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
 
 Architecture tests cover static, dynamic and type-only imports and server/client boundaries.
 Missing metrics never silently become zero. The UI displays configured usage estimates,

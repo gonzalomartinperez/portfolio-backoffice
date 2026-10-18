@@ -1,7 +1,7 @@
 import { open, unlink } from "node:fs/promises";
 import { makeSignature } from "better-auth/crypto";
-import { readAuthConfiguration } from "../src/features/auth/config.ts";
-import { createAuthRuntime } from "../src/features/auth/runtime.ts";
+import { readAuthConfiguration } from "../src/server/auth/config.ts";
+import { createAuthRuntime } from "../src/server/auth/runtime.ts";
 import { verifySessionFixture } from "./check-project-fixture.ts";
 
 export async function fixtureSession(

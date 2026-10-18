@@ -1,5 +1,5 @@
 import type { ProductRead } from "../domain/models";
-import { ButtonLink } from "../../../components/ui/button-link";
+import { ButtonLink } from "../../../shared/ui/button-link";
 import { productCopy } from "./copy";
 import styles from "./metrics.module.css";
 const en = {

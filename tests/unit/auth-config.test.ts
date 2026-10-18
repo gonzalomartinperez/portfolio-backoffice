@@ -3,7 +3,7 @@ import test from "node:test";
 import {
 	invitationToken,
 	readAuthConfiguration,
-} from "../../src/features/auth/config.ts";
+} from "../../src/server/auth/config.ts";
 import { validEmail } from "../../src/features/auth/domain/access.ts";
 const env: NodeJS.ProcessEnv = {
 	NODE_ENV: "test",
@@ -60,7 +60,7 @@ test("invitation boundary accepts only bounded opaque tokens", () => {
 
 test("auth dictionaries are complete and locale parsing remains narrow", async () => {
 	const { authCopy, authLocale } = await import(
-		"../../src/features/auth/copy.ts"
+		"../../src/features/auth/presentation/copy.ts"
 	);
 	assert.deepEqual(
 		Object.keys(authCopy.en).sort(),

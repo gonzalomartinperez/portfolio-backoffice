@@ -1,9 +1,9 @@
 import "server-only";
-import { createFeedbackHttp } from "./adapters/feedback-http";
-import { readFeedback } from "./application/read-feedback";
-import { readOperations } from "./application/read";
-import { createOperationsHttp } from "./adapters/http";
-import { validateGrafanaDestination } from "./adapters/grafana-link";
+import { createFeedbackHttp } from "../features/operations/adapters/feedback-http";
+import { readFeedback } from "../features/operations/application/read-feedback";
+import { readOperations } from "../features/operations/application/read";
+import { createOperationsHttp } from "../features/operations/adapters/http";
+import { validateGrafanaDestination } from "../features/operations/adapters/grafana-link";
 export function loadGrafanaDestination() {
 	return validateGrafanaDestination(process.env.OPERATIONS_GRAFANA_URL);
 }

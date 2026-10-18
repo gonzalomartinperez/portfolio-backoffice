@@ -1,9 +1,9 @@
-import { requireAccess, getAuthLocale } from "../../features/auth/server";
-import { loadAnalyticsView } from "../../features/analytics/entry";
+import { requireAccess, getAuthLocale } from "../../server/auth/session";
+import { loadAnalyticsView } from "../../server/analytics";
 import { ProductMetrics } from "../../features/analytics/presentation/metrics";
 import { productCopy } from "../../features/analytics/presentation/copy";
 import { Preferences } from "../../features/operations/presentation/preferences";
-import { ButtonLink } from "../../components/ui/button-link";
+import { ButtonLink } from "../../shared/ui/button-link";
 import { CalendarReport } from "../../features/analytics/presentation/report";
 import { ReportFilters } from "../../features/analytics/presentation/report-filters";
 import { reportCopy } from "../../features/analytics/presentation/report-copy";
