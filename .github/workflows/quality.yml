@@ -160,7 +160,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: gonzalomartinperez/portfolio-assistant-api
-          ref: defe16a855a13401292257d337ce5dd937b00d23
+          ref: 633b7ecbe8141ddf505deba42c21e418c460f5c2
           path: .artifacts/api-compatibility
           persist-credentials: false
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
@@ -174,8 +174,7 @@ jobs:
         working-directory: .artifacts/api-compatibility
         run: |
           uv sync --frozen
-          # Deliberate pinned-source exception: defe16a owns the legacy API recipe path.
-          docker build -f Dockerfile.postgres -t portfolio-assistant-postgres:project-ci .
+          docker build -f infra/docker/postgres/Dockerfile -t portfolio-assistant-postgres:project-ci .
           uv run python -m scripts.verify_project_databases --authorize-fixture \
             --postgres-image portfolio-assistant-postgres:project-ci \
             --backoffice-path "$GITHUB_WORKSPACE" \
