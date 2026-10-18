@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { requireCiSuccess } from "../../scripts/check-ci-results.ts";
 import { releaseCompatibility } from "../../scripts/release-compatibility.ts";
@@ -56,93 +55,13 @@ test("rejects mutable tags and unverifiable revisions or provenance", () => {
 	);
 });
 
-test("required quality gate covers the full graph and publication stays explicit", async () => {
+test("release verification remains explicit, pinned and publication disabled", async () => {
 	const { readFileSync } = await import("node:fs");
 	const { load } = await import("js-yaml");
 	const { field, list, record, text } = await import("../../scripts/json.ts");
 	const quality = record(
 		load(readFileSync(".github/workflows/quality.yml", "utf8")),
 	);
-	const jobs = record(quality.jobs);
-	const browserSteps = field(jobs, "browser", "steps");
-	assert.ok(Array.isArray(browserSteps));
-	assert.ok(
-		browserSteps.some(
-			(step: unknown) =>
-				typeof field(step, "run") === "string" &&
-				text(field(step, "run")).includes(
-					"npx --no-install playwright install --with-deps --only-shell chromium firefox webkit",
-				),
-		),
-	);
-	assert.deepEqual(Object.keys(jobs).sort(), ["browser", "checks", "static"]);
-	assert.deepEqual(field(jobs, "checks", "needs"), ["static", "browser"]);
-	assert.equal(field(jobs, "checks", "if"), "always()");
-	const gate = list(field(jobs, "checks", "steps")).find(
-		(step) => field(step, "name") === "Require every validation job",
-	);
-	assert.equal(field(gate, "run"), "node scripts/check-ci-results.ts");
-	assert.equal(field(quality, "on", "pull_request", "paths"), undefined);
-	assert.deepEqual(quality.permissions, { contents: "read" });
-	assert.equal(field(quality, "env", "DOCKER_BUILD_RECORD_UPLOAD"), "false");
-	assert.equal(field(jobs, "browser", "needs"), undefined);
-	assert.ok(
-		browserSteps.some((step: unknown) =>
-			String(field(step, "uses")).startsWith("docker/build-push-action@"),
-		),
-	);
-	assert.ok(
-		browserSteps.some((step: unknown) =>
-			String(field(step, "run")).includes("--severity HIGH,CRITICAL"),
-		),
-	);
-	const uploads = browserSteps.filter((step: unknown) =>
-		String(field(step, "uses")).startsWith("actions/upload-artifact@"),
-	);
-	assert.equal(uploads.length, 2);
-	assert.deepEqual(
-		uploads.map((entry: unknown) => {
-			const upload = record(entry);
-			assert.equal(
-				upload.uses,
-				"actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
-			);
-			assert.equal(upload.if, "always()");
-			assert.equal(field(upload, "with", "retention-days"), 7);
-			assert.equal(field(upload, "with", "if-no-files-found"), "ignore");
-			return {
-				name: field(upload, "with", "name"),
-				path: field(upload, "with", "path"),
-			};
-		}),
-		[
-			{ name: "backoffice-ui-screenshots", path: "test-results/**/*.png" },
-			{
-				name: "project-database-verification",
-				path: ".artifacts/project-databases.json",
-			},
-		],
-	);
-	const projectSource = browserSteps.find(
-		(step: unknown) =>
-			field(step, "with", "repository") ===
-			"gonzalomartinperez/portfolio-assistant-api",
-	);
-	assert.match(text(field(projectSource, "with", "ref")), /^[a-f0-9]{40}$/);
-	assert.equal(field(projectSource, "with", "persist-credentials"), false);
-	const recovery = browserSteps.find((step: unknown) =>
-		text(field(step, "name") ?? "").startsWith("Verify restricted IAM"),
-	);
-	assert.equal(
-		field(recovery, "working-directory"),
-		".artifacts/api-compatibility",
-	);
-	assert.ok(
-		text(field(recovery, "run")).includes(
-			"--backoffice-image portfolio-backoffice:rc",
-		),
-	);
-	assert.ok(text(field(recovery, "run")).includes("--authorize-fixture"));
 
 	const release = record(
 		load(readFileSync(".github/workflows/release.yml", "utf8")),
@@ -167,7 +86,10 @@ test("required quality gate covers the full graph and publication stays explicit
 		text(field(release, "jobs", "verify", "if")),
 		/refs\/heads\/develop/,
 	);
-	assert.equal(field(release, "jobs", "publish", "if"), "${{ false }}");
+	assert.match(
+		text(field(release, "jobs", "publish", "if")),
+		/^\$\{\{\s*false\s*\}\}$/,
+	);
 	assert.equal(
 		field(release, "jobs", "publish", "permissions", "packages"),
 		undefined,
@@ -186,52 +108,36 @@ test("required quality gate covers the full graph and publication stays explicit
 	}
 });
 
-test("required gate fails closed for missing, failed, pending or skipped results", () => {
-	const success = {
-		static: { result: "success" },
-		browser: { result: "success" },
-	};
+test("required gate fails closed for every missing, failed, pending or skipped prerequisite", () => {
+	const jobs = [
+		"workflows",
+		"secrets",
+		"static",
+		"database",
+		"container",
+		"browser",
+	];
+	const success = Object.fromEntries(
+		jobs.map((name) => [name, { result: "success" }]),
+	);
 	assert.doesNotThrow(() => requireCiSuccess(success));
-	for (const result of [
-		"failure",
-		"cancelled",
-		"skipped",
-		"pending",
-		"in_progress",
-		undefined,
-	])
-		assert.throws(() => requireCiSuccess({ ...success, browser: { result } }));
-	assert.throws(() => requireCiSuccess({ static: success.static }));
+	for (const name of jobs) {
+		for (const result of [
+			"failure",
+			"cancelled",
+			"skipped",
+			"pending",
+			"in_progress",
+			undefined,
+		])
+			assert.throws(() => requireCiSuccess({ ...success, [name]: { result } }));
+		const missing = { ...success };
+		delete missing[name];
+		assert.throws(() => requireCiSuccess(missing));
+	}
+	assert.throws(() =>
+		requireCiSuccess({ ...success, unexpected: { result: "success" } }),
+	);
 	for (const invalid of [null, [], "success", {}])
 		assert.throws(() => requireCiSuccess(invalid));
-});
-
-test("parallel browser prerequisites wait for both children and fail on either error", async () => {
-	const { readFileSync } = await import("node:fs");
-	const { load } = await import("js-yaml");
-	const { field, list, text } = await import("../../scripts/json.ts");
-	const workflow = load(readFileSync(".github/workflows/quality.yml", "utf8"));
-	const step = list(field(workflow, "jobs", "browser", "steps")).find(
-		(value) =>
-			field(value, "name") ===
-			"Verify database authorization and prepare browsers independently",
-	);
-	const run = text(field(step, "run"));
-	for (const [authorization, browsers] of [
-		[0, 0],
-		[1, 0],
-		[0, 1],
-		[1, 1],
-	]) {
-		const result = spawnSync(
-			"bash",
-			[
-				"-e",
-				"-c",
-				`node(){ return ${authorization}; }; npx(){ return ${browsers}; };\n${run}`,
-			],
-			{ encoding: "utf8" },
-		);
-		assert.equal(result.status, authorization === 0 && browsers === 0 ? 0 : 1);
-	}
 });

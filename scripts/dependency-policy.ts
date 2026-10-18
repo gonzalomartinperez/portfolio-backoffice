@@ -239,7 +239,9 @@ export function gateReason({
 		field(protection, "allow_force_pushes", "enabled") !== false ||
 		field(protection, "allow_deletions", "enabled") !== false ||
 		!Array.isArray(required) ||
-		!required.some((check: unknown) => field(check, "context") === "checks") ||
+		!required.some(
+			(check: unknown) => field(check, "context") === "Required checks",
+		) ||
 		!required.some(
 			(check: unknown) =>
 				field(check, "context") === POLICY_CHECK &&
@@ -275,7 +277,15 @@ export function gateReason({
 		return "quality-not-current-success";
 	if (
 		!Array.isArray(jobs) ||
-		!["static", "image", "browser", "live-fixture", "checks"].every((name) =>
+		![
+			"Workflow validation",
+			"Secret scan",
+			"Static checks",
+			"Database tests",
+			"Container verification",
+			"Browser tests",
+			"Required checks",
+		].every((name) =>
 			jobs.some(
 				(job: unknown) =>
 					field(job, "name") === name &&
