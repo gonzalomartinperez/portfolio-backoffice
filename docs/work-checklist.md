@@ -77,3 +77,15 @@ baseline is preserved in Git, not presented as the current implementation.
 - **Blocked/deferred:** existing Neo4j security, live OAuth, deployment/activation,
   physical-device/screen-reader and VPS capacity gates remain unchanged. No new
   model calls, external exports, services or collector activation were added.
+
+## Current security hold · 2026-10-18
+
+- **Blocked:** PR90 adds the previously missing full IAM PostgreSQL image scan.
+  Actual combined CI39096722293 failed with1CRITICAL and59unfixedHIGH findings;
+  its Required checks aggregate correctly rejected acceptance. Other jobs passed.
+- **Diagnosed:** the unchanged recipe's isolated local image confirms
+  CVE-2026-6653 in libxml2. Debian has no supported fix indicated for the selected
+  Trixie package. The older local scanner database and hosted counts are explicitly
+  distinguished in [security evidence](verification/iam-postgres-security-2026-10-18.md).
+- **Held:** Dependabot87/88/89, PR90 promotion and the final backoffice source tag.
+  No bypass, finding suppression, production action or alternative base adoption.

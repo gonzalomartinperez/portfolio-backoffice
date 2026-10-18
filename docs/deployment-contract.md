@@ -199,6 +199,12 @@ policy counts are logged, with no raw report upload. Missing or mismatched repor
 closed. This does not relax the application image's all-HIGH/CRITICAL gate, and passing
 either gate is not production approval or a guarantee of scanner DB freshness.
 
+**Current security hold (2026-10-18):** the new complete IAM image scan fails for
+a critical libxml2 finding. PR90 and its dependency cohort are not accepted;
+previously green source checks do not establish database-image acceptance. See the
+[exact hosted result and bounded diagnosis](verification/iam-postgres-security-2026-10-18.md).
+Do not select or publish this artifact for production while the gate remains red.
+
 ## Optional private product counts
 
 `PRODUCT_ANALYTICS_ENABLED=false` (runtime boolean) gates only the `/analytics`
