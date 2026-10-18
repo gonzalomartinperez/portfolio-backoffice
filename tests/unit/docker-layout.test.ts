@@ -107,7 +107,7 @@ test("each context fails closed for private, unrelated and secret-shaped inputs"
 	}
 });
 
-test("CI and dependency discovery select owned recipes and preserve pinned foreign exception", () => {
+test("CI and dependency discovery select owned recipes and validate the reviewed foreign recipe", () => {
 	const workflow = record(
 		load(readFileSync(".github/workflows/quality.yml", "utf8")),
 	);
@@ -134,7 +134,7 @@ test("CI and dependency discovery select owned recipes and preserve pinned forei
 	);
 	assert.equal(
 		field(checkout, "with", "ref"),
-		"defe16a855a13401292257d337ce5dd937b00d23",
+		"633b7ecbe8141ddf505deba42c21e418c460f5c2",
 	);
 	const foreign = databaseSteps.find(
 		(step) =>
@@ -147,7 +147,7 @@ test("CI and dependency discovery select owned recipes and preserve pinned forei
 	);
 	assert.match(
 		text(field(foreign, "run")),
-		/docker build -f Dockerfile\.postgres -t portfolio-assistant-postgres:project-ci \./,
+		/docker build -f infra\/docker\/postgres\/Dockerfile -t portfolio-assistant-postgres:project-ci \./,
 	);
 	const dependabot = record(
 		load(readFileSync(".github/dependabot.yml", "utf8")),

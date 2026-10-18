@@ -80,9 +80,11 @@ engines and OS dependencies. Shared local Playwright caches must never be cleane
 ## Fixture privacy and retained evidence
 
 The database job preserves the real scoped-role/recovery check against immutable API source
-`defe16a855a13401292257d337ce5dd937b00d23`. That foreign checkout deliberately uses its own
-legacy `Dockerfile.postgres`; do not rewrite its recipe path to this application's layout.
-This exception changes only when a reviewed committed API handoff changes the pin.
+`633b7ecbe8141ddf505deba42c21e418c460f5c2`. This reviewed handoff includes the final-postmaster
+readiness correction, preventing the temporary initdb socket from being mistaken for
+the final server. Its actual recipe is `infra/docker/postgres/Dockerfile`; the test
+pins both revision and path. No mutable sibling working tree is consumed. The API
+cohort passed all six jobs in run39094247058 before this compatibility refresh.
 
 Each runtime job uses an isolated synthetic PostgreSQL database and independently migrates
 its actual image. The container job verifies read-only/nonroot operation, bounded memory,
