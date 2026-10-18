@@ -68,9 +68,12 @@ baseline is preserved in Git, not presented as the current implementation.
   develop merge7a779bd709af3c9d5d086c32e1d920c0c7a0e2cf has its own required run.
   The additive read-back protection bridge retained strict up-to-date checks, GitHub
   Actions app15368 and enforced administrators on both develop/main.
-- **In progress:** separate root project1.0 metadata/evidence consolidation. Schema
-  versions, cookies and IAM names are unchanged; a version does not authorize
-  publication or certify the blocked production stack.
+- **Completed:** source1.0 metadata and automatic skill discovery guards, normal
+  PR82 merge518e223cc630f18d7d37efbf3a8199b946fedbcf after
+  CI39093971935 passed129unit/66browser cases and all seven jobs. Actual client
+  discovery used zero model turns. Schema versions, cookies and IAM names are
+  unchanged; source promotion/tags remain separate from publication and the
+  blocked production stack.
 - **Blocked/deferred:** existing Neo4j security, live OAuth, deployment/activation,
   physical-device/screen-reader and VPS capacity gates remain unchanged. No new
   model calls, external exports, services or collector activation were added.
