@@ -28,8 +28,8 @@ test("private composition stays private through plain CLI-safe config and barrel
 test("explicit Server Action RPC and client-safe shared UI stay valid", () => {
 	assert.deepEqual(
 		moduleGraphErrors({
-			"src/client.tsx":
-				'"use client"; import {act} from "./server/auth/actions"; import "./shared/ui/button"',
+			"src/app/client.tsx":
+				'"use client"; import {act} from "../server/auth/actions"; import "../shared/ui/button"',
 			"src/server/auth/actions.ts":
 				'"use server"; import "./config"; export async function act(){return {ok:true}}',
 			"src/server/auth/config.ts": 'export const secret="synthetic"',

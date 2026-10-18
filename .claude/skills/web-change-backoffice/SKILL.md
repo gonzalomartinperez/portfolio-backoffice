@@ -48,6 +48,9 @@ Server Actions decode/authorize and format outcomes; PostgreSQL rechecks the own
 inside each transaction. Test both fake-port use cases and isolated database behavior.
 `npm test` includes cycle and transitive client/server guards; new import/composition
 patterns need negative probes, not broader exceptions. See [architecture](../../../docs/architecture.md).
+Source placement is fail-closed, including importless files: use an owned feature layer,
+exact entry module or documented shell/shared location. A new location needs classifier
+and negative-fixture updates; renaming a directory must not evade dependency checks.
 
 For product counts read [analytics semantics](../../../docs/product-analytics.md).
 Keep the server-runtime flag off by default, require live membership before reads,
