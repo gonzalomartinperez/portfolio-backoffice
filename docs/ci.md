@@ -79,3 +79,13 @@ run 39057883143. `DOCKER_BUILD_RECORD_UPLOAD=false` now disables that implicit
 artifact; the workflow policy test enforces it. Build summaries/logs remain available
 without retaining an extra build-record archive. Historical failed runs are retained
 as evidence, not rewritten or described as screenshot-only uploads.
+
+The browser/image job also consumes an exact committed API bootstrap/fixture runner
+under `.artifacts/api-compatibility`. Its separate uv cache follows that source's
+Python version and lockfile; npm remains this repository's primary toolchain. It
+builds the API-owned project engine and checks this PR's exact backoffice image as
+both migrator and restricted runtime, alongside real API/checkpoint and fake-OAuth
+flows, independent recovery, restart and fresh-cluster restore. This is an isolated
+compatibility fixture, not a production stack or mutable sibling dependency. The
+legacy IAM image check is retained until the replacement is accepted. Only the safe
+synthetic JSON receipt is uploaded; never the private IAM diagnostic log or archives.

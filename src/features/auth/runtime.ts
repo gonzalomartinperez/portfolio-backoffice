@@ -39,6 +39,9 @@ export function createAuthRuntime(
 			cookieCache: { enabled: false },
 		},
 		advanced: {
+			// Keep protection enabled when the SDK detects a test environment.
+			disableOriginCheck: false,
+			disableCSRFCheck: false,
 			useSecureCookies: configuration.origin.startsWith("https:"),
 			cookiePrefix: "backoffice",
 			crossSubDomainCookies: { enabled: false },

@@ -40,6 +40,7 @@ export function runtimeTracePath(path: string): string {
 				"scripts/auth-migrate.ts",
 				"package.json",
 				"migrations/001-access.sql",
+				"migrations/runtime-grants.sql",
 			].includes(path)
 		) ||
 		/\.(pem|key|p12|pfx)$/.test(path) ||

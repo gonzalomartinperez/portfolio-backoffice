@@ -115,6 +115,30 @@ jobs:
         run: |
           docker build -f Dockerfile.postgres -t portfolio-backoffice-postgres:rc .
           node scripts/verify-postgres.ts portfolio-backoffice:rc portfolio-backoffice-postgres:rc
+      - name: Read the committed project-engine application handoff
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: gonzalomartinperez/portfolio-assistant-api
+          ref: 3ae967cf736b3909aa48dfbd4494e57077fbe48d
+          path: .artifacts/api-compatibility
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+        with:
+          version: '0.13.1'
+          enable-cache: true
+          cache-dependency-glob: |
+            .artifacts/api-compatibility/uv.lock
+            .artifacts/api-compatibility/.python-version
+      - name: Verify restricted IAM with both real applications and this exact image
+        working-directory: .artifacts/api-compatibility
+        run: |
+          uv sync --frozen
+          docker build -f Dockerfile.postgres -t portfolio-assistant-postgres:project-ci .
+          uv run python -m scripts.verify_project_databases --authorize-fixture \
+            --postgres-image portfolio-assistant-postgres:project-ci \
+            --backoffice-path "$GITHUB_WORKSPACE" \
+            --backoffice-image portfolio-backoffice:rc \
+            --output "$GITHUB_WORKSPACE/.artifacts/project-databases.json"
       - name: Write synthetic container configuration
         run: |
           node --input-type=module <<'NODE'
@@ -183,6 +207,14 @@ jobs:
         with:
           name: backoffice-ui-screenshots
           path: test-results/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Retain safe synthetic database recovery receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: project-database-verification
+          path: .artifacts/project-databases.json
           retention-days: 7
           if-no-files-found: ignore
       - name: Remove only this job's container

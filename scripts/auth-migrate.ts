@@ -4,6 +4,9 @@ import { readAuthConfiguration } from "../src/features/auth/config.ts";
 import { createAuthRuntime } from "../src/features/auth/runtime.ts";
 let runtime: ReturnType<typeof createAuthRuntime> | undefined;
 try {
+	const args = process.argv.slice(2);
+	if (args.some((argument) => argument !== "--project-grants"))
+		throw new Error("Unknown authentication migration option");
 	runtime = createAuthRuntime(readAuthConfiguration(process.env));
 	const { pool, options } = runtime;
 	const migrations = await getMigrations(options);
@@ -18,6 +21,14 @@ try {
 				"utf8",
 			),
 		);
+		if (args.includes("--project-grants")) {
+			await client.query(
+				await readFile(
+					new URL("../migrations/runtime-grants.sql", import.meta.url),
+					"utf8",
+				),
+			);
+		}
 		await client.query("COMMIT");
 	} catch (error) {
 		await client.query("ROLLBACK");

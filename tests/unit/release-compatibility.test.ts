@@ -99,19 +99,50 @@ test("required quality gate covers the full graph and publication stays explicit
 	const uploads = browserSteps.filter((step: unknown) =>
 		String(field(step, "uses")).startsWith("actions/upload-artifact@"),
 	);
-	assert.equal(uploads.length, 1);
-	const upload = record(uploads[0]);
-	assert.equal(
-		upload.uses,
-		"actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+	assert.equal(uploads.length, 2);
+	assert.deepEqual(
+		uploads.map((entry: unknown) => {
+			const upload = record(entry);
+			assert.equal(
+				upload.uses,
+				"actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+			);
+			assert.equal(upload.if, "always()");
+			assert.equal(field(upload, "with", "retention-days"), 7);
+			assert.equal(field(upload, "with", "if-no-files-found"), "ignore");
+			return {
+				name: field(upload, "with", "name"),
+				path: field(upload, "with", "path"),
+			};
+		}),
+		[
+			{ name: "backoffice-ui-screenshots", path: "test-results/**/*.png" },
+			{
+				name: "project-database-verification",
+				path: ".artifacts/project-databases.json",
+			},
+		],
 	);
-	assert.equal(upload.if, "always()");
-	assert.deepEqual(upload.with, {
-		name: "backoffice-ui-screenshots",
-		path: "test-results/**/*.png",
-		"retention-days": 7,
-		"if-no-files-found": "ignore",
-	});
+	const projectSource = browserSteps.find(
+		(step: unknown) =>
+			field(step, "with", "repository") ===
+			"gonzalomartinperez/portfolio-assistant-api",
+	);
+	assert.match(text(field(projectSource, "with", "ref")), /^[a-f0-9]{40}$/);
+	assert.equal(field(projectSource, "with", "persist-credentials"), false);
+	const recovery = browserSteps.find((step: unknown) =>
+		text(field(step, "name") ?? "").startsWith("Verify restricted IAM"),
+	);
+	assert.equal(
+		field(recovery, "working-directory"),
+		".artifacts/api-compatibility",
+	);
+	assert.ok(
+		text(field(recovery, "run")).includes(
+			"--backoffice-image portfolio-backoffice:rc",
+		),
+	);
+	assert.ok(text(field(recovery, "run")).includes("--authorize-fixture"));
 
 	const release = record(
 		load(readFileSync(".github/workflows/release.yml", "utf8")),
