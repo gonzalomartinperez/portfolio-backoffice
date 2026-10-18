@@ -1,7 +1,7 @@
-import { SignIn } from "../../features/auth/sign-in.tsx";
-import { authCopy, authLocale } from "../../features/auth/copy.ts";
-import { getAuthLocale, readiness } from "../../features/auth/server.ts";
-import styles from "../../features/auth/auth.module.css";
+import { SignIn } from "../../features/auth/entry.tsx";
+import { authCopy, authLocale } from "../../features/auth/presentation/copy.ts";
+import { getAuthLocale, readiness } from "../../server/auth/session.ts";
+import styles from "../../features/auth/presentation/auth.module.css";
 export const metadata = {
 	title: "Sign in — Portfolio backoffice",
 	robots: { index: false, follow: false },

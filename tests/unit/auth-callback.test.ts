@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { callbackResponse } from "../../src/features/auth/callback-response.ts";
+import { callbackResponse } from "../../src/features/auth/adapters/callback-response.ts";
 
 test("denied provider callbacks return to the configured origin without arbitrary navigation", () => {
 	const response = callbackResponse(

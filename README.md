@@ -12,7 +12,7 @@ access and a bilingual dashboard keep operational visibility separate from the p
 
 > **Current state:** authentication, invitations, revocation, private-API validation and
 > dashboard rendering are implemented. Browser evidence uses real isolated PostgreSQL
-> and clearly labeled synthetic metrics. Live OAuth-provider and production API pairing
+> and clearly labeled synthetic metrics. The local native-site/API/PostgreSQL/dashboard chain is also verified; live OAuth-provider and production API pairing
 > remain unverified. The paired API's
 > [Neo4j vendor release hold](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/develop/docs/verification/neo4j-release-blocker-2026-10-17.md)
 > is unresolved; green source CI is not full-stack production acceptance.
@@ -22,7 +22,7 @@ access and a bilingual dashboard keep operational visibility separate from the p
 
 | Area | What it tells you |
 | --- | --- |
-| Website interactions | Default-off accepted page/navigation/CV/contact events; seven UTC days, without visitor journeys or conversation text. |
+| Website interactions | Default-off UTC day/week/month reports, reviewed-region click grids and an explicit legacy event view; no visitor journeys or conversation text. |
 | Availability | The latest observed API state; missing data stays unavailable instead of becoming a fabricated zero. |
 | Knowledge freshness | Indexed portfolio revision, corpus version and indexing time. |
 | Executions | Observed 30-day outcomes and first-token p50/p95; searchable sampled phase timings. |
@@ -103,6 +103,21 @@ Grafana link requires independent access controls. No historical trends or provi
 are fabricated. [Design research](docs/research/operations-dashboard.md) explains the
 layout and measurement choices.
 
+<details>
+<summary><strong>Calendar reports and reviewed-region interactions</strong></summary>
+
+Choose a UTC day, ISO week or calendar month. Global counts and regional grid
+filters have separate scopes; cells below the publication threshold remain hidden.
+These original production-container captures use labeled synthetic data.
+
+<p align="center">
+  <a href="docs/assets/calendar/after-desktop.png"><img src="docs/assets/calendar/after-desktop.png" width="960" alt="Calendar interaction report with explicit period filters, page views, daily and country tables, a thresholded region grid and coverage details"></a>
+</p>
+
+[Before](docs/assets/calendar/before-desktop.png) · [Spanish mobile](docs/assets/calendar/after-mobile.png) · [Keyboard at200% text](docs/assets/calendar/keyboard-200-webkit.png) · [Tests, source revisions and measurement limits](docs/verification/calendar-report-2026-10-18.md)
+
+</details>
+
 ## Architecture and trust boundaries
 
 <p align="center">
@@ -162,8 +177,8 @@ flowchart TB
 | `src/features/operations/domain`, `application` | Pure models, explicit available/unconfigured/unavailable results and a small read port. |
 | `src/features/operations/adapters`, `presentation` | Bounded transport, wire mapping, dashboard and intentional client controls. |
 | `src/features/analytics` | Pure product-count models, a private read port/adapter and accessible project summary/detail views. |
-| `src/features/auth`, `migrations` | OAuth, membership, invitations, revocation and explicit IAM migration. |
-| `src/components/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
+| `src/features/auth`, `src/server/auth`, `migrations` | Pure access/session ports, OAuth and membership adapters, private composition and explicit IAM migration. |
+| `src/shared/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
 
 Architecture tests cover static, dynamic and type-only imports and server/client boundaries.
 Missing metrics never silently become zero. The UI displays configured usage estimates,
@@ -203,7 +218,7 @@ Use a disposable database on an unused loopback port. The values below are publi
 credentials, not production secrets.
 
 ```sh
-docker build -f Dockerfile.postgres -t portfolio-backoffice-postgres:local .
+docker build -f infra/docker/postgres/Dockerfile -t portfolio-backoffice-postgres:local .
 
 docker run -d --rm --name portfolio-readme-fixture \
   --user 999:999 --read-only --cap-drop ALL --security-opt no-new-privileges \
@@ -291,7 +306,7 @@ real-database and unverified production behavior. Local figures are not field pe
 ## Runtime and release ownership
 
 ```sh
-docker build --platform linux/amd64 -t portfolio-backoffice:local .
+docker build -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:local .
 ```
 
 The standalone image runs as UID **65532**, exposes private port **3000**, has no shell/npm,

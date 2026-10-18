@@ -9,9 +9,9 @@ allows edits. Inspect status and relevant diffs; preserve other writers' work. R
 and [coding conventions](../../../CONTRIBUTING.md), not the whole documentation tree.
 
 Choose the responsible boundary: pure operations models in domain, small read ports in
-application, bounded HTTP/runtime validation in adapters, server composition in entry,
+application, bounded HTTP/runtime validation in adapters, private composition in src/server,
 and presentation components for interaction. Authentication guards live in
-[auth](../../../src/features/auth/server.ts); every protected page/action/API checks
+[auth](../../../src/server/auth/session.ts); every protected page/action/API checks
 live membership. Hiding a control is not authorization. Never expose service tokens,
 provider secrets, prompts or transcript text through props, logs or browser storage.
 
@@ -65,3 +65,17 @@ For feedback read [current-rating semantics](../../../docs/feedback-and-improvem
 Keep its flag independent and off by default. Use count-only server reads; never turn
 visitor ratings into verified accuracy or introduce raw-chat review, automatic training
 or corpus mutation. The retained-answer creation window is not a vote-event timeline.
+
+Calendar analytics defaults to v2; keep `view=legacy` explicit, with no fallback
+request. Read the distinct period/language versus region/viewport filter scopes in
+product-analytics.md. Receipt bounds are not enablement coverage, withheld grid
+cells are not zeroes, and page views are not people. Preserve the accessible table
+alongside every chart. Signed fixture artifacts must be exclusively created0600
+before sessions are minted; never overwrite an existing file or follow a symlink.
+
+Private composition/configuration lives in src/server. Auth config and runtime
+factories also support the plain Node migration CLI; keep them free of Next request
+APIs and server-only markers. The AST graph treats every src/server path as private.
+Auth browser controls are composed in features/auth/entry.tsx through the narrow
+BrowserSessionPort; presentation never calls the SDK directly. Preserve the exact
+migration trace allowlist when moving code and test negative client/server paths.

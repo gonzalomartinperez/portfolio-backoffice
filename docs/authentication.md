@@ -101,3 +101,15 @@ Revocation requires a native modal confirmation, supports Escape, and restores
 focus to its trigger. Invitation copy feedback is bound to the current link and
 resets for a newly created invitation. Styles reuse semantic tokens and the owned
 button component; no independent theme or reset is introduced.
+
+## Restricted project IAM identity
+
+The optional shared-engine allocation uses a dedicated IAM database and separate
+migrator/runtime logins; see the [runtime handoff](deployment-contract.md#optional-project-scoped-postgresql-allocation).
+`--project-grants` is an explicit migration option, never a server startup action.
+Its exact grants include Better Auth's database rate limiter. The integration suite
+uses the actual migration CLI and validates fake-OAuth behavior with the runtime
+identity. Shared-mode tests require an owned Docker container and fixture UUID;
+remote, elevated, ambiguous or mismatched URLs fail before test mutations.
+Both `disableOriginCheck` and `disableCSRFCheck` are explicitly `false`, preserving
+security checks when the SDK recognizes a test environment.

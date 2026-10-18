@@ -1,4 +1,9 @@
-# Frontend image verification and operations handoff
+# Historical frontend image verification and operations handoff
+
+> Historical receipt for the retired public-chat frontend. Commands, UID1000, image names
+> and removed integration paths below describe that earlier verification; do not execute
+> them as current backoffice instructions. Use the [current runtime contract](deployment-contract.md)
+> and `infra/docker/{app,postgres}/Dockerfile` with repository-root context instead.
 
 Decision: [ADR 002](adrs/002-shared-vps.md). The private vps-ops repository owns shared production
 composition, Coolify orchestration and the operational runbook. The canonical application runtime contract is [deployment-contract.md](deployment-contract.md).

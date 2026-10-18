@@ -1,0 +1,42 @@
+{
+	"date": "2026-10-18",
+	"source_catalog_revision": "300d3f2bc79134ffacef635a3ccbe51e66bed388",
+	"model_turns_sent": 0,
+	"clients": {
+		"codex": {
+			"version": "codex-cli 0.163.0",
+			"expected": [
+				"web-change-backoffice",
+				"web-refresh-contract",
+				"web-review-delivery",
+				"web-verify-backoffice"
+			],
+			"discovered": [
+				"web-change-backoffice",
+				"web-refresh-contract",
+				"web-review-delivery",
+				"web-verify-backoffice"
+			],
+			"passed": true,
+			"errors": 0,
+			"probe_error": null
+		},
+		"claude": {
+			"version": "2.1.292 (Claude Code)",
+			"expected": [
+				"web-change-backoffice",
+				"web-refresh-contract",
+				"web-review-delivery",
+				"web-verify-backoffice"
+			],
+			"discovered": [
+				"web-change-backoffice",
+				"web-refresh-contract",
+				"web-review-delivery",
+				"web-verify-backoffice"
+			],
+			"passed": true,
+			"probe_error": null
+		}
+	}
+}

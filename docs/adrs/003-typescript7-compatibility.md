@@ -7,15 +7,16 @@ peer installation is used.
 
 ## Decision and compiler boundaries
 
-The primary project compiler is stable **TypeScript 7.0.2**. Next.js **16.3.6**
-uses the project-local compiler CLI by default and explicitly documents TypeScript
+The primary project compiler is stable **TypeScript 7.0.2**. Adoption was verified
+with Next.js **16.3.6**; the current locked Next.js **16.4.2** retains the verified
+project-local compiler CLI path and explicitly documents TypeScript
 7 support in its installed `02-typescript.md` and `useTypeScriptCli.md` guides.
 Its package resolver selects `typescript`'s own binary, so production builds use
 7.0.2 without an additional framework configuration flag. Build errors remain fatal.
 The generated route declarations, application, scripts and tests are checked.
 
 TypeScript 7 does not expose the classic compiler API. Architectural AST checks
-and the retained embed fixture transpiler import the official
+and the migration runtime tracer import the official
 `@typescript/typescript6` compatibility package **6.0.2**. Its dependency is locked
 to TypeScript **6.0.3**, which is the actual API version reported at execution.
 Neither tool substitutes a TypeScript 6 project-wide check for the primary checker.

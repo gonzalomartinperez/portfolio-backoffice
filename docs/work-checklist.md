@@ -35,3 +35,45 @@ baseline is preserved in Git, not presented as the current implementation.
 - Blocked: production release acceptance, including the API's unresolved Neo4j image
   findings and fresh exact-digest assessment; ordinary code CI is not that acceptance.
 - Deferred: publication, deployment/activation, live OAuth and physical-device testing.
+
+## Calendar analytics closure — 2026-10-18
+
+- API PR91 integrated into develop (`ed728479f4301984ebddec60cf77752604ceb3c7`):
+  v2 aggregates, migration009, closed country semantics and offline shared fixtures.
+- Backoffice PR78: calendar UI, separate filter scopes, thresholded grid and retained
+  explicit legacy view verified at300b1e2:104 unit/66 browser cases and production image CI pass.
+- Native site delivery persisted in the isolated real API/PostgreSQL fixture:
+  14 native events plus17 seed events; authenticated corrected-build browser readback passes
+  with5/7/6 totals and2/1/2 Spanish mobile selection. See the
+  [dated acceptance](verification/calendar-report-2026-10-18.md) for precise execution environments.
+- Tooling regressions cover SIGTERM cleanup and exclusive0600 session artifacts.
+- Main/final tags, production activation, live OAuth and Neo4j vendor acceptance remain
+  separate gates. Fixture acceptance never substitutes for those requirements.
+
+## Current architecture and source-release closure · 2026-10-18
+
+- **Completed:** PR79 private composition, auth application/session port, capability
+  adapters, shared UI and fail-closed client/NFT boundaries. Tested head
+  48fa0baf1eb034998b1a76454cb2b7b4901088b1 merged into develop
+  f08189eab68d0c0b585d2806710dad936ff17004. CI39091216691passed120unit tests,
+  real IAM/fake-provider/image checks and66browser scenarios across three engines.
+  [Dated layout evidence](verification/common-layout-results-2026-10-18.md) separates
+  local and hosted verification. Independent source review closed with no P1/P2.
+- **Completed:** PR80 canonical Docker recipes/ignore files; CI39091565974 passed
+  124unit tests, real IAM/image/scan checks and66browser cases before normal merge
+  49d0c737414e3dc867f3fecca6b8f8a026b6fdb9. Pinned foreign sources keep their actual paths.
+- **Completed:** PR81 seven-job paired CI profile and source/build provenance.
+  CI39093381592 passed129unit and66browser cases, real IAM/recovery and image checks
+  in296seconds observed end to end. This is one run, not a measured speedup. Normal
+  develop merge7a779bd709af3c9d5d086c32e1d920c0c7a0e2cf has its own required run.
+  The additive read-back protection bridge retained strict up-to-date checks, GitHub
+  Actions app15368 and enforced administrators on both develop/main.
+- **Completed:** source1.0 metadata and automatic skill discovery guards, normal
+  PR82 merge518e223cc630f18d7d37efbf3a8199b946fedbcf after
+  CI39093971935 passed129unit/66browser cases and all seven jobs. Actual client
+  discovery used zero model turns. Schema versions, cookies and IAM names are
+  unchanged; source promotion/tags remain separate from publication and the
+  blocked production stack.
+- **Blocked/deferred:** existing Neo4j security, live OAuth, deployment/activation,
+  physical-device/screen-reader and VPS capacity gates remain unchanged. No new
+  model calls, external exports, services or collector activation were added.

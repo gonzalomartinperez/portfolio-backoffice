@@ -1,5 +1,5 @@
-import { ButtonLink } from "../../components/ui/button-link";
-import styles from "../../features/auth/auth.module.css";
+import { ButtonLink } from "../../shared/ui/button-link";
+import styles from "../../features/auth/presentation/auth.module.css";
 export const metadata = {
 	title: "Privacy / Privacidad — Portfolio backoffice",
 	robots: { index: false, follow: false },

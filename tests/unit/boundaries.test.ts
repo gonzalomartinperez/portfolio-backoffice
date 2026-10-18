@@ -104,7 +104,8 @@ test("architecture detects relative/dynamic cycles and indirect client-to-server
 	assert.deepEqual(
 		moduleGraphErrors({
 			"src/view.tsx": '"use client"; import "./action"',
-			"src/action.ts": '"use server"; import "./private"',
+			"src/action.ts":
+				'"use server"; import "./private"; export async function act(){return {ok:true}}',
 			"src/private.ts": 'import "server-only";',
 		}),
 		[],
@@ -145,12 +146,37 @@ test("owned application, fixtures and tooling remain type-checked TypeScript", (
 	}
 });
 
+test("platform guards distinguish model properties from browser globals", () => {
+	for (const layer of ["domain", "application"]) {
+		const file = `src/features/analytics/${layer}/example.ts`;
+		assert.deepEqual(
+			boundaryErrors(
+				file,
+				"interface Report { window: string } function period(report: Report) { return report.window; }",
+			),
+			[],
+		);
+		for (const source of [
+			"const current = window.location;",
+			"const current = globalThis.window;",
+			"interface Report { window: typeof window }",
+			"const { location } = window;",
+		])
+			assert.ok(boundaryErrors(file, source).length > 0, source);
+	}
+});
+
 test("client boundaries reject authentication infrastructure imports", () => {
-	for (const module of ["server", "config", "database", "runtime", "store"]) {
+	for (const module of [
+		"server/auth/session",
+		"server/auth/config",
+		"server/auth/runtime",
+		"features/auth/adapters/store",
+	]) {
 		assert.notEqual(
 			boundaryErrors(
 				"src/components/example.tsx",
-				`"use client"; import x from "../features/auth/${module}"`,
+				`"use client"; import x from "../${module}"`,
 			).length,
 			0,
 			module,

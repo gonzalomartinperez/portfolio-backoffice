@@ -1,81 +1,122 @@
-# Continuous verification and artifact privacy
+# Paired backoffice CI and artifact privacy
 
-Current2026-10-13 graph: static verification runs independently from the browser job.
-The browser job builds, scans and runs **one exact image on the same ephemeral runner**;
-no image archive is uploaded to public repository Actions storage. `checks` requires both
-jobs and rejects failed, skipped, cancelled, pending or missing results. No path filter can
-skip verification. Repository rules remain authoritative; no admin bypass or bot approval.
+The canonical workflow is `.github/workflows/quality.yml`, named **Quality**. It implements
+the backoffice profile selected in private vps-ops commit
+`8ab1878a318f5572b5d21993ad7a471655a14647`, `docs/architecture/ci-profiles.md`.
+The public application keeps its own commands and tests; this selection is not deployment authority.
 
-| Job | Evidence |
-| --- | --- |
-| static | Frozen main/isolated contract installs, audits, format/lint/type checking, unit/contract/architecture, public-file/docs/skills/license consistency checks and contract drift |
-| browser | Pinned Trixie builder/distroless runtime; full HIGH/CRITICAL scanner gate; PostgreSQL18.6; exact-image migrations/readiness/resource/anonymous workload checks; real database IAM plus fake OAuth; Chromium/Firefox/WebKit operations/accessibility; bounded SIGTERM |
-| checks | Fail-closed aggregate, required by repository protections |
+| Job ID | Exact check name | Needs | Actual responsibility |
+| --- | --- | --- | --- |
+| workflows | Workflow validation | none | Checksum-verified actionlint and paired DAG/events/trust policy |
+| secrets | Secret scan | none | Redacted candidate and full reachable Git-history scan |
+| static | Static checks | none | Frozen main/generator installs, both audits, formatting, lint, TypeScript 7/route types, architecture/unit/contracts, documentation, licensing, skills and generated drift |
+| database | Database tests | static | Owned PostgreSQL artifact, real IAM/OAuth, scoped project roles, migration/isolation and backup/restoration against both applications |
+| container | Container verification | static | Image build and complete vulnerability gate, migrated-database readiness, bounded runtime/anonymous workload and SIGTERM |
+| browser | Browser tests | static | Real image and isolated PostgreSQL; all existing 66 Chromium/Firefox/WebKit cases across available/unavailable operational fixtures |
+| checks | Required checks | all six jobs above | Always-evaluated, fail-closed aggregate |
 
-Build inputs use `.dockerignore` allowlisting and no production secrets. Hosted runners are
-GitHub-managed Ubuntu24.04, not the VPS; actions are SHA-pinned and checkouts do not persist
-credentials. PR execution has only `contents: read`. Fixtures have explicit synthetic secrets,
-loopback origins and dedicated runner data. Image/DB checks do not establish live OAuth,
-public TLS, VPS capacity or production API pairing.
+Workflow, security and static checks run independently. Database, container and browser jobs
+run independently after static; each owns its own disposable fixtures. A completed database
+job does not leave a service running on another runner. No successful placeholder replaces
+IAM, recovery, readiness, vulnerability or browser coverage.
 
-Trivy0.75.0 is downloaded with a reviewed SHA256 check and scans OS and Node dependencies
-with no suppression file. Any HIGH/CRITICAL blocks the image's browser acceptance. Medium/low
-findings still require review. Compiler/tracer executables, npm and shell are absent from the
-runtime; migration dependencies are traced separately. See
-[container verification](verification/container-readiness.md) for historical measurements.
+## Exact source and the private-image rebuild exception
 
-Browser prerequisites wait for both isolated authentication verification and browser
-preparation; either child failure stops acceptance. Available/unavailable operations run
-separately against the same image, with their own result directories and labelled fixture
-payloads. No engine/case is removed. Exact owned container cleanup runs even on failure.
-Local screenshots/reports remain available for authorized inspection; ordinary public CI
-uploads no container archive, browser report or raw container log. CI logs contain only fixture
-verification, never production environment values, tokens or conversation content.
+All three runtime jobs build `infra/docker/app/Dockerfile` using repository-root context,
+explicit `linux/amd64`, the same candidate checkout, pinned base/dependencies and no build
+arguments. They deliberately rebuild on their own ephemeral runner: public Actions image
+archives would expose private runtime bytes, and no approved private transport exists.
+This is the explicit privacy exception permitted by the paired profile, not an assertion
+that different images or configurations are interchangeable. No registry credentials are
+introduced. BuildKit's content-addressed cache can reduce repeated compilation; measure
+actual job/build cost before claiming an efficiency gain.
 
-## Publication remains separately gated
+`scripts/ci-build-provenance.ts` verifies checkout SHA against the workflow candidate and
+records producer run/attempt/job, source/base/workflow revisions, build-input fingerprint,
+platform, actual local image ID and build duration. Receipts stay private in ignored
+`.artifacts/ci-provenance`; they are not publicly uploaded. A local image ID is not a registry
+manifest digest. Base revision can be the all-zero GitHub marker for a newly created branch;
+it must not be reported as an existing commit. PR merge-ref validation and a later branch
+merge have different source identities and need their own successful runs.
 
-`release.yml` can verify reviewed develop through manual dispatch, but its publish job is
-hard-disabled and has no package-write permission. It cannot upload the legacy public image
-archive or publish to an unverified GHCR package. Private artifact delivery must be implemented
-and independently visibility/access-checked in the coordinated vps-ops release path before
-owner-authorized publication. A confirmation checkbox is not an independent approval gate.
-No production deployment or credential is configured by this change.
+Recipes have colocated `Dockerfile.dockerignore` policies. The app allowlists required build
+inputs; PostgreSQL excludes all repository inputs. Root `.dockerignore` denies everything
+as a fallback. No secrets, fixture sessions or database dumps enter image contexts.
 
-App-owned `scripts/release-compatibility.ts` remains available to prepare provenance from
-an actually published immutable digest after approval; local image IDs are not registry
-references. Baseline/source/runtime evidence and rollout constraints belong in the
-[deployment contract](deployment-contract.md). CI completion is release evidence, never proof
-that a server was deployed, secured or restored.
+## Events, gating and trust
 
-## Local browser lease and redacted history checks
+PRs into **develop and main**, pushes to **develop and main**, merge groups, manual dispatch
+and reusable verification run the complete profile. There are no workflow path filters.
+Concurrency cancels obsolete revisions for the same workflow/ref; separate PRs remain
+independent. Per-job timeouts bound failures. `scripts/check-ci-results.ts` requires every
+expected prerequisite to be `success`: missing, failed, pending, cancelled, skipped and
+unexpected result sets fail. Negative unit cases cover every prerequisite and unsafe DAG,
+permissions, names, event filters, dummy adapters and source/artifact substitutions.
 
-Use `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx --no-install playwright install --with-deps chromium firefox webkit`
-when another workspace session may be running a different Playwright version. Alternatively,
-set a task-owned `PLAYWRIGHT_BROWSERS_PATH` for both installation and execution. Do not
-clean the shared `~/.cache/ms-playwright`. Browser revisions belong to the locked package;
-a missing revision is an infrastructure failure, never a reason to skip an engine or weaken
-a gate. Preserve the original failed run when repeating affected checks.
+Default permissions are `contents: read`, checkout credentials are not persisted and every
+action is pinned to a reviewed full commit SHA. No repository secret or paid provider is
+available to PR jobs; provider/embedding fixture mode and `ALLOW_PAID_AI=false` are explicit.
+Untrusted PR code runs only on GitHub-managed Ubuntu24.04. The separate dependency workflow
+is read-only trusted-default-branch assessment; no approval or automatic merge writer is
+activated. Its dormant context assessment follows the new exact human job names and gate.
 
-`npm run security:check` checks current tracked/unignored files plus blobs reachable from
-all local Git refs, including deleted files and unmerged branches. Static CI fetches full
-history; a shallow repository fails closed. Detector names and object IDs are emitted,
-never matched bytes. Temporary Git fixtures prove ignored-but-tracked, deleted-history and
-unmerged-branch detection with synthetic markers. Known-pattern coverage cannot establish
-that every secret, personal datum, binary format or unreachable object is absent. Fetch
-relevant remote refs before a local audit; do not rewrite history or rotate credentials
-without the maintainer's explicit authorization.
+Actionlint1.7.12 is fetched only from its official release and verified against SHA256
+`8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8` before execution.
+One intentional OFF-policy compatibility exception recognizes actionlint's exact `if-cond`
+diagnostic only for `release.yml` / `jobs.publish.if: ${{ false }}`, bound to the parsed YAML
+and its source line. Any additional diagnostic, file, rule, message or condition fails.
+The false condition is preserved; this exception cannot enable publication.
+The TypeScript profile checker additionally validates the concrete adapters and source-bound
+build configuration. Syntax/policy validation is not an executed image or browser result.
 
-Product analytics uses the existing static/type/contract job and authenticated
-production-image browser job; no duplicate server lifecycle or analytics service.
-Synthetic fixtures enable only the private read flag. The generated product types
-join the drift gate. A SHA-pinned official upload-artifact v7.0.2 step retains PNG
-screenshots for seven days on success or failure; session fixtures, traces and
-request logs are deliberately excluded because they can contain signed cookies.
-Public/production analytics defaults remain off.
+Frozen installs remain mandatory. Setup-node caches npm downloads by lockfile/runner inputs;
+static includes the isolated contract-generator lockfile. Node follows `.nvmrc`; runtime
+images pin their own version and digest. BuildKit uses the Node24/amd64 scope and validated
+content-addressed layers. Only the container job writes the shared BuildKit cache; database
+and browser jobs restore it without racing writers. Browser binaries are not cached; the job installs all reviewed
+engines and OS dependencies. Shared local Playwright caches must never be cleaned; set
+`PLAYWRIGHT_SKIP_BROWSER_GC=1` or use an owned browser cache.
 
-The pinned build-push action also uploads a `.dockerbuild` record by default,
-independently of explicit upload-artifact steps. This was confirmed on failed
-run 39057883143. `DOCKER_BUILD_RECORD_UPLOAD=false` now disables that implicit
-artifact; the workflow policy test enforces it. Build summaries/logs remain available
-without retaining an extra build-record archive. Historical failed runs are retained
-as evidence, not rewritten or described as screenshot-only uploads.
+## Fixture privacy and retained evidence
+
+The database job preserves the real scoped-role/recovery check against immutable API source
+`633b7ecbe8141ddf505deba42c21e418c460f5c2`. This reviewed handoff includes the final-postmaster
+readiness correction, preventing the temporary initdb socket from being mistaken for
+the final server. Its actual recipe is `infra/docker/postgres/Dockerfile`; the test
+pins both revision and path. No mutable sibling working tree is consumed. The API
+cohort passed all six jobs in run39094247058 before this compatibility refresh.
+
+Each runtime job uses an isolated synthetic PostgreSQL database and independently migrates
+its actual image. The container job verifies read-only/nonroot operation, bounded memory,
+PIDs, logs, readiness, workload and idle SIGTERM. The browser job retains every original
+interaction/accessibility case and both fixture modes against its own exact image. It does
+not claim Google/GitHub production-provider or real-phone acceptance.
+
+The managed browser lifecycle owns ports3107/3108/8117 and private signed test sessions under
+`.artifacts`. No application authentication bypass endpoint exists. Graceful shutdown removes
+those files. Available/unavailable runs have separate report directories and immutable source
+modes, avoiding cross-engine mutation races. Paid models are never called.
+
+Ordinary public CI uploads only existing safe synthetic UI screenshots and the bounded
+project-database recovery receipt, for seven days. Images, logs, environment files, session
+files, invitation links, traces and database backups are not uploaded. Each runner cleans
+up only its own application/fixture resources, even after failure. Trivy0.75.0 retains its
+reviewed checksum and rejects HIGH/CRITICAL findings without suppression, including unfixed
+findings. No scanner coverage or severity threshold is weakened by the split.
+
+## Context transition and publication
+
+The new final check is **Required checks**, not the former `checks`. Existing branch
+protection remains unchanged until the owner obtains successful exact-head evidence and
+performs the coordinated transition without a protection gap. A legacy required status may
+therefore remain pending during preparation; do not bypass it or manufacture a dummy job.
+Actual GitHub app/context identity must be inspected before changing requirements.
+
+`release.yml` remains dispatch-only, with publication hard-disabled and no package-write
+permission. Its reusable Quality call receives the same complete validation. No deployment,
+SSH/webhook controller or registry publication is activated. Private vps-ops selects releases
+and performs any separately authorized Coolify deployment.
+
+Record actual run URLs, merge/base/workflow revisions, job timings, cache behavior and remaining
+limitations in [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md).
+Success on an older PR or develop commit is not acceptance of a new main merge SHA.

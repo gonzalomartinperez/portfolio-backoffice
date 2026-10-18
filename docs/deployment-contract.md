@@ -7,8 +7,15 @@ are not authorized by a source merge. The portfolio remains on Hostinger Busines
 
 ## Artifact and startup
 
-Build `docker buildx build --load --platform linux/amd64 -t portfolio-backoffice:rc .`.
-The Dockerfile pins its Node 24.22.0 builder and distroless Node 24 Debian 13 nonroot
+Recipes live at `infra/docker/app/Dockerfile` and `infra/docker/postgres/Dockerfile`.
+Always use repository-root build context (`.`) with an explicit `-f` path. Each recipe
+has a colocated `Dockerfile.dockerignore`, which takes precedence over the deny-default
+root `.dockerignore`. The IAM PostgreSQL recipe sends no application source; the app
+recipe allowlists only its build inputs. Neither context admits environment files or keys.
+See [Docker build-context precedence](https://docs.docker.com/build/concepts/context/#filename-and-location).
+
+Build `docker buildx build --load -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:rc .`.
+The application Dockerfile pins its Node 24.22.0 builder and distroless Node 24 Debian 13 nonroot
 runtime by digest (both report Node 24.22.0). Local builds require Docker Buildx/BuildKit. CI installs a SHA-pinned Buildx action.
 It uses `npm ci`, Next standalone output,
 `.next/static`, public assets and a non-root runtime (UID/GID 65532). Linux amd64 is the
@@ -170,7 +177,7 @@ no production publication, deployment or live OAuth/provider check is implied.
 
 ## Project-owned IAM artifact
 
-`Dockerfile.postgres` selects PostgreSQL18.6 Trixie with signed security packages and UID999.
+`infra/docker/postgres/Dockerfile` selects PostgreSQL18.6 Trixie with signed security packages and UID999.
 The persistent parent mount is `/var/lib/postgresql`, PGDATA `/var/lib/postgresql/18/docker`.
 Initialize only a NEW volume's ownership before nonroot startup; no automatic recursive
 repair or reuse of PostgreSQL17 data directories. Existing data needs separately verified
@@ -212,10 +219,38 @@ This is an aggregate-only read using the existing private token/origin. It adds 
 migration, persistent path, service, host port or provider access. API-side deployment
 is still blocked by the documented Neo4j vendor findings; source CI does not waive them.
 
-## Proposed PostgreSQL consolidation within Portfolio
+## Optional project-scoped PostgreSQL allocation
 
-The API-owned [pending compatibility blueprint](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/85addbec7476713cc55fcef10a4ecbe008a6c1d7/docs/adrs/005-project-postgres-consolidation.md)
-considers one engine for distinct assistant and IAM databases, with separate restricted
-identities. This topology is not implemented or jointly tested. Existing IAM fixtures,
-image and migrations remain authoritative until its isolation, migration, resource and
-restore gates pass. No cross-project container/data reuse or production change follows.
+The API-owned application bootstrap is committed at
+[`dc49b8ef2750af0d3e306e9a9958b819b07f6690`](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/dc49b8ef2750af0d3e306e9a9958b819b07f6690/docs/adrs/005-project-postgres-consolidation.md).
+It prepares a common engine with **separate** `portfolio_assistant` and
+`portfolio_iam` databases. This is a local application compatibility handoff,
+not approval to replace production resources. Keep this repository's legacy
+PostgreSQL fixture recipe until vps-ops accepts the replacement.
+
+Use `portfolio_iam_migrator` only for the explicit image task:
+
+```sh
+# Deliver the migrator URL via a protected environment/secret file, never argv.
+node scripts/auth-migrate.ts --project-grants
+```
+
+The same `BACKOFFICE_DATABASE_URL` variable points to the migrator for this one-off
+task and to **`portfolio_iam_runtime`** for the normal server. No new public build
+variable or secret format is introduced. The CLI executes the official Better
+Auth migration and repository access migration, then applies the exact
+`migrations/runtime-grants.sql` resource from the image. Runtime has DML on eight
+named tables (including the database-backed `rateLimit`) and one audit sequence;
+it has no owner membership, DDL, TEMP or cross-database CONNECT. It cannot migrate.
+Do not grant all tables or use the provisioning identity to run the web server.
+
+A local dual-application proof ran the existing fake-OAuth membership/revocation
+flows against this restricted runtime, tested its actual five-connection pool,
+and recovered both databases independently and into a fresh cluster. API owns
+that maintained fixture runner; this source checkout remains an explicit input,
+not a runtime cross-repository import. Source/fixture evidence and remaining
+production gates are recorded in the pinned ADR. Reapply exact grants after
+logical restore and review every new migration's required object privileges.
+
+Origin and CSRF enforcement are explicitly enabled even when Better Auth detects
+a test environment. Test fixtures do not authorize live OAuth or production TLS.

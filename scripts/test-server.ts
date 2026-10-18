@@ -1,9 +1,12 @@
 import { spawn } from "node:child_process";
 import { rmSync } from "node:fs";
-import { mkdir, writeFile, cp, access } from "node:fs/promises";
+import { mkdir, cp, access } from "node:fs/promises";
 import { resolve } from "node:path";
-import { fixtureSession } from "./auth-fixture-session.ts";
-import { readAuthConfiguration } from "../src/features/auth/config.ts";
+import {
+	fixtureSession,
+	writeFixtureSessions,
+} from "./auth-fixture-session.ts";
+import { readAuthConfiguration } from "../src/server/auth/config.ts";
 import { startTestProxy } from "./test-proxy.ts";
 import {
 	startOperationsFixture,
@@ -74,17 +77,16 @@ if (!process.env.WEB_UPSTREAM) {
 		);
 	});
 }
-await writeFile(
-	sessionsFile,
-	JSON.stringify({
-		owner: await fixtureSession("owner", configuration),
-		viewer: await fixtureSession("viewer", configuration),
-	}),
-	{ mode: 0o600 },
-);
+await writeFixtureSessions(sessionsFile, async () => ({
+	owner: await fixtureSession("owner", configuration),
+	viewer: await fixtureSession("viewer", configuration),
+}));
 const operations = await startOperationsFixture({
 	host: process.env.WEB_UPSTREAM ? "0.0.0.0" : "127.0.0.1",
 	mode: process.env.OPERATIONS_FIXTURE_MODE ?? "available",
+}).catch((error: unknown) => {
+	rmSync(sessionsFile, { force: true });
+	throw error;
 });
 const web = process.env.WEB_UPSTREAM
 	? null

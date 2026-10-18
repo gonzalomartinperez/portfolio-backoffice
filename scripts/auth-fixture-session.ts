@@ -1,22 +1,17 @@
-import { writeFile } from "node:fs/promises";
+import { open, unlink } from "node:fs/promises";
 import { makeSignature } from "better-auth/crypto";
-import { readAuthConfiguration } from "../src/features/auth/config.ts";
-import { createAuthRuntime } from "../src/features/auth/runtime.ts";
+import { readAuthConfiguration } from "../src/server/auth/config.ts";
+import { createAuthRuntime } from "../src/server/auth/runtime.ts";
+import { verifySessionFixture } from "./check-project-fixture.ts";
 
 export async function fixtureSession(
 	role: "owner" | "viewer",
 	configuration = readAuthConfiguration(process.env),
 ) {
-	const origin = new URL(configuration.origin);
-	const database = new URL(configuration.databaseUrl);
-	if (
-		!["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname) ||
-		!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
-		!/(test|fixture)/.test(database.pathname)
-	)
-		throw new Error(
-			"Fixture sessions require loopback origin/database and a test/fixture name",
-		);
+	verifySessionFixture(configuration.origin, configuration.databaseUrl, {
+		containerId: process.env.PROJECT_FIXTURE_CONTAINER,
+		fixtureId: process.env.PROJECT_FIXTURE_ID,
+	});
 	const { auth, pool, store } = createAuthRuntime(configuration);
 	try {
 		const context = await auth.$context;
@@ -73,16 +68,32 @@ export async function fixtureSession(
 		await pool.end();
 	}
 }
+export async function writeFixtureSessions(
+	destination: string,
+	produce: () => Promise<{
+		owner: Awaited<ReturnType<typeof fixtureSession>>;
+		viewer: Awaited<ReturnType<typeof fixtureSession>>;
+	}>,
+) {
+	const file = await open(destination, "wx", 0o600);
+	try {
+		await file.writeFile(JSON.stringify(await produce()));
+	} catch (error: unknown) {
+		await unlink(destination);
+		throw error;
+	} finally {
+		await file.close();
+	}
+}
 if (import.meta.url === `file://${process.argv[1]}`) {
 	const destination = process.env.BACKOFFICE_FIXTURE_SESSION_FILE;
 	if (!destination)
 		throw new Error(
 			"BACKOFFICE_FIXTURE_SESSION_FILE is required; session values are never printed",
 		);
-	const owner = await fixtureSession("owner");
-	const viewer = await fixtureSession("viewer");
-	await writeFile(destination, JSON.stringify({ owner, viewer }), {
-		mode: 0o600,
-	});
+	await writeFixtureSessions(destination, async () => ({
+		owner: await fixtureSession("owner"),
+		viewer: await fixtureSession("viewer"),
+	}));
 	console.log("Fixture sessions written to the requested private artifact.");
 }

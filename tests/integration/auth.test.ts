@@ -1,6 +1,7 @@
+import { execFileSync } from "node:child_process";
+import { verifyProjectDatabase } from "../../scripts/check-project-fixture.ts";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
 	inviteViewer,
@@ -17,24 +18,37 @@ try {
 } catch {
 	throw new Error("Invalid isolated authentication test database URL");
 }
-if (
-	!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
-	!/(test|fixture)/.test(database.pathname)
-)
-	throw new Error(
-		"Authentication integration requires a loopback test/fixture database",
+const fixtureAuthority = {
+	containerId: process.env.PROJECT_FIXTURE_CONTAINER,
+	fixtureId: process.env.PROJECT_FIXTURE_ID,
+};
+const projectFixture = Boolean(
+	fixtureAuthority.containerId || fixtureAuthority.fixtureId,
+);
+const migrationDatabaseUrl =
+	process.env.BACKOFFICE_MIGRATION_DATABASE_URL ?? databaseUrl;
+if (projectFixture) {
+	verifyProjectDatabase(databaseUrl, fixtureAuthority, "portfolio_iam_runtime");
+	verifyProjectDatabase(
+		migrationDatabaseUrl,
+		fixtureAuthority,
+		"portfolio_iam_migrator",
 	);
-const [
-	{ betterAuth },
-	{ getMigrations },
-	{ genericOAuth },
-	{ createAuthRuntime },
-] = await Promise.all([
-	import("better-auth"),
-	import("better-auth/db/migration"),
-	import("better-auth/plugins"),
-	import("../../src/features/auth/runtime.ts"),
-]);
+} else if (
+	!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
+	!/(test|fixture)/.test(database.pathname) ||
+	migrationDatabaseUrl !== databaseUrl
+) {
+	throw new Error(
+		"Authentication integration requires its isolated fixture database",
+	);
+}
+const [{ betterAuth }, { genericOAuth }, { createAuthRuntime }] =
+	await Promise.all([
+		import("better-auth"),
+		import("better-auth/plugins"),
+		import("../../src/server/auth/runtime.ts"),
+	]);
 const configuration = {
 	origin: "http://localhost:3971",
 	databaseUrl,
@@ -44,19 +58,51 @@ const configuration = {
 	github: { clientId: "fixture", clientSecret: "fixture" },
 };
 
+async function prepareDatabase(): Promise<void> {
+	const migration = createAuthRuntime({
+		...configuration,
+		databaseUrl: migrationDatabaseUrl,
+	});
+	try {
+		try {
+			execFileSync(
+				process.execPath,
+				[
+					"scripts/auth-migrate.ts",
+					...(projectFixture ? ["--project-grants"] : []),
+				],
+				{
+					stdio: "pipe",
+					timeout: 60000,
+					env: {
+						NODE_ENV: "test",
+						NEXT_TELEMETRY_DISABLED: "1",
+						BACKOFFICE_DATABASE_URL: migrationDatabaseUrl,
+						BACKOFFICE_ORIGIN: configuration.origin,
+						BETTER_AUTH_SECRET: configuration.secret,
+						BACKOFFICE_OWNER_EMAIL: configuration.ownerEmail,
+						GOOGLE_CLIENT_ID: configuration.google.clientId,
+						GOOGLE_CLIENT_SECRET: configuration.google.clientSecret,
+						GITHUB_CLIENT_ID: configuration.github.clientId,
+						GITHUB_CLIENT_SECRET: configuration.github.clientSecret,
+					},
+				},
+			);
+		} catch {
+			throw new Error("Isolated IAM migration command failed");
+		}
+		await migration.pool.query(
+			'TRUNCATE backoffice_access_audit,backoffice_invitation,backoffice_member,session,account,"user",verification,"rateLimit" CASCADE',
+		);
+	} finally {
+		await migration.pool.end();
+	}
+}
+
 test("real PostgreSQL and Better Auth enforce invitation, role and revocation boundaries", async () => {
 	const { pool, store, options } = createAuthRuntime(configuration);
 	try {
-		await (await getMigrations(options)).runMigrations();
-		await pool.query(
-			await readFile(
-				new URL("../../migrations/001-access.sql", import.meta.url),
-				"utf8",
-			),
-		);
-		await pool.query(
-			'TRUNCATE backoffice_access_audit,backoffice_invitation,backoffice_member,session,account,"user",verification CASCADE',
-		);
+		await prepareDatabase();
 		const auth = betterAuth({
 			...options,
 			plugins: [
@@ -316,16 +362,7 @@ test("invitation landing cookie admits a verified OAuth viewer once and cannot r
 	});
 	let listening = false;
 	try {
-		await (await getMigrations(options)).runMigrations();
-		await pool.query(
-			await readFile(
-				new URL("../../migrations/001-access.sql", import.meta.url),
-				"utf8",
-			),
-		);
-		await pool.query(
-			'TRUNCATE backoffice_access_audit,backoffice_invitation,backoffice_member,session,account,"user",verification CASCADE',
-		);
+		await prepareDatabase();
 		const auth = betterAuth({
 			...options,
 			plugins: [
@@ -527,6 +564,71 @@ test("invitation landing cookie admits a verified OAuth viewer once and cannot r
 			await new Promise<void>((resolve, reject) =>
 				provider.close((error) => (error ? reject(error) : resolve())),
 			);
+		await pool.end();
+	}
+});
+
+const code = (error: unknown, expected: string) =>
+	typeof error === "object" &&
+	error !== null &&
+	"code" in error &&
+	error.code === expected;
+test("project IAM runtime cannot inherit owners or run DDL and its actual pool is bounded", {
+	skip: !projectFixture,
+}, async () => {
+	const { pool } = createAuthRuntime(configuration);
+	try {
+		const attributes = await pool.query<{
+			rolsuper: boolean;
+			rolcreatedb: boolean;
+			rolcreaterole: boolean;
+			rolinherit: boolean;
+			rolreplication: boolean;
+			rolbypassrls: boolean;
+		}>(
+			"SELECT rolsuper,rolcreatedb,rolcreaterole,rolinherit,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=current_user",
+		);
+		assert.deepEqual(attributes.rows, [
+			{
+				rolsuper: false,
+				rolcreatedb: false,
+				rolcreaterole: false,
+				rolinherit: false,
+				rolreplication: false,
+				rolbypassrls: false,
+			},
+		]);
+		for (const query of [
+			"CREATE TABLE public.forbidden(id integer)",
+			"CREATE TEMP TABLE forbidden(id integer)",
+			'ALTER TABLE "user" ADD COLUMN forbidden integer',
+			'DROP TABLE "user"',
+			"SET ROLE portfolio_iam_migrator",
+			"SET ROLE portfolio_api_runtime",
+		]) {
+			await assert.rejects(
+				() => pool.query(query),
+				(error) => code(error, "42501"),
+			);
+		}
+		const clients = await Promise.all(
+			Array.from({ length: 5 }, () => pool.connect()),
+		);
+		try {
+			await assert.rejects(
+				() => pool.connect(),
+				/timeout exceeded when trying to connect/,
+			);
+		} finally {
+			for (const client of clients) client.release();
+		}
+		assert.ok(pool.totalCount <= 5);
+		assert.equal(pool.waitingCount, 0);
+		assert.equal(
+			(await pool.query<{ value: number }>("SELECT 1 AS value")).rows[0]?.value,
+			1,
+		);
+	} finally {
 		await pool.end();
 	}
 });

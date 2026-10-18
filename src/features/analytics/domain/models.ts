@@ -40,3 +40,36 @@ export function dailyTotals(counts: ProductCount[], eventName: EventName) {
 		.sort(([a], [b]) => a.localeCompare(b))
 		.map(([day, count]) => ({ day, count }));
 }
+
+export const productTargets = [
+	"en",
+	"es",
+	"email",
+	"linkedin",
+	"github",
+	"rampy",
+	"teamcubation",
+	"cooperativa-obrera",
+	"independent",
+] as const;
+export type ProductTarget = (typeof productTargets)[number];
+const targetsByEvent: Record<EventName, readonly string[]> = {
+	page_view: [""],
+	navigation_click: [""],
+	section_open: ["rampy", "teamcubation", "cooperativa-obrera", "independent"],
+	cv_link_open: ["en", "es"],
+	contact_link_open: ["email", "linkedin", "github"],
+	company_link_open: ["rampy", "teamcubation", "cooperativa-obrera"],
+};
+export function validSemanticDimensions(
+	event: EventName,
+	section: Section,
+	target: string,
+): boolean {
+	return (
+		targetsByEvent[event].includes(target) &&
+		(!(event === "section_open" || event === "company_link_open") ||
+			section === "work") &&
+		(event !== "cv_link_open" || section === "cv")
+	);
+}

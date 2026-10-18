@@ -35,11 +35,16 @@ export function runtimeTracePath(path: string): string {
 			.split("/")
 			.some((part) => part === ".." || part === "." || part === "") ||
 		!(
-			/^(node_modules\/|src\/features\/auth\/)/.test(path) ||
+			path.startsWith("node_modules/") ||
 			[
+				"src/server/auth/config.ts",
+				"src/server/auth/runtime.ts",
+				"src/features/auth/adapters/store.ts",
+				"src/features/auth/domain/access.ts",
 				"scripts/auth-migrate.ts",
 				"package.json",
 				"migrations/001-access.sql",
+				"migrations/runtime-grants.sql",
 			].includes(path)
 		) ||
 		/\.(pem|key|p12|pfx)$/.test(path) ||
