@@ -1,6 +1,6 @@
 # Aggregate report adapter verification · 2026-10-18
 
-This increment prepares the private report boundary. It is not acceptance of the
+This historical checkpoint prepares the private report boundary. It is not acceptance of the
 new visual dashboard, native portfolio collection, Cloudflare headers or VPS deployment.
 
 Schema source: API `7f94f8cddfff8d1aae193f694042c03080632e31`;
@@ -25,6 +25,10 @@ names from global references. Negative tests retain rejection of `window.locatio
 `globalThis.window`, destructuring from `window` and `typeof window` in types.
 No permission or dependency boundary was relaxed.
 
-The new report has not yet been connected to the route UI or verified visually.
+At this checkpoint the new report had not yet been connected to the route UI or verified visually.
 Production image packaging and cross-service/browser verification remain required
 for this candidate. Existing public assistant activation remains unchanged.
+
+The later [calendar acceptance](calendar-report-2026-10-18.md) records implemented
+UI, actual container/browser CI and native-client/API/PostgreSQL readback. This
+checkpoint remains historical rather than a statement of the current UI status.
