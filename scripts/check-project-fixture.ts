@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 
-type Authority = {
+export type Authority = {
 	containerId: string | undefined;
 	fixtureId: string | undefined;
 };
@@ -76,4 +76,39 @@ export function verifyProjectDatabase(
 		binding.HostPort !== url.port
 	)
 		throw new Error("IAM fixture does not match its owned loopback container");
+}
+
+export function verifySessionFixture(
+	origin: string,
+	connection: string,
+	authority: Authority,
+	inspect?: (identity: string) => unknown,
+): void {
+	let target: URL;
+	let database: URL;
+	try {
+		target = new URL(origin);
+		database = new URL(connection);
+	} catch {
+		throw new Error("Fixture sessions require valid loopback origin/database");
+	}
+	if (!["localhost", "127.0.0.1", "[::1]"].includes(target.hostname))
+		throw new Error("Fixture sessions require loopback origin/database");
+	if (authority.containerId || authority.fixtureId) {
+		verifyProjectDatabase(
+			connection,
+			authority,
+			"portfolio_iam_runtime",
+			inspect,
+		);
+	} else if (
+		!["postgres:", "postgresql:"].includes(database.protocol) ||
+		!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
+		!/(test|fixture)/.test(database.pathname) ||
+		database.search ||
+		database.hash
+	)
+		throw new Error(
+			"Fixture sessions require loopback origin/database and a test/fixture name",
+		);
 }

@@ -413,13 +413,162 @@ test("private product analytics requires live access", async ({ page }) => {
 	).toHaveCount(0);
 });
 
+test("calendar product report separates totals, suppressed cells and filter scopes", async ({
+	page,
+	context,
+}) => {
+	test.skip(!available, "Available fixture only");
+	await authenticate(context, "viewer");
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await page.goto("/analytics?locale=en");
+	await expect(
+		page.getByRole("heading", { name: "Page views", exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByText("Current period · still in progress", { exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByText(
+			"Country collection is off. Retained historical buckets may still appear.",
+			{ exact: true },
+		),
+	).toBeVisible();
+	const grid = page.getByRole("region", {
+		name: "Reviewed-region click grid",
+		exact: true,
+	});
+	await expect(grid.getByRole("table")).toBeVisible();
+	await expect(
+		grid.getByRole("row", { name: "3 4 3", exact: true }),
+	).toBeVisible();
+	await expect(grid.getByText("Clicks withheld from the grid")).toBeVisible();
+	await expect(grid.locator("dd").first()).toHaveText("1");
+	expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+	await page.screenshot({
+		path: `test-results/calendar-${test.info().project.name}-desktop-en.png`,
+		fullPage: true,
+	});
+	await page.getByLabel("Grid page", { exact: true }).selectOption("about");
+	await expect(page.getByLabel("Public region", { exact: true })).toHaveValue(
+		"about-story",
+	);
+	await expect(
+		page
+			.getByLabel("Public region", { exact: true })
+			.locator('option[value="home-featured"]'),
+	).toHaveCount(0);
+	await page
+		.getByRole("button", { name: "Apply filters", exact: true })
+		.click();
+	await expect(page).toHaveURL(/section=about/);
+	await expect(
+		page.getByText(
+			"No grid cell meets the publication threshold in this selection.",
+			{ exact: true },
+		),
+	).toBeVisible();
+	await expect(
+		page
+			.getByRole("heading", { name: "Page views", exact: true })
+			.locator("..")
+			.locator(".metric"),
+	).toHaveText("4");
+	await page.getByLabel("Event language", { exact: true }).selectOption("es");
+	await page
+		.getByRole("button", { name: "Apply filters", exact: true })
+		.click();
+	await expect(page).toHaveURL(/eventLocale=es/);
+	await expect(
+		page.getByRole("heading", { name: "Portfolio interactions", exact: true }),
+	).toBeVisible();
+	await expect(page.getByRole("status")).toHaveText(
+		"No accepted events in this selection. This does not establish complete collection.",
+	);
+	await page.goto("/analytics?locale=en&section=home&region=about-story");
+	await expect(
+		page.getByRole("heading", {
+			name: "These filters are not supported",
+			exact: true,
+		}),
+	).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "Page views", exact: true }),
+	).toHaveCount(0);
+	await page.getByRole("link", { name: "Reset filters", exact: true }).click();
+	await expect(
+		page.getByRole("heading", { name: "Page views", exact: true }),
+	).toBeVisible();
+});
+
+test("calendar report supports Spanish light theme, reduced motion and narrow layout", async ({
+	page,
+	context,
+}) => {
+	test.skip(!available, "Available fixture only");
+	await authenticate(context, "viewer");
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	await page.setViewportSize({ width: 390, height: 844 });
+	await page.goto("/analytics?locale=es");
+	await page.getByText("Preferencias", { exact: true }).click();
+	await page.getByLabel("Tema", { exact: true }).selectOption("light");
+	await page.keyboard.press("Escape");
+	await expect(page.getByText("Preferencias", { exact: true })).toBeFocused();
+	await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+	await expect(
+		page.getByRole("heading", { name: "Vistas de página", exact: true }),
+	).toBeVisible();
+	await page.getByText("Cobertura e interpretación", { exact: true }).click();
+	await expect(
+		page.getByText(
+			/No se registran la fecha de habilitación ni una cobertura ininterrumpida/,
+		),
+	).toBeVisible();
+	expect(
+		await page.evaluate(
+			() => document.documentElement.scrollWidth <= window.innerWidth,
+		),
+	).toBe(true);
+	expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+	await page.screenshot({
+		path: `test-results/calendar-${test.info().project.name}-mobile-es-light.png`,
+		fullPage: true,
+	});
+	await page.setViewportSize({ width: 844, height: 390 });
+	expect(
+		await page.evaluate(
+			() => document.documentElement.scrollWidth <= window.innerWidth,
+		),
+	).toBe(true);
+});
+
+test("calendar operational failure stays unavailable without fabricating zero counts", async ({
+	page,
+	context,
+}) => {
+	test.skip(available, "Unavailable fixture only");
+	await authenticate(context, "viewer");
+	await page.goto("/analytics?locale=en");
+	await expect(
+		page.getByRole("heading", {
+			name: "Product data is unavailable",
+			exact: true,
+		}),
+	).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "Page views", exact: true }),
+	).toHaveCount(0);
+	await expect(
+		page.getByRole("link", { name: "Seven-day event details", exact: true }),
+	).toBeVisible();
+});
+
 test("product counts have honest labels, keyboard filtering and table alternatives", async ({
 	page,
 	context,
 }) => {
 	test.skip(!available, "Available fixture only");
 	await authenticate(context, "viewer");
-	await page.goto("/analytics?locale=en");
+	await page.goto("/analytics?view=legacy&locale=en");
 	await expect(
 		page.getByRole("heading", { name: "Portfolio interactions" }),
 	).toBeVisible();
@@ -459,7 +608,7 @@ test("product counts have honest labels, keyboard filtering and table alternativ
 	});
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.emulateMedia({ reducedMotion: "reduce" });
-	await page.goto("/analytics?locale=es");
+	await page.goto("/analytics?view=legacy&locale=es");
 	await expect(
 		page.getByRole("heading", { name: "Interacciones del portfolio" }),
 	).toBeVisible();

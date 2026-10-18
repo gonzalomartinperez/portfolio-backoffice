@@ -1,0 +1,192 @@
+.report {
+	display: grid;
+	gap: 1rem;
+}
+.window {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-block: 0.5rem;
+}
+.window h2 {
+	font-size: 1.15rem;
+	margin: 0;
+}
+.window p {
+	margin-bottom: 0.5rem;
+}
+.badge {
+	border: 1px solid var(--line-control);
+	border-radius: var(--radius-sm);
+	padding: 0.4rem 0.75rem;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+.metrics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+.metric {
+	border-top-color: var(--accent);
+}
+.metric p:last-child {
+	margin-bottom: 0;
+}
+.twoColumns {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	align-items: start;
+}
+.filters {
+	display: grid;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+.filters fieldset {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	min-inline-size: 0;
+}
+.filters legend {
+	margin-bottom: 0.75rem;
+	font-weight: 550;
+}
+.fields {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+}
+.fields label {
+	display: grid;
+	gap: 0.4rem;
+	min-width: 0;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+.fields select {
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	font-size: 1rem;
+}
+.filterFooter {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+	justify-content: space-between;
+}
+.filterFooter p {
+	max-width: 75ch;
+	margin: 0;
+}
+.filterFooter button {
+	flex-shrink: 0;
+}
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	font-size: 0.875rem;
+}
+.table caption {
+	text-align: start;
+	color: var(--text-secondary);
+	padding-block: 0.75rem;
+	font-size: 0.8rem;
+}
+.table th,
+.table td {
+	border-bottom: 1px solid var(--line-strong);
+	padding: 0.75rem 0.4rem;
+	text-align: start;
+	vertical-align: top;
+	overflow-wrap: anywhere;
+	font-variant-numeric: tabular-nums;
+}
+.table th {
+	font-weight: 500;
+}
+.table td {
+	text-align: end;
+}
+.table thead {
+	color: var(--text-secondary);
+}
+.plot {
+	height: 15rem;
+	width: 100%;
+	min-width: 0;
+}
+.scroll {
+	max-height: 24rem;
+	overflow: auto;
+}
+.sourceNotice {
+	padding: 0.75rem;
+	border-radius: var(--radius-sm);
+	background: var(--surface-raised);
+	border-inline-start: 2px solid var(--line-control);
+}
+.gridHeader {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+.gridHeader dl {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+	margin: 0;
+	max-width: 32rem;
+}
+.gridHeader dt {
+	color: var(--text-secondary);
+}
+.gridHeader dd {
+	margin: 0.25rem 0 0;
+	text-align: start;
+	font-size: 1.5rem;
+}
+.gridContent {
+	display: grid;
+	grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+	gap: 2rem;
+	align-items: start;
+}
+.heatmap {
+	width: 100%;
+	height: auto;
+	max-width: 20rem;
+}
+.coverage dd {
+	overflow-wrap: anywhere;
+}
+@media (max-width: 56rem) {
+	.twoColumns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+@media (max-width: 42rem) {
+	.fields,
+	.metrics,
+	.gridContent {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.filterFooter {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	.gridContent {
+		gap: 1rem;
+	}
+}
+
+.navigation {
+	flex-wrap: wrap;
+}

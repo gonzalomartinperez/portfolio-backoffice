@@ -2,21 +2,16 @@ import { writeFile } from "node:fs/promises";
 import { makeSignature } from "better-auth/crypto";
 import { readAuthConfiguration } from "../src/features/auth/config.ts";
 import { createAuthRuntime } from "../src/features/auth/runtime.ts";
+import { verifySessionFixture } from "./check-project-fixture.ts";
 
 export async function fixtureSession(
 	role: "owner" | "viewer",
 	configuration = readAuthConfiguration(process.env),
 ) {
-	const origin = new URL(configuration.origin);
-	const database = new URL(configuration.databaseUrl);
-	if (
-		!["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname) ||
-		!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
-		!/(test|fixture)/.test(database.pathname)
-	)
-		throw new Error(
-			"Fixture sessions require loopback origin/database and a test/fixture name",
-		);
+	verifySessionFixture(configuration.origin, configuration.databaseUrl, {
+		containerId: process.env.PROJECT_FIXTURE_CONTAINER,
+		fixtureId: process.env.PROJECT_FIXTURE_ID,
+	});
 	const { auth, pool, store } = createAuthRuntime(configuration);
 	try {
 		const context = await auth.$context;

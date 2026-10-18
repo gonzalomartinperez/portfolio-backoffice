@@ -46,6 +46,35 @@ test("validated report maps aggregate data without treating observations as uniq
 	assert.equal("schema_version" in parsed, false);
 });
 
+test("deterministic fixture honors period, language and region scopes independently", () => {
+	for (const period of ["day", "week", "month"] as const)
+		for (const offset of [0, 1, 2] as const)
+			for (const eventLocale of ["all", "en", "es"] as const)
+				for (const viewport of ["desktop", "mobile"] as const) {
+					const selection = {
+						...defaultReportSelection,
+						period,
+						offset,
+						eventLocale,
+						viewport,
+					};
+					const result = parseProductReport(
+						productReportPayload(selection),
+						selection,
+					);
+					if (eventLocale === "es") assert.equal(result.totals.views, 0);
+					if (viewport === "mobile") {
+						assert.deepEqual(result.cells, []);
+						assert.equal(result.selectedRegionExposures, 0);
+					}
+				}
+	const day = { ...defaultReportSelection, period: "day" as const };
+	assert.equal(
+		parseProductReport(productReportPayload(day), day).totals.views,
+		1,
+	);
+});
+
 test("report rejects wrong calendar selections, ambiguous dimensions and privacy leaks", () => {
 	const payload = productReportPayload();
 	for (const candidate of [

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { verifyProjectDatabase } from "../../scripts/check-project-fixture.ts";
+import {
+	verifyProjectDatabase,
+	verifySessionFixture,
+} from "../../scripts/check-project-fixture.ts";
 const authority = { containerId: "a".repeat(64), fixtureId: "b".repeat(32) };
 const connection =
 	"postgresql://portfolio_iam_runtime:synthetic@127.0.0.1:59443/portfolio_iam";
@@ -100,4 +103,50 @@ test("missing authority and remote or elevated endpoints fail before inspection"
 			/endpoint or identity/,
 		);
 	}
+});
+
+test("signed fixture sessions require legacy isolation or verified project ownership", () => {
+	const none = { containerId: undefined, fixtureId: undefined };
+	verifySessionFixture(
+		"http://localhost:3107",
+		"postgres://fixture:synthetic@127.0.0.1:55443/backoffice_test",
+		none,
+	);
+	verifySessionFixture(
+		"http://127.0.0.1:3317",
+		connection,
+		authority,
+		metadata,
+	);
+	for (const origin of ["https://shared.invalid", "invalid"])
+		assert.throws(() =>
+			verifySessionFixture(origin, connection, authority, metadata),
+		);
+	assert.throws(() =>
+		verifySessionFixture("http://127.0.0.1:3317", connection, none),
+	);
+	assert.throws(() =>
+		verifySessionFixture(
+			"http://127.0.0.1:3317",
+			connection,
+			{ ...authority, fixtureId: "c".repeat(32) },
+			metadata,
+		),
+	);
+	assert.throws(() =>
+		verifySessionFixture(
+			"http://127.0.0.1:3317",
+			connection.replace("portfolio_iam_runtime", "portfolio_iam_migrator"),
+			authority,
+			metadata,
+		),
+	);
+	assert.throws(() =>
+		verifySessionFixture(
+			"http://127.0.0.1:3317",
+			connection.replace("127.0.0.1", "shared.invalid"),
+			authority,
+			metadata,
+		),
+	);
 });
