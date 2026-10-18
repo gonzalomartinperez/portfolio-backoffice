@@ -35,3 +35,17 @@ baseline is preserved in Git, not presented as the current implementation.
 - Blocked: production release acceptance, including the API's unresolved Neo4j image
   findings and fresh exact-digest assessment; ordinary code CI is not that acceptance.
 - Deferred: publication, deployment/activation, live OAuth and physical-device testing.
+
+## Calendar analytics closure — 2026-10-18
+
+- API PR91 integrated into develop (`ed728479f4301984ebddec60cf77752604ceb3c7`):
+  v2 aggregates, migration009, closed country semantics and offline shared fixtures.
+- Backoffice PR78: calendar UI, separate filter scopes, thresholded grid and retained
+  explicit legacy view verified at300b1e2:104 unit/66 browser cases and production image CI pass.
+- Native site delivery persisted in the isolated real API/PostgreSQL fixture:
+  14 native events plus17 seed events; authenticated corrected-build browser readback passes
+  with5/7/6 totals and2/1/2 Spanish mobile selection. See the
+  [dated acceptance](verification/calendar-report-2026-10-18.md) for precise execution environments.
+- Tooling regressions cover SIGTERM cleanup and exclusive0600 session artifacts.
+- Main/final tags, production activation, live OAuth and Neo4j vendor acceptance remain
+  separate gates. Fixture acceptance never substitutes for those requirements.

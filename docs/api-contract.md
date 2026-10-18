@@ -42,8 +42,29 @@ See [TypeScript compatibility](adrs/003-typescript7-compatibility.md).
 
 `npm run contract:install`, `npm run contract:generate` and `npm run contract:check`
 install/regenerate/check the historical public archive and the pinned private operations
-snapshot plus the separately pinned product and feedback schemas. CI checks drift in all four generated declaration files. Public and private contract
+snapshot plus the separately pinned product and feedback schemas. CI checks drift in all five generated declaration files. Public and private contract
 provenance remain separate.
+
+## Aggregate report v2
+
+`contracts/product-analytics-v2.source.json` pins the additive private report schema
+from API `7f94f8cddfff8d1aae193f694042c03080632e31`. The v1 product snapshot remains
+unchanged and its existing dashboard remains available. The new server-only composition
+exposes `loadProductReport(selection)` for the detailed dashboard increment; importing
+the contract does not by itself deliver its visual interface.
+
+The v2 adapter calls `/internal/ops/v2/product-analytics` with closed calendar,
+section, region, viewport and event-language filters. Interface `locale` and data
+`eventLocale` are separate. It shares the existing five-second, bounded-response,
+no-cache/no-redirect/no-retry transport policy. Service tokens stay server-side.
+Runtime validation checks the echoed selection, UTC calendar boundaries, complete
+section/region buckets, suppression thresholds and consistent totals before mapping
+to independent application models. Counts describe received events, not people,
+reading, attention or conversions. Disabled country collection can coexist with
+historical country aggregates; it does not erase them or prove proxy trust.
+
+Focused evidence is recorded in
+[aggregate report adapter verification](verification/product-report-adapter-2026-10-18.md).
 
 ## Independent feedback contract
 

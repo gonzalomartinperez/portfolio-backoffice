@@ -21,16 +21,16 @@
 	opacity: 0.55;
 	cursor: not-allowed;
 }
-.default {
+.button.default {
 	background: var(--accent);
 	color: var(--accent-ink);
 	border-color: var(--accent);
 }
-.outline {
+.button.outline {
 	background: var(--surface-base);
 	color: var(--text-primary);
 }
-.ghost {
+.button.ghost {
 	background: transparent;
 	color: var(--text-primary);
 	border-color: transparent;
@@ -53,4 +53,9 @@
 .button[aria-disabled="true"] {
 	cursor: progress;
 	opacity: 0.55;
+}
+
+.button.default:hover:not(:disabled) {
+	background: var(--accent);
+	color: var(--accent-ink);
 }

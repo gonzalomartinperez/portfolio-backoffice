@@ -68,6 +68,49 @@ if (
 	throw new Error("Product OpenAPI wrapper drift");
 console.log(`Product contract matches API ${text(product.api_commit)}`);
 
+const detailedProduct = record(
+	JSON.parse(
+		readFileSync("contracts/product-analytics-v2.source.json", "utf8"),
+	),
+);
+const detailedBytes = readFileSync(
+	"contracts/product-analytics-v2.schema.json",
+);
+if (
+	!/^([a-f0-9]{40})$/.test(text(detailedProduct.api_commit)) ||
+	detailedProduct.endpoint !== "/internal/ops/v2/product-analytics" ||
+	createHash("sha256").update(detailedBytes).digest("hex") !==
+		text(detailedProduct.schema_sha256)
+)
+	throw new Error("Detailed product schema differs from pinned API");
+const { $defs: detailedDefinitions, ...detailedRoot } = record(
+	JSON.parse(detailedBytes.toString()),
+);
+const detailedWrapper = JSON.parse(
+	JSON.stringify({
+		openapi: "3.1.0",
+		info: { title: "Private aggregate analytics", version: "2" },
+		paths: {},
+		components: {
+			schemas: {
+				...record(detailedDefinitions),
+				ProductReportSnapshot: detailedRoot,
+			},
+		},
+	}).replaceAll("#/$defs/", "#/components/schemas/"),
+);
+if (
+	JSON.stringify(
+		JSON.parse(
+			readFileSync("contracts/product-analytics-v2.openapi.json", "utf8"),
+		),
+	) !== JSON.stringify(detailedWrapper)
+)
+	throw new Error("Detailed product OpenAPI wrapper drift");
+console.log(
+	`Detailed product contract matches API ${text(detailedProduct.api_commit)}`,
+);
+
 const feedback = record(
 	JSON.parse(readFileSync("contracts/feedback.source.json", "utf8")),
 );

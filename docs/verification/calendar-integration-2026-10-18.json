@@ -1,0 +1,28 @@
+{
+	"fixture": true,
+	"apiCommit": "596c5f3af873817b6215e6c2332f8b3511ea2e36",
+	"portfolioCommit": "193e1e6d4fd4caf7263926130ce877684ebb174b",
+	"backofficeCommit": "300b1e2cd0cadda58ff6388812439bb047ab1fb5",
+	"backofficeImage": "portfolio-backoffice:calendar-300b1e2",
+	"imageId": "sha256:109b9431c8963e8982f83d254c9b9c53a40c56cd812bbff1c6045f80648bde86",
+	"buildId": "KLVZeKYSsolKT1meJuLKj",
+	"authenticatedViewer": true,
+	"anonymousRejected": true,
+	"invalidScopeRejected": true,
+	"previousMonthReceivedEvents": 0,
+	"privateRuntimeValuesAbsentFromHtml": true,
+	"receivedTotals": {
+		"pageViews": 5,
+		"publicClicks": 7,
+		"sectionExposures": 6
+	},
+	"spanishMobileTotals": {
+		"pageViews": 2,
+		"publicClicks": 1,
+		"sectionExposures": 2
+	},
+	"sourceMode": "synthetic-real-HTTP-PostgreSQL",
+	"runtimeExecution": "production-image-files-with-host-Node24.22.0",
+	"assistantReadiness": false,
+	"physicalDevice": false
+}

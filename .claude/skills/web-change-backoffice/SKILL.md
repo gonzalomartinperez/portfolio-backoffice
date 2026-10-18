@@ -65,3 +65,10 @@ For feedback read [current-rating semantics](../../../docs/feedback-and-improvem
 Keep its flag independent and off by default. Use count-only server reads; never turn
 visitor ratings into verified accuracy or introduce raw-chat review, automatic training
 or corpus mutation. The retained-answer creation window is not a vote-event timeline.
+
+Calendar analytics defaults to v2; keep `view=legacy` explicit, with no fallback
+request. Read the distinct period/language versus region/viewport filter scopes in
+product-analytics.md. Receipt bounds are not enablement coverage, withheld grid
+cells are not zeroes, and page views are not people. Preserve the accessible table
+alongside every chart. Signed fixture artifacts must be exclusively created0600
+before sessions are minted; never overwrite an existing file or follow a symlink.

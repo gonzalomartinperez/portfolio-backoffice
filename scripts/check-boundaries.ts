@@ -119,6 +119,10 @@ export function boundaryErrors(file: string, source: string) {
 		if (
 			application &&
 			ts.isIdentifier(node) &&
+			!(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
+			!(
+				ts.isPropertyAccessExpression(node.parent) && node.parent.name === node
+			) &&
 			[
 				"window",
 				"document",
@@ -138,6 +142,10 @@ export function boundaryErrors(file: string, source: string) {
 		if (
 			domain &&
 			ts.isIdentifier(node) &&
+			!(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
+			!(
+				ts.isPropertyAccessExpression(node.parent) && node.parent.name === node
+			) &&
 			[
 				"window",
 				"document",

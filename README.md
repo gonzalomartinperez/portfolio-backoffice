@@ -12,7 +12,7 @@ access and a bilingual dashboard keep operational visibility separate from the p
 
 > **Current state:** authentication, invitations, revocation, private-API validation and
 > dashboard rendering are implemented. Browser evidence uses real isolated PostgreSQL
-> and clearly labeled synthetic metrics. Live OAuth-provider and production API pairing
+> and clearly labeled synthetic metrics. The local native-site/API/PostgreSQL/dashboard chain is also verified; live OAuth-provider and production API pairing
 > remain unverified. The paired API's
 > [Neo4j vendor release hold](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/develop/docs/verification/neo4j-release-blocker-2026-10-17.md)
 > is unresolved; green source CI is not full-stack production acceptance.
@@ -22,7 +22,7 @@ access and a bilingual dashboard keep operational visibility separate from the p
 
 | Area | What it tells you |
 | --- | --- |
-| Website interactions | Default-off accepted page/navigation/CV/contact events; seven UTC days, without visitor journeys or conversation text. |
+| Website interactions | Default-off UTC day/week/month reports, reviewed-region click grids and an explicit legacy event view; no visitor journeys or conversation text. |
 | Availability | The latest observed API state; missing data stays unavailable instead of becoming a fabricated zero. |
 | Knowledge freshness | Indexed portfolio revision, corpus version and indexing time. |
 | Executions | Observed 30-day outcomes and first-token p50/p95; searchable sampled phase timings. |
@@ -102,6 +102,21 @@ private API summary; infrastructure monitoring stays under vps-ops. An optional 
 Grafana link requires independent access controls. No historical trends or provider uptime
 are fabricated. [Design research](docs/research/operations-dashboard.md) explains the
 layout and measurement choices.
+
+<details>
+<summary><strong>Calendar reports and reviewed-region interactions</strong></summary>
+
+Choose a UTC day, ISO week or calendar month. Global counts and regional grid
+filters have separate scopes; cells below the publication threshold remain hidden.
+These original production-container captures use labeled synthetic data.
+
+<p align="center">
+  <a href="docs/assets/calendar/after-desktop.png"><img src="docs/assets/calendar/after-desktop.png" width="960" alt="Calendar interaction report with explicit period filters, page views, daily and country tables, a thresholded region grid and coverage details"></a>
+</p>
+
+[Before](docs/assets/calendar/before-desktop.png) · [Spanish mobile](docs/assets/calendar/after-mobile.png) · [Keyboard at200% text](docs/assets/calendar/keyboard-200-webkit.png) · [Tests, source revisions and measurement limits](docs/verification/calendar-report-2026-10-18.md)
+
+</details>
 
 ## Architecture and trust boundaries
 

@@ -4,6 +4,8 @@ import {
 	startOperationsFixture,
 	operationsFixtureToken,
 } from "../../scripts/operations-fixture.ts";
+import { parseProductReport } from "../../src/features/analytics/adapters/validate-report.ts";
+import { defaultReportSelection } from "../../src/features/analytics/domain/report.ts";
 
 test("operational fixture authenticates every read and exposes immutable failure modes", async () => {
 	for (const mode of ["available", "unavailable", "malformed"]) {
@@ -23,6 +25,35 @@ test("operational fixture authenticates every read and exposes immutable failure
 				assert.match(await response.text(), /fixture-1/);
 			if (mode === "malformed")
 				assert.deepEqual(await response.json(), { status: "unsupported" });
+			const detailed = `http://127.0.0.1:${address.port}/internal/ops/v2/product-analytics`;
+			assert.equal((await fetch(detailed)).status, 401);
+			const report = await fetch(detailed, {
+				headers: { Authorization: `Bearer ${operationsFixtureToken}` },
+			});
+			assert.equal(report.status, mode === "unavailable" ? 503 : 200);
+			if (mode === "available") {
+				assert.equal(
+					parseProductReport(await report.json(), defaultReportSelection).totals
+						.views,
+					4,
+				);
+				for (const query of [
+					"?section=about&region_id=home-featured",
+					"?offset=3",
+					"?period=day&period=month",
+					"?unknown=1",
+				])
+					assert.equal(
+						(
+							await fetch(detailed + query, {
+								headers: { Authorization: `Bearer ${operationsFixtureToken}` },
+							})
+						).status,
+						422,
+					);
+			}
+			if (mode === "malformed")
+				assert.deepEqual(await report.json(), { status: "unsupported" });
 		} finally {
 			server.closeAllConnections();
 			await new Promise<void>((resolve, reject) =>
