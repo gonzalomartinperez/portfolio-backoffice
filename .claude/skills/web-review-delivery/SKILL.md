@@ -23,8 +23,14 @@ permissions. Required checks must fail closed for missing/skipped/cancelled resu
 Verify non-root read-only image, assets, health/readiness distinction, isolated database
 migration and graceful termination. Do not upload fixture sessions or environment files.
 Runtime is distroless, UID65532, without shell/npm. Migration runs directly with Node.
-Use repository-root build context with explicit `-f infra/docker/app/Dockerfile` or
-`-f infra/docker/postgres/Dockerfile`. Each recipe owns `Dockerfile.dockerignore`;
+Use repository-root build context with explicit `-f infra/docker/app/Dockerfile`.
+The API owns the canonical PostgreSQL/pgvector recipe. Consume only the committed
+revision in [the database handoff](../../../docs/verification/shared-postgres-adoption-2026-10-18.md),
+with that checkout's root as context; do not recreate an IAM-only recipe here.
+Runtime CI must use that exact compiled artifact for IAM, browser and full image
+verification, with scoped managed cleanup. UID70 requires fresh data; never reuse
+or chown Debian PGDATA. The API's bootstrap/HBA and this repository's IAM migrations
+keep separate owners. Each owned recipe has `Dockerfile.dockerignore`;
 the root ignore file is a deny-default fallback. Preserve the narrow application build
 context and explicit migration dependency trace; unknown
 required imports fail packaging. Review the full image scan, not only npm audit: CI rejects
@@ -76,3 +82,10 @@ For licensing edits run `npm run license:check` and the license regression tests
 Keep the standard MIT grant unchanged; personal identity, fonts and third-party
 content remain governed by [separate notices](../../../THIRD_PARTY_NOTICES.md).
 The consistency check is not a dependency-license or legal audit.
+
+The database job also inventories the exact IAM PostgreSQL image. Read the maintained
+CI policy before accepting an image refresh: all CRITICAL and fixable HIGH block;
+unfixed HIGH remains explicit for production assessment. The application image's
+all-HIGH/CRITICAL gate is unchanged. Raw inventories and diagnostics stay ephemeral;
+only bounded counts enter public logs. A new OCI index can reference the exact old
+amd64 manifest, so compare platform bytes before claiming a runtime/security upgrade.

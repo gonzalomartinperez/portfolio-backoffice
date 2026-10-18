@@ -77,3 +77,29 @@ baseline is preserved in Git, not presented as the current implementation.
 - **Blocked/deferred:** existing Neo4j security, live OAuth, deployment/activation,
   physical-device/screen-reader and VPS capacity gates remain unchanged. No new
   model calls, external exports, services or collector activation were added.
+
+## Original security hold and replacement · 2026-10-18
+
+- **Historical rejection:** PR90 added the previously missing full IAM PostgreSQL image scan.
+  Actual combined CI39096722293 failed with1CRITICAL and59unfixedHIGH findings;
+  its Required checks aggregate correctly rejected acceptance. Other jobs passed.
+- **Diagnosed:** the unchanged recipe's isolated local image confirms
+  CVE-2026-6653 in libxml2. Debian has no supported fix indicated for the selected
+  Trixie package. The older local scanner database and hosted counts are explicitly
+  distinguished in [security evidence](verification/iam-postgres-security-2026-10-18.md).
+- **Remediation implemented:** the API owns one canonical PG18.6/pgvector0.8.7
+  maintained-base recipe. Its reviewed committed source passed754offline/41real
+  checks and a full PostgreSQL scan with0CRITICAL/0HIGH/2total findings. The
+  backoffice consumes that source with managed exact-image fixtures and retires
+  its legacy IAM-only recipe after explicit source-ownership confirmation.
+- **Completed source acceptance:** PR90 merged normally into develop
+  `2a6fdecee245706e8969a7252f0c43ab8cbba368` after independent source review and
+  [all seven final checks](https://github.com/gonzalomartinperez/portfolio-backoffice/actions/runs/39102418984).
+  The rebuilt canonical artifact passed140unit/66browser cases, real IAM/dual-app
+  recovery and a full PostgreSQL inventory with0CRITICAL/0HIGH/2total findings.
+  Dependabot87/88/89 are integrated with their original commits preserved; the
+  old index update is not called a security fix. See
+  [the shared handoff](verification/shared-postgres-adoption-2026-10-18.md).
+- **Still separate:** source tag/promotion, unresolved API application/Neo4j
+  production assessment, live OAuth, publication, deployment and physical-device
+  testing. No finding suppression or existing-volume change is authorized.

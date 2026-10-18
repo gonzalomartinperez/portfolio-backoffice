@@ -57,10 +57,3 @@ updates:
     ignore:
       - dependency-name: node
         update-types: [version-update:semver-major]
-  - package-ecosystem: docker
-    directory: /infra/docker/postgres
-    target-branch: develop
-    rebase-strategy: auto
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 2

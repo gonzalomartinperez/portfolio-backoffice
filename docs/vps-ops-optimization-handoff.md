@@ -25,16 +25,18 @@ and meaningful tests; no speculative services or repeated architectural refactor
 
 ## Inspect current committed inputs
 
-At this handoff the inspected revisions are:
+Source ownership was refreshed2026-10-18; the following are references, not a
+selected production release:
 
-- Backoffice baseline develop: `f29b6cd91b6869c7ad190067ef9ca53fdfc06312`; consume
-  the later merged container optimization and its successful Actions evidence.
+- Backoffice baseline develop: `52231498950eee9afe47250bc0ff8a16b65f1ee0`; PR90
+  prepares canonical PostgreSQL consumption and dependency maintenance. Verify its
+  final merged revision and exact-head seven-job/browser evidence before selection.
   Canonical public repo is `gonzalomartinperez/portfolio-backoffice`.
-- API: `c6012067c4a99db477bb6ddcf1f26dae095641ca`. Inspect its committed Dockerfile,
+- API database candidate: `f77c8d878401cc2a5bcea63716396b4bbcc1fc18`. Inspect its committed Dockerfile,
   deployment contract, environment schema, migrations, SSE and knowledge-sync behavior.
-- vps-ops inspected baseline: `04be6193710d23cab324d7b3bb4da9cf12b2be16`.
-  Its portfolio inventory still names the former web repo and iframe routes; reconcile
-  actual committed changes before replacing these obsolete assumptions.
+- The old vps-ops baseline `04be6193710d23cab324d7b3bb4da9cf12b2be16` is historical.
+  vps-ops owns its current inventory; do not treat that dated reference as current
+  configuration or copy a shared production stack into this application repository.
 
 Pin the inspected portfolio reference separately. Never depend on application working
 trees. Record compatible source SHAs, API/schema contracts, migrations, corpus revision,
@@ -65,11 +67,10 @@ Verify combined application/proxy TLS, cache and security headers on all relevan
 Only Coolify's shared reverse proxy exposes application traffic; restrict administrative
 access separately. Databases, internal monitoring and operational APIs stay private.
 
-**Committed documentation conflict to resolve with the API owner:** the inspected API
-deployment document still describes `/embed` and an assistant-only origin allowlist.
-Those presentation assumptions are obsolete. The native portfolio requires its reviewed
-exact origin in the API configuration; do not copy the old target allowlist unchanged.
-Request an updated committed handoff. Backoffice's retained public contract snapshot is
+The native portfolio requires its reviewed exact origin in API configuration;
+historical iframe and assistant-only origin assumptions are obsolete. Consume the
+current API runtime handoff and verify the effective exact allowlist rather than
+copying the original audit's configuration. Backoffice's retained public contract snapshot is
 historical (`6b1e65f2406ba5ddf21d15c56c34ccf672d90bbb`). The separate private v1
 contract now has its own pin/hash in `contracts/operations.source.json`; release metadata
 retains this distinction and does not claim deployed OAuth/API pairing.
@@ -77,13 +78,13 @@ retains this distinction and does not claim deployed OAuth/API pairing.
 ## Backoffice runtime to preserve
 
 Read `docs/deployment-contract.md` for the complete validated environment schema.
-Node24.21.0, Next standalone, digest-pinned distroless Debian13, UID/GID65532, `/app`,
+Node24.22.0, Next standalone, digest-pinned distroless Debian13, UID/GID65532, `/app`,
 private port3000, exec `node server.js`, empty entrypoint, no shell/npm. Health commands
 must be HTTP or exec-form Node. Never install dependencies in the runtime.
-Use the image's Docker healthcheck or Compose exec-form Node check. Coolify dashboard
-HTTP checks require curl/wget, which this image intentionally lacks; do not enable them.
-Verify effective image health inheritance and proxy routing in the selected version,
-not a shell-based dashboard command. References: [health checks](https://coolify.io/docs/applications/configuration/health-checks)
+Use the image's Docker healthcheck or an exec-form Node check. The image has no
+curl/wget/shell; verify that the selected Coolify probe mechanism does not require
+those missing binaries. Verify effective image-health inheritance and proxy routing
+in the selected version. References: [health checks](https://coolify.io/docs/applications/configuration/health-checks)
 and [prebuilt images](https://coolify.io/docs/applications/deployments/docker-image).
 
 `/api/health` is liveness. `/api/ready` checks authentication configuration/schema/database,
@@ -110,13 +111,25 @@ no additional swap, 0.75 CPU, 128 PIDs, drop all capabilities, no-new-privileges
 local log driver10 MB x3. Tmpfs counts toward RAM. Preserve equivalent bounded policies
 supported by Coolify. Idle SIGTERM was tested; active-request draining is not proven.
 
-Local image disk footprint fell955→302 MB; content bytes198,528,077→72,706,013. Docker29
+Historical local image disk footprint fell955→302 MB; content bytes198,528,077→72,706,013. Docker29
 containerd disk accounting includes compressed/unpacked shared layers. A small synthetic
 workload sampled53→72 MiB memory, not peak or a VPS capacity guarantee. CI rejects all
 HIGH/CRITICAL runtime CVEs, including unfixed ones; 23 MEDIUM/eight LOW remained on the
-local scan date. Re-scan selected digests and triage findings before release.
+local scan date. These dated samples are not measurements of the new candidate.
+Re-scan selected digests and triage findings before release.
 
 ## API, migrations and streaming
+
+The API owns the single vector-capable PostgreSQL18.6/pgvector0.8.7 recipe and
+bootstrap/HBA contract. The backoffice retains IAM migrations/grants and consumes
+the reviewed source rather than a second IAM-only recipe. The maintained-base
+candidate uses Alpine3.24/UID70 on fresh data. Never reuse/chown Debian UID999
+PGDATA; existing data requires separately rehearsed logical migration, locale/index
+and rollback verification. Both applications' scoped roles and independent restores
+are acceptance gates. The [database source handoff](verification/shared-postgres-adoption-2026-10-18.md)
+records executed API evidence and the required exact-image backoffice/browser closure.
+Alpine support does not extend to PostgreSQL18's EOL; main ends2028-06-01 and
+community packages have a shorter cadence. No production image is selected here.
 
 Do not invent backend behavior. Current image runs non-root Python on private8000;
 readiness depends on PostgreSQL/pgvector, Neo4j, current schema and public corpus. Verify
