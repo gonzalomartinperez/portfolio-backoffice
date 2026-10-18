@@ -1,26 +1,25 @@
-# Release-candidate acceptance
+# Source release acceptance
 
-This bounded checklist supplements the implementation plan. A candidate is not a production
-release; remaining deployment/device gates are explicit in the verification report.
-The current three-deliverable status and evidence live in the [interaction checklist](verification/interaction-polish.md).
+The single prioritized status is [the work checklist](work-checklist.md). This
+repository is the authenticated backoffice; historical chat/iframe acceptance
+belongs to its dated receipts and the portfolio owner, not to this runtime.
 
-| Gate | Acceptance evidence |
+| Gate | Current acceptance |
 | --- | --- |
-| Preserved scope | Existing quality-chat work incorporated; only this frontend changed; develop-targeted PR |
-| Architecture | Pure lifecycle models, transport ports/mapping, deliberate React composition; resolved-path and dynamic-import negative tests |
-| Full flows | Bootstrap/history/send/source/stop/interruption/reconnect/rename/delete/feedback; no automatic generation retry |
-| Race safety | Delayed feedback, stale history, partial correlation, rapid submit/stop, creation/unmount cancellation tests |
-| Untrusted data | Validated HTTP/SSE, safe Markdown/links, no remote model images, no-store credentialed requests |
-| Accessible UI | Both languages/themes, five viewports plus keyboard-sized viewport, keyboard/focus/IME/zoom/scroll behavior, axe and inspected screenshots |
-| Tooling | Frozen npm install, Biome adaptations, strict TypeScript, unit/contract/import checks, generated drift, production browser tests |
-| Public project | README screenshots/setup/status, CONTRIBUTING, SECURITY, MIT scope/attribution, templates, update configuration, redacted scan/local links |
-| Integration | Required checks and live-fixture CI pass before normal PR merge; main and production untouched |
+| Authentication | Verified-owner/invited-viewer policy, explicit Google/GitHub linking, live membership, atomic invitations/revocation, CSRF/origin checks and private IAM migrations. Live provider registrations remain unverified. |
+| Private metrics | Runtime-validated operational/product/feedback contracts, no-store bounded server reads, no browser service tokens, safe unavailable/fixture states and semantic table alternatives. No deployed monitoring claim. |
+| Calendar analytics | UTC periods, distinct filter scopes, receipt coverage and withheld-cell semantics. The native→API/PostgreSQL→authenticated UI fixture proof is separately attributed in the work checklist. |
+| Architecture | Pure feature models/ports, concrete adapters, private server composition, client entry and shared UI. AST negatives protect direct/transitive server paths and valid Server Action RPCs. |
+| Runtime | Exact trace closure for Node migrations, non-root read-only production image, health/readiness distinction, graceful shutdown and isolated PostgreSQL restore/restart tests. |
+| Quality | Frozen installation, Biome, strict TypeScript7/generated routes, unit/contract/architecture checks, real IAM/fake-provider integration, Chromium/Firefox/WebKit accessibility/interaction checks and redacted history scan. |
+| Delivery | Normal current-head CI/review before develop/main PR merge. Publication and production require separate authority; vps-ops owns Coolify, routing, shared resources and recovery. |
 
-Read-only architecture/security and accessibility reviews found feedback lifecycle, stale
-partial-recovery and focus-restoration bugs. Those findings are covered by regression tests.
-No review agent modified the worktree. Final counts, artifact paths, measurements and limits
-are recorded in [verification](verification/quality-chat.md).
+Review [the runtime contract](deployment-contract.md), [Docker ownership](ci.md),
+[skill compatibility evidence](agent-skills.md) and the dated reports linked from
+[the checklist](work-checklist.md). Existing software is MIT with separately scoped
+identity, reference content, fonts and third-party rights.
 
-Follow-ups outside candidate approval: physical iOS/Android keyboard/browser-chrome testing,
-human assistive-technology review, deployed HTTPS/CORS/cookie configuration, provider quality
-assessment under separate paid-call authorization. These are not represented as completed tests.
+Remaining release limitations are explicit: blocked API Neo4j vendor acceptance,
+private publication path/visibility, deployed API pairing, live OAuth, effective
+TLS/headers, VPS sizing/reboot/restore and human screen-reader/physical-device tests.
+A source version or tag never certifies those gates or activates the assistant.

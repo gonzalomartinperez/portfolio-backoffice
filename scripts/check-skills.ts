@@ -11,6 +11,14 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { load, FAILSAFE_SCHEMA } from "js-yaml";
 
+function metadata(source: string, portable: boolean): Record<string, unknown> {
+	try {
+		return record(load(source, portable ? { schema: FAILSAFE_SCHEMA } : {}));
+	} catch {
+		throw new Error("Invalid YAML metadata");
+	}
+}
+
 export function validateSkills(directoryRoot: string) {
 	const root = realpathSync(directoryRoot);
 	const errors: string[] = [];
@@ -36,7 +44,7 @@ export function validateSkills(directoryRoot: string) {
 			const source = readFileSync(entry, "utf8");
 			const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]+)$/.exec(source);
 			if (!match) throw new Error("Missing YAML frontmatter or skill body");
-			const meta = record(load(match[1] ?? "", { schema: FAILSAFE_SCHEMA }));
+			const meta = metadata(match[1] ?? "", true);
 			if (
 				Object.keys(meta).some((key) => !["name", "description"].includes(key))
 			)
@@ -107,6 +115,23 @@ export function validateSkills(directoryRoot: string) {
 				)
 			)
 				fail(file, "Machine-specific or global path");
+			if (name === "openai.yaml") {
+				try {
+					const client = metadata(source, false);
+					const policy =
+						client.policy === undefined ? {} : record(client.policy);
+					if (
+						policy.allow_implicit_invocation !== undefined &&
+						policy.allow_implicit_invocation !== true
+					)
+						throw new Error("Explicit-only skill policy");
+				} catch {
+					fail(
+						file,
+						"Automatic skill selection must remain enabled; invalid client metadata",
+					);
+				}
+			}
 			if (!file.endsWith(".md")) continue;
 			for (const match of source.matchAll(/!?\[[^\]]*\]\(([^\s)]+)\)/g)) {
 				const ref = match[1];

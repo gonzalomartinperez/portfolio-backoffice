@@ -1,6 +1,6 @@
 # ADR007: private composition and feature-owned auth ports
 
-Accepted as implementation candidate,2026-10-18. Required PR CI remains authoritative.
+Accepted through PR79 with full required CI,2026-10-18.
 
 Source folders now express actual boundaries: thin app routes, private server
 composition/config/lifecycle, feature domain/application/adapters/presentation and

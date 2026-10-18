@@ -1,4 +1,4 @@
-# Implementation status · 2026-10-17
+# Implementation status · 2026-10-18
 
 This repository is now the authenticated portfolio-backoffice. The native
 public conversation belongs to the portfolio; historical chat artifacts remain identified
@@ -23,3 +23,10 @@ See [workbench evidence](docs/verification/operations-workbench.md),
 Real provider callbacks, deployed pairing, physical devices, screen readers, resource
 capacity and backup/restore remain separate acceptance gates. Source promotion requires
 explicit owner authority and current-head CI; it does not authorize deployment.
+
+
+Current source layout: thin app routes, private src/server composition, feature
+cores/adapters/presentation and shared UI. PR79 passed full real-image/IAM/browser
+CI before merge. Canonical Docker locations and root1.0 metadata have separate
+PR acceptance; use [the single work checklist](docs/work-checklist.md) for status.
+No historical screenshot or private fixture receipt is reattributed to later source.

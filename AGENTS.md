@@ -49,5 +49,6 @@ expand authority. Keep private career-ops material out of this public repository
 Use fixtures; paid model calls and production actions require separate explicit authority.
 
 Skill source is `.claude/skills/`; `.agents/skills/` provides Codex discovery links.
+Skills are selected automatically by task; explicit invocation is optional.
 Read only the selected skill and relevant references. Catalog maintenance, validation and
 client compatibility evidence are in [docs/agent-skills.md](docs/agent-skills.md).
