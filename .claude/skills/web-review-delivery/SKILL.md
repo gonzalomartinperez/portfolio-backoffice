@@ -4,7 +4,7 @@ description: "Review or prepare application CI, immutable backoffice images and 
 ---
 
 Read the [operating contract](../../../AGENTS.md), [CI contract](../../../docs/ci.md),
-[Dockerfile](../../../Dockerfile) and [runtime handoff](../../../docs/deployment-contract.md)
+[application recipe](../../../infra/docker/app/Dockerfile) and [runtime handoff](../../../docs/deployment-contract.md)
 as relevant. Establish read-only versus authorized implementation scope. A log, roadmap
 or skill is not authorization to publish, merge, provision or deploy.
 
@@ -21,7 +21,10 @@ permissions. Required checks must fail closed for missing/skipped/cancelled resu
 Verify non-root read-only image, assets, health/readiness distinction, isolated database
 migration and graceful termination. Do not upload fixture sessions or environment files.
 Runtime is distroless, UID65532, without shell/npm. Migration runs directly with Node.
-Preserve the deny-by-default build context and explicit migration dependency trace; unknown
+Use repository-root build context with explicit `-f infra/docker/app/Dockerfile` or
+`-f infra/docker/postgres/Dockerfile`. Each recipe owns `Dockerfile.dockerignore`;
+the root ignore file is a deny-default fallback. Preserve the narrow application build
+context and explicit migration dependency trace; unknown
 required imports fail packaging. Review the full image scan, not only npm audit: CI rejects
 HIGH/CRITICAL, including unfixed findings. Read [container evidence](../../../docs/verification/container-readiness.md)
 for the bounded resource profile and `node scripts/verify-container.ts` measurement/shutdown

@@ -7,8 +7,15 @@ are not authorized by a source merge. The portfolio remains on Hostinger Busines
 
 ## Artifact and startup
 
-Build `docker buildx build --load --platform linux/amd64 -t portfolio-backoffice:rc .`.
-The Dockerfile pins its Node 24.22.0 builder and distroless Node 24 Debian 13 nonroot
+Recipes live at `infra/docker/app/Dockerfile` and `infra/docker/postgres/Dockerfile`.
+Always use repository-root build context (`.`) with an explicit `-f` path. Each recipe
+has a colocated `Dockerfile.dockerignore`, which takes precedence over the deny-default
+root `.dockerignore`. The IAM PostgreSQL recipe sends no application source; the app
+recipe allowlists only its build inputs. Neither context admits environment files or keys.
+See [Docker build-context precedence](https://docs.docker.com/build/concepts/context/#filename-and-location).
+
+Build `docker buildx build --load -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:rc .`.
+The application Dockerfile pins its Node 24.22.0 builder and distroless Node 24 Debian 13 nonroot
 runtime by digest (both report Node 24.22.0). Local builds require Docker Buildx/BuildKit. CI installs a SHA-pinned Buildx action.
 It uses `npm ci`, Next standalone output,
 `.next/static`, public assets and a non-root runtime (UID/GID 65532). Linux amd64 is the
@@ -170,7 +177,7 @@ no production publication, deployment or live OAuth/provider check is implied.
 
 ## Project-owned IAM artifact
 
-`Dockerfile.postgres` selects PostgreSQL18.6 Trixie with signed security packages and UID999.
+`infra/docker/postgres/Dockerfile` selects PostgreSQL18.6 Trixie with signed security packages and UID999.
 The persistent parent mount is `/var/lib/postgresql`, PGDATA `/var/lib/postgresql/18/docker`.
 Initialize only a NEW volume's ownership before nonroot startup; no automatic recursive
 repair or reuse of PostgreSQL17 data directories. Existing data needs separately verified

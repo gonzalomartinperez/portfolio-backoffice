@@ -218,7 +218,7 @@ Use a disposable database on an unused loopback port. The values below are publi
 credentials, not production secrets.
 
 ```sh
-docker build -f Dockerfile.postgres -t portfolio-backoffice-postgres:local .
+docker build -f infra/docker/postgres/Dockerfile -t portfolio-backoffice-postgres:local .
 
 docker run -d --rm --name portfolio-readme-fixture \
   --user 999:999 --read-only --cap-drop ALL --security-opt no-new-privileges \
@@ -306,7 +306,7 @@ real-database and unverified production behavior. Local figures are not field pe
 ## Runtime and release ownership
 
 ```sh
-docker build --platform linux/amd64 -t portfolio-backoffice:local .
+docker build -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:local .
 ```
 
 The standalone image runs as UID **65532**, exposes private port **3000**, has no shell/npm,

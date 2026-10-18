@@ -12,7 +12,10 @@ skip verification. Repository rules remain authoritative; no admin bypass or bot
 | browser | Pinned Trixie builder/distroless runtime; full HIGH/CRITICAL scanner gate; PostgreSQL18.6; exact-image migrations/readiness/resource/anonymous workload checks; real database IAM plus fake OAuth; Chromium/Firefox/WebKit operations/accessibility; bounded SIGTERM |
 | checks | Fail-closed aggregate, required by repository protections |
 
-Build inputs use `.dockerignore` allowlisting and no production secrets. Hosted runners are
+Builds use repository-root context and explicit `infra/docker/app/Dockerfile` or
+`infra/docker/postgres/Dockerfile` paths. Colocated `Dockerfile.dockerignore` files
+allowlist app inputs and exclude every repository file for PostgreSQL, respectively.
+The root `.dockerignore` denies all files as a fallback. No production secrets enter either context. Hosted runners are
 GitHub-managed Ubuntu24.04, not the VPS; actions are SHA-pinned and checkouts do not persist
 credentials. PR execution has only `contents: read`. Fixtures have explicit synthetic secrets,
 loopback origins and dedicated runner data. Image/DB checks do not establish live OAuth,
@@ -89,3 +92,11 @@ flows, independent recovery, restart and fresh-cluster restore. This is an isola
 compatibility fixture, not a production stack or mutable sibling dependency. The
 legacy IAM image check is retained until the replacement is accepted. Only the safe
 synthetic JSON receipt is uploaded; never the private IAM diagnostic log or archives.
+
+## Pinned foreign recipe exception
+
+The project-engine compatibility step checks out API revision
+`defe16a855a13401292257d337ce5dd937b00d23` into an ignored artifact directory. Its
+`Dockerfile.postgres` remains the correct recipe path in that immutable foreign checkout.
+Do not rewrite it to this repository's layout or consume the API working tree. Update
+that consumer only when a separately reviewed committed API handoff changes the pin.

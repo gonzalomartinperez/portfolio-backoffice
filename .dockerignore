@@ -1,31 +1,3 @@
-# Only application build inputs may enter the image context.
-*
-!Dockerfile
-!.dockerignore
-!LICENSE
-!package.json
-!package-lock.json
-!next.config.ts
-!next-env.d.ts
-!tsconfig.json
-!src/
-!src/**
-!public/
-!public/**
-!contracts/
-!contracts/types.d.ts
-!contracts/operations.types.d.ts
-!contracts/product-analytics.types.d.ts
-!contracts/product-analytics-v2.types.d.ts
-!contracts/product-analytics-v2.schema.json
-!contracts/feedback.types.d.ts
-!scripts/
-!scripts/auth-migrate.ts
-!scripts/prepare-runtime.ts
-!migrations/
-!migrations/**
-**/.env*
-**/*.pem
-**/*.key
-**/*.p12
-**/*.pfx
+# Fail closed for unspecified recipes. Build with an explicit infra/docker/*/Dockerfile.
+# Docker applies that recipe's Dockerfile.dockerignore instead of this fallback.
+**
