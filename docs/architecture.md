@@ -77,6 +77,15 @@ The production build still enforces `server-only`. Pure application modules may 
 perform direct browser/environment/network access; adapters may not import feature
 presentation or entry composition. Negative fixtures exercise the actual checker.
 
+Every collected source file must have an explicit placement, even when it has no
+imports. Feature files belong to `domain`, `application`, `adapters`, `presentation`
+or an exact `entry.ts`/`entry.tsx` composition module (including `.mts`/`.cts`).
+The other owned locations are `app`, `server`, `shared/ui`, `shared/http`,
+`shared/accessibility` and the exact `src/proxy.ts` framework entry. Unknown roots,
+feature layers and shared groups fail both the per-file and graph checks. Adding
+a location requires an intentional classifier update and positive/negative probes;
+renaming an adapter directory cannot silently remove its dependency checks.
+
 These checks are a regression guard, not a sandbox or a substitute for authorization
 and behavioral review. Computed imports in pure/presentation layers are rejected;
 module-graph resolution supports relative imports and the conventional @/ source
