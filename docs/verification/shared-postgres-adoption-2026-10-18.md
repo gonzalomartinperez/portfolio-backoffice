@@ -39,11 +39,27 @@ and the actual two-application role/recovery harness. A second local tag is an a
 not a second recipe or build. Independently rebuilt jobs must not be described as
 byte-identical or as registry artifacts.
 
-PR90 must pass all seven current-head jobs, including66browser cases against the
-replacement, restricted fake-provider OAuth, role/TEMP/isolation checks, restoration,
-source/image provenance and the complete scanner policy. Initial source-only units
-or an older API/BO run cannot substitute for that acceptance. Current execution
-and merge status are available on the [reviewed PR](https://github.com/gonzalomartinperez/portfolio-backoffice/pull/90).
+[PR90](https://github.com/gonzalomartinperez/portfolio-backoffice/pull/90) merged
+normally into develop `2a6fdecee245706e8969a7252f0c43ab8cbba368` after independent
+source review and [final Quality39102418984](https://github.com/gonzalomartinperez/portfolio-backoffice/actions/runs/39102418984)
+passed all seven jobs. Head `1c14317ccd383f02ca92f13726da29a37053c4ff` passed140unit
+and66browser cases across Chromium, Firefox and WebKit, restricted fake-provider
+OAuth, role/TEMP/isolation checks, independent/fresh-cluster restoration,
+source/image provenance and the complete scanner policy.
+
+The earlier complete [Quality39102151155](https://github.com/gonzalomartinperez/portfolio-backoffice/actions/runs/39102151155)
+reported0CRITICAL/0HIGH/2total PostgreSQL findings. Its tested merge
+`9d2990b4219858b541ec7283a8fafa3d2fc8f209` and candidate head have identical tree
+`88ba5e89459b63aed0910d3a12435f3ffe7dae04`. Database-job image ID
+`sha256:4ed650d9ab6963876c255e0d2413bf82b59fb525e1c53935406289924291e016`
+is local hosted-CI evidence, not a registry digest. End-to-end time was267seconds
+including queue time; database207seconds, browser191seconds and container143seconds.
+These are one hosted execution's observations, not speedup or VPS capacity claims.
+The application image's full HIGH/CRITICAL policy, resources/readiness and bounded
+idle shutdown checks also passed. No paid model calls or live OAuth were involved.
+Dependabot87/88/89 were recognized as merged with original commits preserved.
+The develop merge has its own [post-integration run](https://github.com/gonzalomartinperez/portfolio-backoffice/actions/runs/39102748572);
+its result is separate from the candidate evidence above.
 
 Only the two obsolete IAM recipe files and their Docker dependency-discovery entry
 are retired. Dependabot87's original bytes/commit and the
