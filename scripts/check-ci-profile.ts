@@ -1,9 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { load } from "js-yaml";
-import { field, list, record, text } from "./json.ts";
 import { requiredJobs } from "./check-ci-results.ts";
+import { postgresSource } from "./ci-postgres.ts";
+import { field, list, record, text } from "./json.ts";
 
 export const names = {
 	workflows: "Workflow validation",
@@ -133,8 +134,8 @@ export function validateCiProfile(value: unknown): void {
 			if (!command.test(runs))
 				throw new Error(`Missing actual job adapter: ${id}`);
 		if (["database", "container", "browser"].includes(id)) {
-			const build = steps.find((step) =>
-				String(field(step, "uses")).startsWith("docker/build-push-action@"),
+			const build = steps.find(
+				(step) => field(step, "with", "file") === "infra/docker/app/Dockerfile",
 			);
 			if (
 				field(build, "with", "context") !== "." ||
@@ -154,13 +155,7 @@ export function validateCiProfile(value: unknown): void {
 				throw new Error("Only container may write the shared build cache");
 			if (!/ci-build-provenance\.ts record/.test(runs))
 				throw new Error("Missing exact-source build provenance");
-			if (
-				JSON.stringify(field(jobs, id, "services")) !==
-				JSON.stringify(field(jobs, "database", "services"))
-			)
-				throw new Error(
-					"Runtime fixtures differ from the reviewed database configuration",
-				);
+			validateManagedPostgres(record(jobs[id]), id);
 		}
 	}
 
@@ -171,6 +166,184 @@ export function validateCiProfile(value: unknown): void {
 	])
 		if (field(workflow, "env", text(key)) !== value)
 			throw new Error("Paid providers must be disabled");
+	validatePostgresSecurity(workflow);
+}
+
+function validateManagedPostgres(
+	job: Record<string, unknown>,
+	id: string,
+): void {
+	if (job.services !== undefined)
+		throw new Error(
+			"Runtime jobs require the canonical managed PostgreSQL artifact",
+		);
+	const steps = list(job.steps).map(record);
+	const required = (name: string) => {
+		const matches = steps.filter((step) => step.name === name);
+		if (matches.length !== 1)
+			throw new Error("Missing canonical PostgreSQL lifecycle");
+		const step = record(matches[0]);
+		if (
+			step.env !== undefined ||
+			step.shell !== undefined ||
+			step["working-directory"] !== undefined ||
+			step["continue-on-error"] !== undefined
+		)
+			throw new Error("PostgreSQL lifecycle overrides are forbidden");
+		return step;
+	};
+	const checkout = required("Read the canonical PostgreSQL source");
+	const verify = required("Verify the canonical PostgreSQL source");
+	const build = required("Build the canonical PostgreSQL artifact");
+	const start = required("Start this job's canonical PostgreSQL fixture");
+	const stop = required("Remove only this job's canonical PostgreSQL fixture");
+	if (
+		field(checkout, "with", "repository") !==
+			"gonzalomartinperez/portfolio-assistant-api" ||
+		field(checkout, "with", "ref") !== postgresSource ||
+		field(checkout, "with", "path") !== ".artifacts/api-compatibility" ||
+		verify.run !== "node scripts/ci-postgres.ts source" ||
+		start.run !== "node scripts/ci-postgres.ts start" ||
+		stop.run !== "node scripts/ci-postgres.ts cleanup" ||
+		stop.if !== "always()"
+	)
+		throw new Error("Canonical PostgreSQL source or lifecycle changed");
+	for (const step of [checkout, verify, build, start])
+		if (step.if !== undefined)
+			throw new Error("Canonical PostgreSQL lifecycle may not be skipped");
+	if (
+		field(build, "with", "context") !== ".artifacts/api-compatibility" ||
+		field(build, "with", "file") !==
+			".artifacts/api-compatibility/infra/docker/postgres/Dockerfile" ||
+		field(build, "with", "platforms") !== "linux/amd64" ||
+		field(build, "with", "load") !== true ||
+		field(build, "with", "push") === true ||
+		field(build, "with", "tags") !== "portfolio-backoffice-postgres:rc" ||
+		field(build, "with", "cache-from") !==
+			"type=gha,scope=canonical-postgres18-amd64" ||
+		(id === "database"
+			? field(build, "with", "cache-to") !==
+				"type=gha,mode=max,scope=canonical-postgres18-amd64"
+			: field(build, "with", "cache-to") !== undefined)
+	)
+		throw new Error("Canonical PostgreSQL build or cache changed");
+	const positions = [checkout, verify, build, start, stop].map((step) =>
+		steps.indexOf(step),
+	);
+	if (
+		positions.some(
+			(position, index) =>
+				index > 0 && position <= (positions[index - 1] ?? -1),
+		) ||
+		positions[4] !== steps.length - 1
+	)
+		throw new Error("Canonical PostgreSQL lifecycle order changed");
+	const runs = steps.map((step) => String(step.run ?? "")).join("\n");
+	if (/postgres:18.*trixie|docker build -f infra\/docker\/postgres/.test(runs))
+		throw new Error("Legacy PostgreSQL build is forbidden");
+	if (
+		!runs.includes('--network "$CI_POSTGRES_NETWORK"') ||
+		!runs.includes("$" + "{process.env.CI_POSTGRES_HOST}:5432/backoffice_test")
+	)
+		throw new Error("Application must use its canonical PostgreSQL fixture");
+	if (
+		id === "database" &&
+		!runs.includes(
+			"docker tag portfolio-backoffice-postgres:rc portfolio-assistant-postgres:project-ci",
+		)
+	)
+		throw new Error(
+			"Dual-application recovery must reuse the scanned PostgreSQL image",
+		);
+}
+
+function validatePostgresSecurity(workflow: Record<string, unknown>): void {
+	if (
+		field(workflow, "defaults", "run", "shell") !== "bash" ||
+		field(workflow, "jobs", "database", "defaults") !== undefined
+	)
+		throw new Error(
+			"PostgreSQL security requires the reviewed fail-closed shell",
+		);
+	const steps = list(field(workflow, "jobs", "database", "steps")).map(record);
+	const container = list(field(workflow, "jobs", "container", "steps"));
+	const normalize = (source: unknown) =>
+		text(source)
+			.replace(/[ \t]*\\\n\s*/g, " ")
+			.split("\n")
+			.map((line) => line.trim())
+			.join("\n")
+			.trim();
+	const required = (name: string) => {
+		const found = steps.filter((step) => step.name === name);
+		if (found.length !== 1) throw new Error("Missing PostgreSQL security gate");
+		const step = record(found[0]);
+		if (
+			step.if !== undefined ||
+			step.env !== undefined ||
+			step.shell !== undefined ||
+			step["working-directory"] !== undefined
+		)
+			throw new Error("PostgreSQL security steps may not be bypassed");
+		return step;
+	};
+	const installer = required("Verify pinned PostgreSQL image scanner");
+	const appInstaller = container.find(
+		(step) => field(step, "name") === "Verify pinned image scanner",
+	);
+	if (
+		installer.run !== field(appInstaller, "run") ||
+		!text(installer.run).includes(
+			"https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz",
+		) ||
+		!text(installer.run).includes(
+			"c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check",
+		)
+	)
+		throw new Error(
+			"PostgreSQL scanner must use the reviewed checksum-pinned installer",
+		);
+	const commands = [
+		[
+			"Inventory the exact PostgreSQL image",
+			"umask 077\nif ! /tmp/image-scanner/trivy --config '' image --image-src docker --ignorefile '' --scanners vuln --list-all-pkgs --format json --output /tmp/postgres-image-vulnerabilities.json portfolio-backoffice-postgres:rc > /tmp/postgres-image-scan.log 2>&1; then\necho 'PostgreSQL image inventory failed; raw diagnostics remain ephemeral.'\nexit 1\nfi",
+		],
+		[
+			"Gate PostgreSQL critical and fixable high findings",
+			"postgres_image_id=$(docker image inspect portfolio-backoffice-postgres:rc --format '{{.Id}}')\nnode scripts/postgres-image-security.ts /tmp/postgres-image-vulnerabilities.json \"$postgres_image_id\"",
+		],
+	];
+	const order = [steps.indexOf(installer)];
+	for (const [name, command] of commands) {
+		const step = required(text(name));
+		if (normalize(step.run) !== command)
+			throw new Error("PostgreSQL security command changed or bypassed");
+		order.push(steps.indexOf(step));
+	}
+	const build = steps.findIndex(
+		(step) => step.name === "Build the canonical PostgreSQL artifact",
+	);
+	if (
+		build < 0 ||
+		build >= (order[0] ?? -1) ||
+		order.some(
+			(position, index) => index > 0 && position <= (order[index - 1] ?? -1),
+		)
+	)
+		throw new Error("PostgreSQL security must follow its actual image build");
+	const uploads = steps.filter((step) =>
+		String(step.uses).startsWith("actions/upload-artifact@"),
+	);
+	if (
+		uploads.length !== 1 ||
+		field(uploads[0], "with", "path") !== ".artifacts/project-databases.json"
+	)
+		throw new Error(
+			"Database artifacts may not expose raw image inventories or diagnostics",
+		);
+	for (const env of [workflow.env, field(workflow, "jobs", "database", "env")])
+		if (Object.keys(record(env ?? {})).some((key) => key.startsWith("TRIVY_")))
+			throw new Error("PostgreSQL scanner environment overrides are forbidden");
 }
 export function validateWorkflowTrust(value: unknown): void {
 	const workflow = record(value);

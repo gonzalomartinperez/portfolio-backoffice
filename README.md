@@ -216,23 +216,30 @@ registration are disabled.
 
 Use a disposable database on an unused loopback port. The values below are public test
 credentials, not production secrets.
+PostgreSQL/pgvector has one canonical recipe in the API repository. Build the reviewed
+committed source rather than a second IAM-only database recipe:
 
 ```sh
-docker build -f infra/docker/postgres/Dockerfile -t portfolio-backoffice-postgres:local .
+git clone --filter=blob:none --no-checkout https://github.com/gonzalomartinperez/portfolio-assistant-api.git .artifacts/api-compatibility
+(
+  cd .artifacts/api-compatibility
+  git checkout --detach f77c8d878401cc2a5bcea63716396b4bbcc1fc18
+  docker build -f infra/docker/postgres/Dockerfile -t portfolio-assistant-postgres:project-ci .
+)
 
 docker run -d --rm --name portfolio-readme-fixture \
-  --user 999:999 --read-only --cap-drop ALL --security-opt no-new-privileges \
+  --user 70:70 --read-only --cap-drop ALL --security-opt no-new-privileges \
   --memory 384m --cpus 0.5 --pids-limit 128 \
   --tmpfs /tmp:rw,noexec,nosuid,size=16m \
-  --tmpfs /var/run/postgresql:uid=999,gid=999,mode=0775,size=16m \
-  --tmpfs /var/lib/postgresql/18/docker:uid=999,gid=999,mode=0700,size=256m \
+  --tmpfs /var/run/postgresql:uid=70,gid=70,mode=0775,size=16m \
+  --tmpfs /var/lib/postgresql/18/docker:uid=70,gid=70,mode=0700,size=256m \
   -e PGDATA=/var/lib/postgresql/18/docker \
   -e POSTGRES_USER=backoffice_fixture -e POSTGRES_PASSWORD=public-fixture-only \
   -e POSTGRES_DB=backoffice_test \
   -p 127.0.0.1:15432:5432 \
-  portfolio-backoffice-postgres:local
+  portfolio-assistant-postgres:project-ci
 
-docker exec portfolio-readme-fixture pg_isready -U backoffice_fixture
+docker exec portfolio-readme-fixture pg_isready -h 127.0.0.1 -U backoffice_fixture -d backoffice_test
 npm run build
 PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium
 npm run test:browser -- backoffice.spec.ts --project=chromium
@@ -243,6 +250,9 @@ provisions private signed owner/viewer sessions and starts the synthetic operati
 It requires ports **3107**, **3108** and **8117** to be free. Add `--headed` to the test
 command to watch the real flows in a local desktop environment; headless works in CI.
 No external OAuth provider or model API is contacted.
+The pinned database uses Alpine UID70 and fresh data only. Never mount/chown an old
+Debian PGDATA directory; existing data needs a separate logical-migration and collation
+review. See the [shared database handoff](docs/deployment-contract.md#shared-project-postgresql-artifact).
 
 `npm run preview:fixture` is an optional manual server preview. Protected pages still
 require a signed fixture session, so an ordinary browser initially sees sign-in. The
@@ -289,9 +299,12 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 
 | CI job | Purpose |
 | --- | --- |
+| `workflows` | Validate SHA-pinned actions, shell syntax, the seven-job graph and negative policy fixtures. |
+| `secrets` | Scan tracked files and reachable history without printing suspected values. |
 | `static` | Frozen installs/audits, Biome, strict types, unit/contract/boundary checks and documentation/security/skill validation. |
-| `image` | Build once and scan the complete non-root distroless runtime for HIGH/CRITICAL findings. |
-| `browser` | Reuse that exact image for migration, database-backed admission, three browser engines, accessibility and termination checks. |
+| `database` | Verify the canonical PostgreSQL artifact, complete inventory, IAM/OAuth, scoped two-application roles and independent recovery. |
+| `container` | Verify the actual non-root distroless image, HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
+| `browser` | Independently build the same reviewed app/database sources; verify actual-image admission, three browser engines and accessibility. |
 | `checks` | Fail closed unless every required validation job succeeds. |
 
 The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict
