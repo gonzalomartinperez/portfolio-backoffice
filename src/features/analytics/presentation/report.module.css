@@ -61,7 +61,7 @@
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 1rem;
 }
-.fields label {
+.field {
 	display: grid;
 	gap: 0.4rem;
 	min-width: 0;

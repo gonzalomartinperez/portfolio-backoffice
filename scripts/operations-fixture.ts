@@ -95,3 +95,24 @@ export function startOperationsFixture({
 		server.listen(port, host, () => resolve(server));
 	});
 }
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+	const args = process.argv.slice(2);
+	if (args.some((value) => value !== "--container-fixture") || args.length > 1)
+		throw new Error(
+			"Only the explicit private-container fixture flag is supported",
+		);
+	const server = await startOperationsFixture({
+		host: args.length === 1 ? "0.0.0.0" : "127.0.0.1",
+		mode: process.env.OPERATIONS_FIXTURE_MODE ?? "available",
+	});
+	let stopped = false;
+	const stop = () => {
+		if (stopped) return;
+		stopped = true;
+		server.closeAllConnections();
+		server.close();
+	};
+	process.on("SIGINT", stop);
+	process.on("SIGTERM", stop);
+}

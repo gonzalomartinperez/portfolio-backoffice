@@ -1,10 +1,31 @@
 import { readFileSync } from "node:fs";
-import { test, expect, type BrowserContext } from "@playwright/test";
+import {
+	test,
+	expect,
+	type BrowserContext,
+	type Locator,
+} from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { field, record, text } from "../../scripts/json.ts";
 
 const available =
 	(process.env.OPERATIONS_FIXTURE_MODE ?? "available") === "available";
+
+async function verifyPrimaryAction(button: Locator) {
+	const accent = await button.evaluate((element) => {
+		const probe = document.createElement("span");
+		probe.style.backgroundColor = "var(--accent)";
+		element.append(probe);
+		const color = getComputedStyle(probe).backgroundColor;
+		probe.remove();
+		return color;
+	});
+	await expect(button).toHaveCSS("background-color", accent);
+	await button.hover();
+	await expect(button).toHaveCSS("background-color", accent);
+	await button.focus();
+	await expect(button).toBeFocused();
+}
 async function authenticate(context: BrowserContext, role: "owner" | "viewer") {
 	const sessions = record(
 		JSON.parse(readFileSync(".artifacts/fixture-sessions.json", "utf8")),
@@ -443,6 +464,11 @@ test("calendar product report separates totals, suppressed cells and filter scop
 	).toBeVisible();
 	await expect(grid.getByText("Clicks withheld from the grid")).toBeVisible();
 	await expect(grid.locator("dd").first()).toHaveText("1");
+	await verifyPrimaryAction(
+		page.getByRole("button", { name: "Apply filters", exact: true }),
+	);
+	await page.keyboard.press("Shift+Tab");
+	await expect(page.getByLabel("Grid viewport", { exact: true })).toBeFocused();
 	expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 	await page.screenshot({
 		path: `test-results/calendar-${test.info().project.name}-desktop-en.png`,
@@ -517,6 +543,9 @@ test("calendar report supports Spanish light theme, reduced motion and narrow la
 	await expect(
 		page.getByRole("heading", { name: "Vistas de página", exact: true }),
 	).toBeVisible();
+	await verifyPrimaryAction(
+		page.getByRole("button", { name: "Aplicar filtros", exact: true }),
+	);
 	await page.getByText("Cobertura e interpretación", { exact: true }).click();
 	await expect(
 		page.getByText(

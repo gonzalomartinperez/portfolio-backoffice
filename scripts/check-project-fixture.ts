@@ -92,7 +92,15 @@ export function verifySessionFixture(
 	} catch {
 		throw new Error("Fixture sessions require valid loopback origin/database");
 	}
-	if (!["localhost", "127.0.0.1", "[::1]"].includes(target.hostname))
+	if (
+		!["http:", "https:"].includes(target.protocol) ||
+		!["localhost", "127.0.0.1", "[::1]"].includes(target.hostname) ||
+		target.pathname !== "/" ||
+		target.search ||
+		target.hash ||
+		target.username ||
+		target.password
+	)
 		throw new Error("Fixture sessions require loopback origin/database");
 	if (authority.containerId || authority.fixtureId) {
 		verifyProjectDatabase(

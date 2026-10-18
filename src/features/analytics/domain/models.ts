@@ -52,6 +52,7 @@ export const productTargets = [
 	"cooperativa-obrera",
 	"independent",
 ] as const;
+export type ProductTarget = (typeof productTargets)[number];
 const targetsByEvent: Record<EventName, readonly string[]> = {
 	page_view: [""],
 	navigation_click: [""],

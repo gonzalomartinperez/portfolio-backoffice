@@ -1,4 +1,5 @@
 import type { ProductReport } from "../domain/report";
+import type { ProductTarget } from "../domain/models";
 import { productCopy } from "./copy";
 import { reportCopy, regionCopy } from "./report-copy";
 import { DailyViewsChart } from "./report-chart";
@@ -32,8 +33,8 @@ export function CalendarReport({
 			: code === "withheld"
 				? t.withheld
 				: (countries.of(code) ?? code);
-	const targetName = (target: string | null) =>
-		Object.entries(common.targets).find(([key]) => key === target)?.[1] ?? "—";
+	const targetName = (target: ProductTarget | null) =>
+		target ? common.targets[target] : "—";
 	const maximum = Math.max(3, ...report.cells.map((cell) => cell.count));
 	return (
 		<div className={styles.report}>

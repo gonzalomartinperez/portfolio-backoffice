@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "../../../components/ui/button";
 import { sections } from "../domain/models";
 import {
@@ -22,6 +22,7 @@ export function ReportFilters({
 	selection: ReportSelection;
 	locale: "en" | "es";
 }) {
+	const formId = useId();
 	const [section, setSection] = useState(selection.section);
 	const [region, setRegion] = useState(selection.region);
 	const t = reportCopy[locale];
@@ -36,44 +37,57 @@ export function ReportFilters({
 			<fieldset>
 				<legend>{t.periodFilters}</legend>
 				<div className={styles.fields}>
-					<label>
-						{t.period}
-						<select name="period" defaultValue={selection.period}>
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-period`}>{t.period}</label>
+						<select
+							id={`${formId}-period`}
+							name="period"
+							defaultValue={selection.period}
+						>
 							{reportPeriods.map((value) => (
 								<option key={value} value={value}>
 									{t.periods[value]}
 								</option>
 							))}
 						</select>
-					</label>
-					<label>
-						{t.offset}
-						<select name="offset" defaultValue={selection.offset}>
+					</div>
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-offset`}>{t.offset}</label>
+						<select
+							id={`${formId}-offset`}
+							name="offset"
+							defaultValue={selection.offset}
+						>
 							{t.offsets.map((label, index) => (
 								<option key={label} value={index}>
 									{label}
 								</option>
 							))}
 						</select>
-					</label>
-					<label>
-						{t.eventLocale}
-						<select name="eventLocale" defaultValue={selection.eventLocale}>
+					</div>
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-eventLocale`}>{t.eventLocale}</label>
+						<select
+							id={`${formId}-eventLocale`}
+							name="eventLocale"
+							defaultValue={selection.eventLocale}
+						>
 							{eventLocales.map((value) => (
 								<option key={value} value={value}>
 									{t.languages[value]}
 								</option>
 							))}
 						</select>
-					</label>
+					</div>
 				</div>
 			</fieldset>
 			<fieldset>
 				<legend>{t.gridFilters}</legend>
 				<div className={styles.fields}>
-					<label>
-						{t.page}
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-section`}>{t.page}</label>
 						<select
+							id={`${formId}-section`}
 							name="section"
 							value={section}
 							onChange={(event) => {
@@ -92,10 +106,11 @@ export function ReportFilters({
 								</option>
 							))}
 						</select>
-					</label>
-					<label>
-						{t.region}
+					</div>
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-region`}>{t.region}</label>
 						<select
+							id={`${formId}-region`}
 							name="region"
 							value={region}
 							onChange={(event) => {
@@ -111,17 +126,21 @@ export function ReportFilters({
 								</option>
 							))}
 						</select>
-					</label>
-					<label>
-						{t.viewport}
-						<select name="viewport" defaultValue={selection.viewport}>
+					</div>
+					<div className={styles.field}>
+						<label htmlFor={`${formId}-viewport`}>{t.viewport}</label>
+						<select
+							id={`${formId}-viewport`}
+							name="viewport"
+							defaultValue={selection.viewport}
+						>
 							{reportViewports.map((value) => (
 								<option key={value} value={value}>
 									{t.viewports[value]}
 								</option>
 							))}
 						</select>
-					</label>
+					</div>
 				</div>
 			</fieldset>
 			<div className={styles.filterFooter}>

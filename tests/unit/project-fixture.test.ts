@@ -118,7 +118,14 @@ test("signed fixture sessions require legacy isolation or verified project owner
 		authority,
 		metadata,
 	);
-	for (const origin of ["https://shared.invalid", "invalid"])
+	for (const origin of [
+		"https://shared.invalid",
+		"invalid",
+		"ftp://localhost",
+		"http://localhost:3317/path",
+		"http://fixture:synthetic@localhost:3317",
+		"http://localhost:3317?target=shared",
+	])
 		assert.throws(() =>
 			verifySessionFixture(origin, connection, authority, metadata),
 		);

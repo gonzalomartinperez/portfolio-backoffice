@@ -1,4 +1,4 @@
-import type { EventName, Section } from "./models.ts";
+import type { EventName, Section, ProductTarget } from "./models.ts";
 
 export const reportPeriods = ["day", "week", "month"] as const;
 export const reportViewports = ["mobile", "tablet", "desktop"] as const;
@@ -91,7 +91,7 @@ export interface ProductReport {
 		event: Exclude<EventName, "page_view">;
 		section: Section;
 		locale: "en" | "es";
-		target: string | null;
+		target: ProductTarget | null;
 		count: number;
 	}[];
 	selectedRegionExposures: number;

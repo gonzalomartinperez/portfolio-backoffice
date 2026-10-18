@@ -1,63 +1,72 @@
-# Private product-interaction view
+# Private product-interaction reports
 
-The `/analytics` page rechecks live owner/viewer membership before fetching data.
-It consumes API commit `59a5ccec1b38bb1a3679497deffd02749c0e8d49`, copied from
-committed Git objects, not an API working tree. Schema/hash/provenance are in
-`contracts/product-analytics.source.json`; the generated OpenAPI wrapper and types
-are drift-checked in CI. Existing operations v1 remains unchanged and best effort.
+`/analytics` requires live owner/viewer membership before reading its source. The
+calendar report uses `/internal/ops/v2/product-analytics`; `?view=legacy` explicitly
+selects the retained seven-day v1 view. There is no automatic fallback or double
+fetch. Each contract has its own committed source SHA and SHA256 in `contracts/`;
+refresh from committed Git objects, never a sibling working tree.
 
-`PRODUCT_ANALYTICS_ENABLED=false` is the server-runtime default. Off means no
-product request, not a fabricated empty dataset. When true, the existing private
-`OPERATIONS_API_ORIGIN` and `OPERATIONS_READ_TOKEN` read exactly
-`/internal/ops/v1/product-analytics`. No new secret, port or storage is required.
-No public collection is enabled by this page or flag; the API and public portfolio
-have independent activation gates. Never use NEXT_PUBLIC for this configuration.
+`PRODUCT_ANALYTICS_ENABLED=false` is the server-runtime default. When enabled,
+`OPERATIONS_API_ORIGIN` and `OPERATIONS_READ_TOKEN` remain private server settings.
+This flag enables reads only, never public collection. Publication, privacy approval
+and portfolio/API activation are separate gates. Never use NEXT_PUBLIC for tokens.
 
-The read adapter has a five-second deadline, 256,000-byte actual response limit,
-no redirects/cache/cookies, strict UTF-8 and a closed runtime parser. Only validated
-allowlisted counts reach the client. Unknown fields/projects/countries, duplicate
-cells, invalid dates/counts and event/target mismatches fail closed. Service tokens,
-event IDs, prompts and session credentials never enter props or browser JSON.
+## Calendar and filter semantics
 
-## Meaning and interaction
+Select the current or two preceding UTC days, ISO Monday weeks or calendar months.
+Windows are [start,end); the current calendar window is partial. The API retains
+93 days of aggregates. Page views are accepted event UUIDs, not unique visitors or
+people. Duplicate suppression lasts 24 hours; later replays can count again.
+Counts do not prove completed downloads, contacts, purchases or model usage.
 
-Accepted interactions are not unique people, completed downloads, sent contacts or
-provider invoices. The source groups by authoritative server UTC day, covering the
-current day plus six preceding days. Country is `unknown`; no country inference or
-visitor journey is shown. Transport loss, bots and global quotas affect coverage.
-No historical generation count is inferred from website events or SSE chunks.
+Period and event language filter the global totals, daily series, countries,
+pages and semantic actions. Page, reviewed region and viewport filter only the
+regional grid and exposure denominator. The two form groups explain that distinction;
+selection changes do not fetch until the user submits the native GET form.
+Regions reset to a valid value when the selected page changes.
 
-Choose an event using the native keyboard-accessible select. Static token-colored
-bars supplement a captioned semantic table; no chart animation or tooltip is
-required to read the counts. Native disclosure provides section/language details.
-No records, disabled configuration and unavailable source have different messages.
-Both English/Spanish and existing data-theme tokens apply. Mobile bars reflow;
-there is no fixed-height reading region or scroll interception.
+The 8×8 grid publishes only cells meeting the minimum count of three. Empty cells
+are withheld or absent, never invented zeroes; the adjacent table is the accessible
+alternative. Suppressed click totals and selected-region exposures remain distinct.
+Country defaults to unknown. Reliable country attribution requires the separately
+approved API trusted-edge configuration; DNS delegation is not evidence of it.
 
-The production-build browser harness uses real isolated IAM PostgreSQL with signed
-synthetic sessions and a separate authenticated fixture endpoint. Sample values
-are clearly labeled. It is not a live API/OAuth/production acceptance test. CI
-retains only synthetic PNG screenshots for seven days, never cookie/session files,
-traces or raw request logs. Manual physical-device/screen-reader review remains a
-separate limitation; axe is not an accessibility certification.
+First/last receipt timestamps describe global received events, not collector
+enablement, uptime or selected-window coverage. Legacy backfill can have day-level
+precision and predate retention. No enabled_at history exists. Empty results mean
+no received events for that selection, not proof that the site had no traffic.
 
-## Refresh procedure and activation boundaries
+## Boundaries and presentation
 
-1. Obtain an identified committed API revision and review its compatibility notes.
-2. Copy `product-analytics.schema.json` using `git show <sha>:contracts/...`; record
-   its SHA256 and exact source SHA in the provenance file.
-3. Regenerate the local OpenAPI wrapper from `$defs` plus `ProductSnapshot`, rewriting
-   refs only in the wrapper. `npm run contract:check` verifies this transformation.
-4. `npm run contract:generate`, typecheck, unit tests and authenticated browser
-   checks verify the consumer. Do not silently repin the historical chat snapshot.
-5. Agree effective private routing, reviewed retention/backup expiry, privacy basis,
-   accurate public notice and storage/resource acceptance before any activation.
+The read adapter has a five-second deadline and a 256,000-byte actual response limit,
+with no redirects, shared cache, cookies or retries. Strict UTF-8 and closed runtime
+validation reject unknown fields, invalid dates/counts/countries and inconsistent
+buckets. Only validated aggregates reach presentation. Service tokens, event UUIDs,
+credentials, prompts and transcripts never enter browser props or JSON.
 
-API local limits are 24-hour event dedupe and seven UTC-day aggregates; these are
-not a production retention approval. Expiry is logical until maintenance/pruning;
-backup erasure and restore are ops gates. Migration 007 belongs to the API repository.
-This backoffice slice requires no IAM migration. After API migration 007, a pre-007
-API image fails schema readiness because its checkout lacks the applied migration.
-Use a reviewed forward-fix image retaining 007/checksum with analytics off; never
-delete the migration, weaken the guard or restore over newer writes. Image rollback
-does not roll back API migrations or erase analytics data. Publication/deployment stay disabled.
+Server-rendered captioned tables remain available alongside the small Recharts
+boundary; chart animation is disabled. Native form controls, visible focus and
+semantic tokens support both languages/themes and narrow layouts. Disabled,
+unavailable, invalid selection and empty data have different messages.
+
+The browser suite uses isolated real IAM PostgreSQL and a separately authenticated
+synthetic HTTP source. That is not live OAuth or production evidence. The separate
+native-site → real API → PostgreSQL → authenticated backoffice proof must record
+all source revisions, exact counts and synthetic provenance. Never upload signed
+session files, environment files, raw request logs or private traces.
+
+## Refresh and deployment
+
+1. Review the identified API commit and compatibility notes.
+2. Copy the owned schema using `git show`, update its source/hash and regenerate the
+   local OpenAPI wrapper/types with the maintained contract commands.
+3. Run contract, strict typing, unit and authenticated browser checks. Keep the
+   historical public-chat snapshot independently pinned.
+4. Coordinate private routing, privacy/retention/backup approval and resource limits
+   with the API and vps-ops owners before activation.
+
+API migrations 007–009 are forward history, not IAM migrations. A rollback reader
+must retain every applied migration and checksum. Do not delete history, weaken
+readiness checks or restore over newer writes. Image rollback does not undo schema
+changes or erase analytics data. Production remains disabled; physical-device and
+assistive-technology verification remain separate from automated axe checks.
