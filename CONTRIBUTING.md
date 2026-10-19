@@ -1,6 +1,6 @@
 # Contributing
 
-Developed and maintained exclusively by Gonzalo Martín Pérez. Suggestions, bug reports
+Developed and maintained exclusively by Gonzalo Martin Perez. Suggestions, bug reports
 and constructive feedback are welcome through the repository’s available channels.
 Development priorities, implementation, reviews and releases remain the maintainer’s
 responsibility. Security reports use the private channel in [SECURITY.md](SECURITY.md).
@@ -121,3 +121,6 @@ guard and negative fixtures in the required static CI job. For focused feedback 
 `node --test tests/unit/boundaries.test.ts tests/unit/manage-access.test.ts`.
 New aliases, exceptions or client/server composition patterns require meaningful guard
 coverage and a documented compatibility reason. Do not relax a rule to silence a failure.
+
+Use the owner name exactly as **Gonzalo Martin Perez** in both languages; do not
+remove accents from other Spanish text or rewrite historical evidence.
