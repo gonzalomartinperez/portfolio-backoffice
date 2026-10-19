@@ -236,6 +236,17 @@ IAM tables, persistent data, environment variables, ports and planned hostnames 
 unchanged. A repository rename does not migrate infrastructure or authorize a new
 registry package; visibility/access/digests must still be approved independently.
 
+## Deployment authorization and vulnerability policy
+
+Owner decision, 2026-10-19: dependency/image CVEs are advisory for deployment,
+not a deployment veto. Preserve findings, maintenance priorities and original
+failed scanner receipts; do not describe the stack as clean or repaired. Existing
+source CI is unchanged. Artifact identity, inventory completeness, secret handling,
+health, ports and data safety remain mandatory technical checks. The VPS is not yet
+purchased/provisioned and future owner activation is required. vps-ops/Coolify owns
+production selection and execution; neither publication nor deployment is enabled.
+This policy does not relabel historical acceptance or replace runtime verification.
+
 ## Optional feedback summary
 
 See [rating semantics and compatibility](feedback-and-improvement.md). The consumed
@@ -243,8 +254,9 @@ schema is pinned to API `bb36012eef55e85f7e0cf78df1845f38ef13da63`; public API/S
 and the independent operations/product contract pins remain unchanged. Set
 `FEEDBACK_OVERVIEW_ENABLED=true` on both compatible applications only after approval.
 This is an aggregate-only read using the existing private token/origin. It adds no
-migration, persistent path, service, host port or provider access. API-side deployment
-is still blocked by the documented Neo4j vendor findings; source CI does not waive them.
+migration, persistent path, service, host port or provider access. The API's Neo4j
+findings remain documented and advisory for deployment under the current owner
+policy above. Source CI does not imply production acceptance or activation authority.
 
 ## Optional project-scoped PostgreSQL allocation
 
