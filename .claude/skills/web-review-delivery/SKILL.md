@@ -89,3 +89,10 @@ unfixed HIGH remains explicit for production assessment. The application image's
 all-HIGH/CRITICAL gate is unchanged. Raw inventories and diagnostics stay ephemeral;
 only bounded counts enter public logs. A new OCI index can reference the exact old
 amd64 manifest, so compare platform bytes before claiming a runtime/security upgrade.
+
+Deployment policy update, 2026-10-19: dependency/image CVEs are advisory for deployment
+by owner decision. Preserve findings and original failed assessments. Existing source
+CI and identity, inventory coverage, secret, health and data-safety checks remain
+unchanged. The VPS is not purchased/provisioned and activation requires future owner
+approval; this policy grants no publication/deployment authority. Read the current
+runtime contract before interpreting historical vendor release holds.
