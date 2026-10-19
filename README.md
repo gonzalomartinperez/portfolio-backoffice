@@ -13,10 +13,12 @@ access and a bilingual dashboard keep operational visibility separate from the p
 > **Current state:** authentication, invitations, revocation, private-API validation and
 > dashboard rendering are implemented. Browser evidence uses real isolated PostgreSQL
 > and clearly labeled synthetic metrics. The local native-site/API/PostgreSQL/dashboard chain is also verified; live OAuth-provider and production API pairing
-> remain unverified. The paired API's
-> [Neo4j vendor release hold](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/develop/docs/verification/neo4j-release-blocker-2026-10-17.md)
-> is unresolved; green source CI is not full-stack production acceptance.
-> No deployment or publication is activated here.
+> remain unverified. The VPS is not purchased/provisioned and production activation
+> is not authorized. Dependency/image CVEs are advisory for deployment by owner
+> decision; unresolved findings and original assessments remain visible in the
+> [API artifact evidence](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/develop/docs/verification/final-artifact-closeout-2026-10-18.md).
+> Green source CI is not full-stack production acceptance. No deployment or
+> publication is activated here.
 
 ## What you can inspect
 
