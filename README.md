@@ -351,6 +351,7 @@ proxy headers, API pairing, backup/restore and physical-device behavior remain e
 | Maintain checks and dependencies | [CI](docs/ci.md) · [Dependency policy](docs/dependency-updates.md) |
 | Work with agents | [Codex/Claude skills](docs/agent-skills.md) |
 | Review remaining acceptance | [Checklist](docs/work-checklist.md) |
+| Review the planned target state (not scheduled) | [Master plan](docs/master-plan/README.md) |
 
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
 
