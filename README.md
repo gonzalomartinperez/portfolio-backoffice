@@ -123,7 +123,7 @@ These original production-container captures use labeled synthetic data.
 ## Architecture and trust boundaries
 
 <p align="center">
-  <a href="docs/assets/architecture-overview.svg"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-overview.svg"><source media="(prefers-color-scheme: light)" srcset="docs/assets/architecture-overview.svg"><img src="docs/assets/architecture-overview.svg" width="1100" alt="Invited OAuth access, protected Next.js composition, separate IAM and private API reads feeding accessible aggregate views — click for the full-size diagram"></picture></a>
+  <a href="docs/assets/architecture-overview.svg"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-overview.svg"><source media="(prefers-color-scheme: light)" srcset="docs/assets/architecture-overview.svg"><img src="docs/assets/architecture-overview.svg" width="1100" alt="Invited OAuth access, protected Next.js composition, separate IAM and private API reads feeding accessible aggregate views. Click for the full-size diagram"></picture></a>
 </p>
 
 Solid arrows show requests or synchronization; dashed arrows show returned data.
@@ -214,7 +214,7 @@ change schema. See [authentication setup](docs/authentication.md) for owner admi
 OAuth callbacks, invitation lifecycle and safe secret handling. Password login and public
 registration are disabled.
 
-### Deterministic local preview — no provider credentials
+### Deterministic local preview without provider credentials
 
 Use a disposable database on an unused loopback port. The values below are public test
 credentials, not production secrets.
