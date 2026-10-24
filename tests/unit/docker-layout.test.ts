@@ -7,7 +7,7 @@ import { field, list, record, text } from "../../scripts/json.ts";
 const app = "infra/docker/app/Dockerfile";
 const foreignPostgres =
 	".artifacts/api-compatibility/infra/docker/postgres/Dockerfile";
-const postgresSource = "f77c8d878401cc2a5bcea63716396b4bbcc1fc18";
+const postgresSource = "e6b2e67c1a0ebded3d03209594e0cfce1b1720e5";
 function rules(file: string) {
 	return readFileSync(file, "utf8")
 		.split("\n")

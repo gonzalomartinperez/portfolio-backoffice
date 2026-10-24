@@ -225,7 +225,7 @@ committed source rather than a second IAM-only database recipe:
 git clone --filter=blob:none --no-checkout https://github.com/gonzalomartinperez/portfolio-assistant-api.git .artifacts/api-compatibility
 (
   cd .artifacts/api-compatibility
-  git checkout --detach f77c8d878401cc2a5bcea63716396b4bbcc1fc18
+  git checkout --detach e6b2e67c1a0ebded3d03209594e0cfce1b1720e5
   docker build -f infra/docker/postgres/Dockerfile -t portfolio-assistant-postgres:project-ci .
 )
 
@@ -351,6 +351,7 @@ proxy headers, API pairing, backup/restore and physical-device behavior remain e
 | Maintain checks and dependencies | [CI](docs/ci.md) · [Dependency policy](docs/dependency-updates.md) |
 | Work with agents | [Codex/Claude skills](docs/agent-skills.md) |
 | Review remaining acceptance | [Checklist](docs/work-checklist.md) |
+| Review the planned target state (not scheduled) | [Master plan](docs/master-plan/README.md) |
 
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
 
