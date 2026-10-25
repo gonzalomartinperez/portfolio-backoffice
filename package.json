@@ -46,7 +46,7 @@
 		"@types/react-dom": "19.3.0",
 		"@typescript/typescript6": "6.0.2",
 		"@vercel/nft": "1.11.0",
-		"js-yaml": "5.4.3",
+		"js-yaml": "5.5.0",
 		"typescript": "7.0.2"
 	},
 	"type": "module",
