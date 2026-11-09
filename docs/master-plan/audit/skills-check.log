@@ -1,0 +1,5 @@
+
+> portfolio-backoffice@1.0.0 skills:check
+> node scripts/check-skills.ts
+
+Skills: 4 canonical entries, 0 errors.

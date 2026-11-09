@@ -1,0 +1,52 @@
+
+> portfolio-backoffice@1.0.0 build
+> next build --webpack && node scripts/prepare-runtime.ts
+
+▲ Next.js 16.4.2 (webpack)
+✓ Running next.config.ts took 134ms
+
+  Creating an optimized production build ...
+
+
+Retrying 1/3...
+
+
+Retrying 1/3...
+
+
+Retrying 2/3...
+
+
+Retrying 2/3...
+✓ Compiled successfully in 77s
+  Running TypeScript ...
+  Finished TypeScript in 4.5s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/6) ...
+  Generating static pages using 3 workers (1/6) 
+  Generating static pages using 3 workers (2/6) 
+  Generating static pages using 3 workers (4/6) 
+✓ Generating static pages using 3 workers (6/6) in 1020ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /access
+├ ƒ /access/invitation
+├ ƒ /analytics
+├ ƒ /api/auth/[...all]
+├ ƒ /api/health
+├ ƒ /api/operations
+├ ƒ /api/ready
+├ ƒ /privacy
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+Prepared migration runtime: 1217 traced files; 4434776 added bytes.

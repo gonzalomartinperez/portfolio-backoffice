@@ -1,0 +1,5 @@
+
+> portfolio-backoffice@1.0.0 toolchain:check
+> node scripts/check-typescript-toolchain.ts
+
+Primary checker: Version 7.0.2; compiler API compatibility: 6.0.3

@@ -1,0 +1,39 @@
+
+> portfolio-backoffice@1.0.0 lint
+> biome lint src tests scripts next.config.ts
+
+scripts/verify-postgres.ts:247:3 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    245 │ 	writeFileSync(
+    246 │ 		`${receipt}/verification.json`,
+  > 247 │ 		JSON.stringify({
+        │ 		^^^^^^^^^^^^^^^^
+  > 248 │ 			synthetic: true,
+         ...
+  > 258 │ 			dump_bytes: dump.length,
+  > 259 │ 		}) + "\n",
+        │ 		^^^^^^^^^
+    260 │ 		{ mode: 0o600 },
+    261 │ 	);
+  
+  i Unsafe fix: Use a template literal.
+  
+    245 245 │     writeFileSync(
+    246 246 │       `${receipt}/verification.json`,
+    247     │ - → → JSON.stringify({
+        247 │ + → → `${JSON.stringify({
+    248 248 │         synthetic: true,
+    249 249 │         server_version: "18.6",
+    ······· │ 
+    257 257 │         application_image: appImage,
+    258 258 │         dump_bytes: dump.length,
+    259     │ - → → })·+·"\n",
+        259 │ + → → })}\n`,
+    260 260 │       { mode: 0o600 },
+    261 261 │     );
+  
+
+Checked 144 files in 468ms. No fixes applied.
+Found 1 info.

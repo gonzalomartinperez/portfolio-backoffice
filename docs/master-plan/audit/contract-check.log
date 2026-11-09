@@ -1,0 +1,9 @@
+
+> portfolio-backoffice@1.0.0 contract:check
+> node scripts/check-contract.ts
+
+Historical public contract matches API 6b1e65f2406ba5ddf21d15c56c34ccf672d90bbb
+Private operations contract matches API d30d36857c9053693c7817d967a7b38b97d9f12a
+Product contract matches API 59a5ccec1b38bb1a3679497deffd02749c0e8d49
+Detailed product contract matches API 7f94f8cddfff8d1aae193f694042c03080632e31
+Feedback contract matches API bb36012eef55e85f7e0cf78df1845f38ef13da63

@@ -1,0 +1,5 @@
+
+> portfolio-backoffice@1.0.0 format:check
+> biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts tsconfig.json tooling/api-contract/package.json
+
+Checked 153 files in 156ms. No fixes applied.
