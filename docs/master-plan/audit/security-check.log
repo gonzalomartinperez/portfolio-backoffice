@@ -1,0 +1,6 @@
+
+> portfolio-backoffice@1.0.0 security:check
+> node scripts/check-public-files.ts
+
+Git history scan: 320 reachable blobs checked.
+Public-file scan: 273 text files, 0 findings. High-confidence patterns only; not a complete secret audit.

@@ -1,0 +1,231 @@
+✔ denied provider callbacks return to the configured origin without arbitrary navigation (152.635056ms)
+✔ non-callback responses and successful provider cookies remain unchanged (4.315893ms)
+✔ auth configuration rejects insecure production and invalid origins without leaking values (9.715885ms)
+✔ invitation boundary accepts only bounded opaque tokens (138.588678ms)
+✔ auth dictionaries are complete and locale parsing remains narrow (18.90977ms)
+✔ malformed credentialed URLs never attach the secret input to public errors (0.340299ms)
+✔ unknown source placements fail closed even without imports (95.347048ms)
+✔ source placement recognizes the owned layers and exact composition entries (28.220354ms)
+✔ source dependency boundaries and public environment allowlist (1810.742103ms)
+✔ source collection cannot hide ESM/CommonJS TypeScript dependency violations (5.036692ms)
+✔ boundaries resolve traversal and inspect dynamic and type-only imports (6.53209ms)
+✔ architecture detects relative/dynamic cycles and indirect client-to-server leaks (6.433089ms)
+✔ all feature cores reject platform I/O and adapters cannot render presentation (1.785397ms)
+✔ owned application, fixtures and tooling remain type-checked TypeScript (9.011486ms)
+✔ platform guards distinguish model properties from browser globals (5.041492ms)
+✔ client boundaries reject authentication infrastructure imports (2.546296ms)
+✔ client directives remain effective after comments and inside transitive import-equals graphs (1.926697ms)
+✔ client graph resolves emitted JavaScript specifiers and rejects computed loaders (6.829589ms)
+✔ bounded JSON preserves split UTF-8 and releases the stream reader (112.69272ms)
+✔ untrusted unbounded/non-JSON data is rejected with deterministic cancellation (16.802974ms)
+✔ browser session maps SDK responses to a narrow result and reviewed destinations (3.345495ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (0.351599ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (0.34ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (1.750497ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (2.907695ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (0.1427ms)
+✔ invalid or rejected SDK responses never navigate or automatically retry (2.758495ms)
+✔ network failure remains a single attempt handled by presentation (1.025999ms)
+✔ managed fixture requires explicit Actions run/attempt/runtime job authority (2.133197ms)
+✔ canonical source rejects branches, other revisions and dirty checkout (0.373199ms)
+✔ runtime image is bound to immutable identity, API ownership and reviewed UID/platform/profile (0.755199ms)
+✔ cleanup rejects unlabelled, foreign and replaced fixture images (0.732799ms)
+✔ pending, absent and failed TCP SQL probes cannot become a successful readiness receipt (0.648598ms)
+✔ committed paired workflow has exact names, DAG, events and real job adapters (128.574994ms)
+✔ database acceptance rejects missing, substituted or bypassed PostgreSQL inventory gates (324.312781ms)
+✔ all runtime jobs reject mutable PostgreSQL source, wrong builds and skipped cleanup (806.549109ms)
+✔ paired profile rejects cosmetic parity, bypasses and missing prerequisite edges (653.041055ms)
+✔ privileged dependency assessment cannot check out an untrusted head (7.390588ms)
+✔ private rebuild provenance rejects source/run/image/config substitutions (36.714841ms)
+✔ only the exact hard-disabled publication diagnostic is recognized (29.178753ms)
+✔ static Playwright discovery preserves all 66 reviewed cases and three real engines (6236.012485ms)
+✔ container acceptance rejects unbounded memory, PIDs, logs and weakened isolation (20.388368ms)
+✔ measurements cannot contact a public origin or a credentialed URL (0.576999ms)
+✔ image disk usage is distinguished from content size and parsed without unit guessing (0.4901ms)
+✔ runtime trace rejects private files and escapes while accepting migration dependencies (5.308491ms)
+✔ only reviewed optional driver and disabled instrumentation imports may be unresolved (0.499699ms)
+Prepared migration runtime: 5 traced files; 430 added bytes.
+Prepared migration runtime: 5 traced files; 0 added bytes.
+✔ traces native TypeScript and SQL without shipping its build compiler (413.448038ms)
+✔ an unresolved required dependency prevents packaging a migration (39.374737ms)
+✔ dependency policy allows bounded patch and explicitly covered minor (35.810742ms)
+✔ major, prerelease, unknown, downgrade, unchanged and unstable versions require review (14.497677ms)
+✔ all grouped and transitive changes must qualify (0.4955ms)
+✔ unexpected files, scripts, package hooks, sources and lock-only changes fail closed (5.74689ms)
+✔ authenticated bot identity, signed single commit, repository and develop are mandatory (1.254598ms)
+✔ failed, missing, cancelled, skipped and pending verification cannot arm auto-merge (1.101398ms)
+✔ new heads, base advancement, conflicts and absent protection block arming (0.651499ms)
+✔ controller revokes first, arms native auto-merge while policy pending, never approves or merges (34.299245ms)
+✔ controller veto, pause, head race and API failure never retain automatic eligibility (34.357845ms)
+✔ a head changed after arming revokes auto-merge before completing the old policy check (1.497897ms)
+✔ read-only invocation never writes, even when eligible (13.220579ms)
+✔ manual assessment executes only trusted default-branch code with read-only permissions (57.442608ms)
+✔ unavailable token capability is safe only with both activation switches disabled (0.450799ms)
+✔ contract generator compiler-major proposals respect the isolated API compatibility boundary (7.750788ms)
+✔ manual profile assesses even an eligible candidate without any API mutation (0.688598ms)
+✔ manual CLI rejects legacy write activation before token or network use (812.5968ms)
+✔ manual transport allows read-only GraphQL and rejects mutation methods before fetch (4.978792ms)
+✔ only canonical recipes exist and app COPY inputs remain in root context (44.06293ms)
+✔ each context fails closed for private, unrelated and secret-shaped inputs (8.509687ms)
+✔ CI and dependency discovery select owned recipes and validate the reviewed foreign recipe (93.74855ms)
+✔ current documented builds use explicit recipes and root context (26.081758ms)
+✔ rating signal maps closed wire and preserves no-rating as undefined share (34.505045ms)
+✔ disabled feedback never requests data and missing configuration is unavailable (10.573383ms)
+✔ feedback transport uses exact private path with bounded no-store credentialless reads (262.34958ms)
+✔ destructive integration rejects remote and malformed configuration before connecting (1211.428047ms)
+✔ fixture session provisioning refuses a remote database (1.744198ms)
+✔ session artifacts reject existing files and symlinks before minting credentials (35.781142ms)
+✔ fresh session artifacts are private and preserve their serialized content (16.868773ms)
+✔ private composition stays private through plain CLI-safe config and barrels (46.888525ms)
+✔ explicit Server Action RPC and client-safe shared UI stay valid (15.233476ms)
+✔ migration trace admits only the relocated CLI factory closure (0.895698ms)
+✔ a private module cannot impersonate a Server Action: export const act = () => "synthetic" (2.089397ms)
+✔ a private module cannot impersonate a Server Action: "use server"; export const secret = "synthetic" (4.417593ms)
+✔ a private module cannot impersonate a Server Action: "use server"; export * from "./config" (1.816097ms)
+✔ a private module cannot impersonate a Server Action: "use server"; export function act(){return "synthetic"} (6.28409ms)
+✔ type-only and dynamic aliases preserve the private closure (8.557986ms)
+✔ current source has consistent software licensing (7.690288ms)
+✔ an isolated complete licensing fixture passes (1.390698ms)
+✔ license consistency rejects a restriction inserted before the grant (1.100198ms)
+✔ license consistency rejects a commercial restriction appended to MIT (0.813799ms)
+✔ license consistency rejects a placeholder copyright (0.983499ms)
+✔ license consistency rejects a placeholder copyright holder (1.171098ms)
+✔ license consistency rejects mismatched manifest metadata (1.162998ms)
+✔ license consistency rejects missing lock metadata (2.016297ms)
+✔ license consistency rejects a missing grant (3.370995ms)
+✔ license consistency rejects missing content-scope notices (1.615397ms)
+✔ license consistency rejects README without a license link (0.930999ms)
+✔ access use cases reject viewers and malformed inputs before persistence (4.847593ms)
+✔ owner use cases normalize email and delegate the actor for transactional reauthorization (0.4605ms)
+✔ revoked owners and persistence failures produce bounded failures without leaking diagnostics (0.654599ms)
+✔ summary keeps reservations, settlement and unclassified outcomes distinct (1.836797ms)
+✔ zero observations and zero budget do not invent percentages (0.545499ms)
+✔ overspending remains visible instead of being clamped in the model (2.969795ms)
+✔ trace selection combines outcome and bounded case-insensitive ID queries (1.755697ms)
+✔ Grafana links accept configured dashboard destinations without URL credentials (0.988698ms)
+✔ operational fixture authenticates every read and exposes immutable failure modes (169.099727ms)
+✔ wire maps to a platform-independent operational model (5.579891ms)
+✔ rejects sensitive fields, malformed counts, versions and unbounded traces (0.967098ms)
+✔ missing configuration performs no network request and never invents zero metrics (2.077297ms)
+✔ transport uses only configured private origin, exact path, token and no-store (90.582954ms)
+✔ failures are explicit and do not expose response bodies or exception secrets (2.191296ms)
+✔ bounds undeclared chunked response bodies and cancels their readers (2.815295ms)
+✔ refuses credential URLs, prefixes and redirects rather than leaking the token (1.310498ms)
+✔ rejects a non-JSON successful response without consuming untrusted content (0.685799ms)
+✔ committed API example maps without infrastructure fields leaking into the model (1.167398ms)
+✔ database policy rejects all critical and fixable high while exposing unfixed high (4.819093ms)
+✔ database inventory fails closed for missing OS results, malformed findings and wrong image (6.19909ms)
+✔ only the reviewed Alpine branch and exact backoffice scan alias are accepted (0.707199ms)
+✔ database CLI fails closed and prints only aggregate counts without raw package metadata (1017.224159ms)
+✔ SQL readiness waits through bootstrap rejection and a missing target database (2.018797ms)
+✔ a ready SQL connection proceeds immediately (0.271299ms)
+✔ unavailable or invalid SQL probes fail within the bound without exposing diagnostics (0.930499ms)
+✔ product schema maps wire to pure model and aggregates only selected event (17.438272ms)
+✔ product boundary rejects leaked fields, ambiguity and forged dimensions (2.124897ms)
+✔ default-off analytics port performs no requests and does not invent zero (0.5677ms)
+✔ private aggregate adapter pins path, omits credentials and bounds response (50.657219ms)
+✔ invalid private origins and outages cannot leak token or retry requests (0.843799ms)
+✔ calendar windows follow UTC, ISO Monday weeks and leap-year month boundaries (3.760493ms)
+✔ validated report maps aggregate data without treating observations as unique visitors (3.718394ms)
+✔ deterministic fixture honors period, language and region scopes independently (16.500774ms)
+✔ report rejects wrong calendar selections, ambiguous dimensions and privacy leaks (4.361193ms)
+✔ report selection keeps display locale separate and rejects duplicate or incompatible filters (0.599399ms)
+✔ report HTTP adapter sends only versioned private filters and never caches or retries (65.856094ms)
+✔ project IAM fixture requires exact active owned loopback metadata (8.168887ms)
+✔ missing authority and remote or elevated endpoints fail before inspection (0.999798ms)
+✔ signed fixture sessions require legacy isolation or verified project ownership (1.177398ms)
+✔ records immutable image and both contract pins without claiming deployed compatibility (1.904697ms)
+✔ rejects mutable tags and unverifiable revisions or provenance (2.915895ms)
+✔ release verification remains explicit, pinned and publication disabled (51.179317ms)
+✔ required gate fails closed for every missing, failed, pending or skipped prerequisite (1.250698ms)
+✔ secret scan catches ignored tracked files, deleted history and unmerged branches without printing values (1055.345498ms)
+✔ history verification fails closed outside a Git repository (131.633687ms)
+✔ canonical catalog and relative client discovery resolve (21.422865ms)
+✔ catalog rejects drift, escapes, malformed metadata and stale commands (137.273579ms)
+ℹ tests 142
+ℹ suites 0
+ℹ pass 142
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12629.355322
+ℹ start of coverage report
+ℹ ---------------------------------------------------------------------------------------------------------------------------
+ℹ file                           | line % | branch % | funcs % | uncovered lines
+ℹ ---------------------------------------------------------------------------------------------------------------------------
+ℹ playwright.config.ts           | 100.00 |    33.33 |  100.00 | 
+ℹ scripts                        |        |          |         | 
+ℹ  auth-fixture-session.ts       |  49.49 |    54.55 |   66.67 | 18 21-56 68-69 89-99
+ℹ  check-boundaries.ts           |  98.79 |    95.26 |   95.45 | 277-278 282-284
+ℹ  check-ci-profile.ts           |  94.17 |    83.43 |   95.65 | 148-149 256-257 266-267 342-343 383-384 387-388 396 402-412
+ℹ  check-ci-results.ts           | 100.00 |    84.62 |  100.00 | 
+ℹ  check-license.ts              |  91.57 |    90.48 |  100.00 | 77-83
+ℹ  check-project-fixture.ts      |  87.70 |    92.31 |   75.00 | 10-22 41-42
+ℹ  check-public-files.ts         |  91.84 |    50.00 |  100.00 | 21-24
+ℹ  check-secret-history.ts       | 100.00 |    88.89 |  100.00 | 
+ℹ  check-skills.ts               |  94.54 |    71.23 |  100.00 | 102-104 177-183
+ℹ  check-workflows.ts            |  56.07 |    78.26 |   80.00 | 56-102
+ℹ  ci-build-provenance.ts        |  36.91 |    75.00 |   66.67 | 41-42 58-149
+ℹ  ci-postgres.ts                |  25.00 |    86.67 |   50.00 | 83-331 336-344
+ℹ  container-policy.ts           | 100.00 |    92.86 |  100.00 | 
+ℹ  dependency-automation.ts      |  82.70 |    70.42 |   92.86 | 284 289-336 341-343 347-352 355-360
+ℹ  dependency-policy.ts          | 100.00 |    95.45 |  100.00 | 
+ℹ  json.ts                       |  41.94 |    91.30 |   53.33 | 3-4 6-7 9-13 15-19 21-23 25
+ℹ  operations-fixture.ts         |  81.36 |    80.65 |   71.43 | 32-34 100-118
+ℹ  postgres-image-security.ts    | 100.00 |    90.00 |  100.00 | 
+ℹ  postgres-readiness.ts         | 100.00 |   100.00 |   50.00 | 
+ℹ  prepare-runtime.ts            |  94.20 |    85.71 |  100.00 | 72-79
+ℹ  release-compatibility.ts      |  83.12 |    94.12 |  100.00 | 65-77
+ℹ  secret-patterns.ts            | 100.00 |   100.00 |  100.00 | 
+ℹ src                            |        |          |         | 
+ℹ  features                      |        |          |         | 
+ℹ   analytics                    |        |          |         | 
+ℹ    adapters                    |        |          |         | 
+ℹ     calendar.ts                | 100.00 |   100.00 |  100.00 | 
+ℹ     http.ts                    | 100.00 |   100.00 |  100.00 | 
+ℹ     read-json.ts               | 100.00 |    95.45 |  100.00 | 
+ℹ     report-http.ts             | 100.00 |   100.00 |  100.00 | 
+ℹ     report-values.ts           | 100.00 |    91.89 |  100.00 | 
+ℹ     validate-report.ts         | 100.00 |    93.02 |  100.00 | 
+ℹ     validate.ts                |  98.86 |    91.67 |  100.00 | 22
+ℹ    domain                      |        |          |         | 
+ℹ     models.ts                  | 100.00 |   100.00 |  100.00 | 
+ℹ     report.ts                  | 100.00 |   100.00 |  100.00 | 
+ℹ    presentation                |        |          |         | 
+ℹ     selection.ts               | 100.00 |    93.33 |  100.00 | 
+ℹ   auth                         |        |          |         | 
+ℹ    adapters                    |        |          |         | 
+ℹ     browser-session.ts         | 100.00 |   100.00 |  100.00 | 
+ℹ     callback-response.ts       | 100.00 |   100.00 |  100.00 | 
+ℹ     store.ts                   |   4.40 |   100.00 |    0.00 | 9-182
+ℹ    application                 |        |          |         | 
+ℹ     manage-access.ts           | 100.00 |   100.00 |  100.00 | 
+ℹ    domain                      |        |          |         | 
+ℹ     access.ts                  | 100.00 |   100.00 |  100.00 | 
+ℹ     locale.ts                  | 100.00 |   100.00 |  100.00 | 
+ℹ    presentation                |        |          |         | 
+ℹ     copy.ts                    | 100.00 |   100.00 |  100.00 | 
+ℹ   operations                   |        |          |         | 
+ℹ    adapters                    |        |          |         | 
+ℹ     feedback-http.ts           | 100.00 |    88.89 |  100.00 | 
+ℹ     feedback-validate.ts       | 100.00 |    95.65 |  100.00 | 
+ℹ     grafana-link.ts            |  92.31 |    94.12 |  100.00 | 24-25
+ℹ     http.ts                    |  97.26 |    96.15 |  100.00 | 34-35
+ℹ     validate.ts                |  97.84 |    73.08 |  100.00 | 61 71 74 121
+ℹ    application                 |        |          |         | 
+ℹ     read.ts                    | 100.00 |   100.00 |  100.00 | 
+ℹ    domain                      |        |          |         | 
+ℹ     feedback.ts                | 100.00 |   100.00 |  100.00 | 
+ℹ     insights.ts                | 100.00 |   100.00 |  100.00 | 
+ℹ  server                        |        |          |         | 
+ℹ   auth                         |        |          |         | 
+ℹ    config.ts                   | 100.00 |    88.89 |  100.00 | 
+ℹ    runtime.ts                  |   7.61 |   100.00 |    0.00 | 8-92
+ℹ  shared                        |        |          |         | 
+ℹ   http                         |        |          |         | 
+ℹ    bounded-json.ts             | 100.00 |   100.00 |   33.33 | 
+ℹ ---------------------------------------------------------------------------------------------------------------------------
+ℹ all files                      |  82.74 |    88.28 |   90.08 | 
+ℹ ---------------------------------------------------------------------------------------------------------------------------
+ℹ end of coverage report

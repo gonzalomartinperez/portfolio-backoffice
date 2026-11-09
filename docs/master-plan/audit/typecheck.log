@@ -1,0 +1,7 @@
+
+> portfolio-backoffice@1.0.0 typecheck
+> node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit
+
+Primary checker: Version 7.0.2; compiler API compatibility: 6.0.3
+Generating route types...
+✓ Types generated successfully

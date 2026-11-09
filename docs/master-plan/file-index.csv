@@ -1,0 +1,321 @@
+path,layer,kind,lines,target_path,target_layer,action,reason
+.agents/skills/web-change-backoffice,skill,skill,0,.claude/skills/web-change-backoffice,skill,move,Becomes the relative symlink to ../../.agents/skills/web-change-backoffice
+.agents/skills/web-refresh-contract,skill,skill,0,.claude/skills/web-refresh-contract,skill,move,Becomes the relative symlink to ../../.agents/skills/web-refresh-contract
+.agents/skills/web-review-delivery,skill,skill,0,.claude/skills/web-review-delivery,skill,move,Becomes the relative symlink to ../../.agents/skills/web-review-delivery
+.agents/skills/web-verify-backoffice,skill,skill,0,.claude/skills/web-verify-backoffice,skill,move,Becomes the relative symlink to ../../.agents/skills/web-verify-backoffice
+.claude/skills/web-change-backoffice/SKILL.md,skill,skill,84,.agents/skills/web-change-backoffice/SKILL.md,skill,move,Canonical location is .agents/skills (ecosystem 15.1); add evals/ and metadata
+.claude/skills/web-refresh-contract/SKILL.md,skill,skill,26,.agents/skills/web-refresh-contract/SKILL.md,skill,move,Canonical location is .agents/skills (ecosystem 15.1); add evals/ and metadata
+.claude/skills/web-review-delivery/SKILL.md,skill,skill,98,.agents/skills/web-review-delivery/SKILL.md,skill,move,Canonical location is .agents/skills (ecosystem 15.1); add evals/ and metadata
+.claude/skills/web-verify-backoffice/SKILL.md,skill,skill,39,.agents/skills/web-verify-backoffice/SKILL.md,skill,move,Canonical location is .agents/skills (ecosystem 15.1); add evals/ and metadata
+.dockerignore,config,config,3,.dockerignore,build,keep,Deny-by-default fallback stays; template-checked
+.env.example,config,config,27,.env.example,config,keep,Add OTEL and LOG_LEVEL names at M4 (env.ts schema is the source)
+.github/ISSUE_TEMPLATE/bug_report.yml,ci,ci,21,.github/ISSUE_TEMPLATE/bug.yml,community,move,Ecosystem name bug.yml; add feature.yml and config.yml (blank issues off)
+.github/dependabot.yml,ci,ci,59,.github/dependabot.yml,ci,rewrite,"Replace four independent entries (limits 3/2/2/2) with one multi-ecosystem-group weekly, patterns *, limit 1"
+.github/pull_request_template.md,ci,ci,11,.github/pull_request_template.md,community,rewrite,"Ecosystem template: summary, issue, evidence, docs touched, agent-docs touched, risk"
+.github/workflows/dependency-policy.yml,ci,ci,42,.github/workflows/deps-weekly-guard.yml,ci,replace,"pull_request_target workflow replaced by the shared deps-weekly-guard (zizmor-clean, no PR-head checkout)"
+.github/workflows/quality.yml,ci,ci,508,.github/workflows/ci.yml,ci,replace,"Split into ci.yml (classify + shared reusable workflows + ci-gate), nightly.yml, security.yml; build once"
+.github/workflows/release.yml,ci,ci,36,.github/workflows/release.yml,ci,rewrite,"Remove dead publish job; release-please + attest-image reusable workflow, gated by owner authorization input and production environment"
+.gitignore,config,config,15,.gitignore,config,keep,"Add .artifacts, scorecard output, test-results"
+.nvmrc,config,config,1,.nvmrc,config,keep,Value moves to Node 26 LTS at PBO-M4 after the two-week 24/26 matrix (E10)
+AGENTS.md,config,config,54,AGENTS.md,agent-docs,rewrite,"Shorten to commands, non-obvious layout, boundaries, skills; commands tested against package.json (ecosystem 15.1)"
+CLAUDE.md,config,config,1,CLAUDE.md,agent-docs,keep,Already @AGENTS.md
+CONTRIBUTING.md,config,config,126,CONTRIBUTING.md,community,rewrite,"Short: run npm run check, branch flow, Conventional Commits (ecosystem 14.2)"
+IMPLEMENTATION_STATUS.md,config,config,32,docs/master-plan/progress.md,plan,delete,Volatile status; superseded by progress.md and roadmap.md (no volatile facts rule)
+LICENSE,config,config,21,LICENSE,legal,keep,MIT
+README.md,config,config,382,README.md,docs,rewrite,Ecosystem README template (14.1); gallery regenerated at PBO-M5
+SECURITY.md,config,config,31,SECURITY.md,community,rewrite,"Enable private vulnerability reporting; acknowledge in 5 days; drop personal address in favour of GitHub advisory flow (owner confirms, PBO-D12)"
+THIRD_PARTY_NOTICES.md,config,config,36,THIRD_PARTY_NOTICES.md,legal,keep,"Add Tailwind, CVA, tailwind-merge, Lucide notices at PBO-M4"
+biome.json,config,config,26,biome.json,config,rewrite,"Ecosystem preset: 2-space, 100 columns, domains, noRestrictedImports, noImportCycles, class sorting"
+contracts/embed.v1.examples.json,contract,contract,42,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/embed.v1.schema.json,contract,contract,165,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/feedback.openapi.json,contract,contract,65,contracts/assistant-api/feedback.openapi.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/feedback.schema.json,contract,contract,53,contracts/assistant-api/feedback.schema.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/feedback.source.json,contract,contract,5,contracts/assistant-api/feedback.source.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/feedback.types.d.ts,contract,contract,51,contracts/assistant-api/feedback.types.d.ts,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/manifest.json,contract,contract,7,,contract,delete,Recreated at contracts/assistant-api/manifest.json covering only consumed contracts with revision and SHA-256
+contracts/openapi.json,contract,contract,1950,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/operations.example.json,contract,contract,42,contracts/assistant-api/operations.example.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/operations.openapi.json,contract,contract,43,contracts/assistant-api/operations.openapi.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/operations.schema.json,contract,contract,288,contracts/assistant-api/operations.schema.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/operations.source.json,contract,contract,7,contracts/assistant-api/operations.source.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/operations.types.d.ts,contract,contract,219,contracts/assistant-api/operations.types.d.ts,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics-v2.openapi.json,contract,contract,853,contracts/assistant-api/product-analytics-v2.openapi.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics-v2.schema.json,contract,contract,843,contracts/assistant-api/product-analytics-v2.schema.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics-v2.source.json,contract,contract,5,contracts/assistant-api/product-analytics-v2.source.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics-v2.types.d.ts,contract,contract,233,contracts/assistant-api/product-analytics-v2.types.d.ts,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics.openapi.json,contract,contract,119,contracts/assistant-api/product-analytics.openapi.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics.schema.json,contract,contract,109,contracts/assistant-api/product-analytics.schema.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics.source.json,contract,contract,5,contracts/assistant-api/product-analytics.source.json,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/product-analytics.types.d.ts,contract,contract,67,contracts/assistant-api/product-analytics.types.d.ts,contract,move,Ecosystem snapshot path contracts/assistant-api/ with revision and SHA-256 in manifest
+contracts/source.json,contract,contract,8,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/sse.examples.json,contract,contract,83,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/sse.schema.json,contract,contract,578,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+contracts/types.d.ts,contract,contract,1686,,contract,delete,Historical public-chat contract (former embed); no src import; backoffice never handles visitor chat (invariant 2); Dockerfile copies types.d.ts needlessly. manifest.json recreated for the four consumed contracts
+docs/adrs/002-shared-vps.md,docs,docs,51,docs/decisions/0002-shared-vps.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/adrs/003-typescript7-compatibility.md,docs,docs,92,docs/decisions/0003-typescript7-compatibility.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/adrs/004-native-chat-and-private-operations.md,docs,docs,38,docs/decisions/0004-native-chat-and-private-operations.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/adrs/005-bounded-distroless-runtime.md,docs,docs,29,docs/decisions/0005-bounded-distroless-runtime.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/adrs/006-project-backoffice.md,docs,docs,40,docs/decisions/0006-project-backoffice.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/adrs/007-canonical-server-composition.md,docs,docs,24,docs/decisions/0007-canonical-server-composition.md,adr,move,"MADR path docs/decisions/NNNN (ecosystem 14.2); update inbound links, docs:check enforces"
+docs/agent-skills.md,docs,docs,109,docs/reference/agent-skills.md,docs,move,Diataxis reference
+docs/api-contract.md,docs,docs,74,docs/how-to/refresh-contract.md,docs,move,Diataxis how-to
+docs/architecture.md,docs,docs,122,docs/explanation/architecture.md,docs,rewrite,C4 L1-L2 Mermaid; matches target-state.md
+docs/assets/architecture-overview.svg,docs,docs,0,,docs,delete,Replaced by Mermaid C4 in README and architecture.md (light/dark safe)
+docs/assets/calendar/after-desktop.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/calendar/after-mobile.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/calendar/before-desktop.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/calendar/keyboard-200-webkit.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/calendar/real-native-api-pg-backoffice-desktop-en.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/calendar/real-native-api-pg-backoffice-mobile-es.png,docs,docs,0,,asset,delete,Evidence for the 2026-10-18 calendar report; archived report cites git history
+docs/assets/gallery/01-sign-in.png,docs,docs,0,docs/assets/gallery/01-sign-in.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/02-availability.png,docs,docs,0,docs/assets/gallery/02-availability.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/03-executions.png,docs,docs,0,docs/assets/gallery/03-executions.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/04-tokens.png,docs,docs,0,docs/assets/gallery/04-tokens.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/05-execution-stages.png,docs,docs,0,docs/assets/gallery/05-execution-stages.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/06-access.png,docs,docs,0,docs/assets/gallery/06-access.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/07-unavailable.png,docs,docs,0,docs/assets/gallery/07-unavailable.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/gallery/08-mobile-es.png,docs,docs,0,docs/assets/gallery/08-mobile-es.png,asset,replace,"README gallery regenerated from the new UI at PBO-M5, light and dark pairs via <picture>"
+docs/assets/technology-stack.svg,docs,docs,0,docs/assets/technology-stack.svg,docs,replace,Regenerated with Tailwind and current versions at PBO-M5 (or removed for text table)
+docs/authentication.md,docs,docs,115,docs/explanation/authentication.md,docs,move,Explanation; adds ASVS mapping link
+docs/backend-operations-request.md,docs,docs,67,,docs,delete,Handoff request fulfilled and snapshotted; history keeps it
+docs/ci.md,docs,docs,176,docs/reference/ci.md,docs,rewrite,Describes ecosystem profiles and ci-profile.json
+docs/dependency-updates.md,docs,docs,71,docs/reference/dependency-updates.md,docs,rewrite,Weekly single PR rule
+docs/deployment-contract.md,docs,docs,295,docs/reference/deployment-contract.md,docs,move,Reference; health/ready/env schema contract (ecosystem 8.5)
+docs/deployment.md,docs,docs,124,docs/how-to/deploy.md,docs,move,Diataxis how-to; gated on VPS
+docs/design-system.md,docs,docs,111,docs/reference/design-system.md,docs,rewrite,"Tailwind 4, CVA, tokens, Instrument blue; supersedes the no-Tailwind statement"
+docs/diagrams.md,docs,docs,44,docs/explanation/architecture.md,docs,merge,Diagrams merged into architecture explanation
+docs/embed-integration.md,docs,docs,174,,docs,delete,Historical public-chat embed contract; ADR 0004 supersedes
+docs/engineering-coordination.md,docs,docs,83,,docs,delete,Dated session handoff; superseded by ecosystem.md and RESUME.md
+docs/feedback-and-improvement.md,docs,docs,59,docs/explanation/feedback-and-improvement.md,docs,move,Explanation
+docs/implementation-plan.md,docs,docs,41,,docs,delete,Superseded by docs/master-plan/roadmap.md
+docs/master-plan/README.md,docs,docs,116,docs/master-plan/README.md,plan,replace,v2 replaces v1 in place; see Changes from v1 in README
+docs/master-plan/research/baseline-audit.md,docs,docs,222,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/delivery-and-observability.md,docs,docs,86,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/dependencies.md,docs,docs,26,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/design-and-dataviz.md,docs,docs,102,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/security.md,docs,docs,25,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/sources.md,docs,docs,59,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/standards-docs-skills.md,docs,docs,64,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/target-architecture.md,docs,docs,158,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/research/testing.md,docs,docs,80,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/roadmap.md,docs,docs,99,docs/master-plan/roadmap.md,plan,replace,v2 replaces v1 in place; see Changes from v1 in README
+docs/master-plan/rubrics/README.md,docs,docs,26,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/rubrics/senior-designer.md,docs,docs,41,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/rubrics/senior-developer.md,docs,docs,84,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/rubrics/senior-recruiter.md,docs,docs,26,,plan,delete,v1 plan content absorbed into v2 files (see file-moves.md v1 mapping); v1 stays in git history
+docs/master-plan/scorecard.md,docs,docs,48,docs/master-plan/scorecard.md,plan,replace,v2 replaces v1 in place; see Changes from v1 in README
+docs/privacy-review.md,docs,docs,43,docs/explanation/privacy-review.md,docs,move,Explanation
+docs/product-analytics.md,docs,docs,72,docs/explanation/product-analytics.md,docs,move,Explanation
+docs/release-checklist.md,docs,docs,25,docs/how-to/release.md,docs,rewrite,Release-please flow and gated publication
+docs/research/operations-dashboard.md,docs,docs,32,docs/explanation/design-research.md,docs,move,Owner-supplied references and dashboard research kept as explanation
+docs/runtime-baseline.md,docs,docs,64,docs/reference/runtime-baseline.md,docs,move,"Reference; versions generated, not hand-written"
+docs/verification/backoffice.md,docs,docs,86,docs/verification/archive/backoffice.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/backoffice/desktop-dark-en.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/backoffice/mobile-light-es.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/backoffice/usage-dark-en.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/baseline-bundle.json,docs,docs,4,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/baseline-desktop.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/baseline-mobile.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/calendar-integration-2026-10-18.json,docs,docs,28,docs/verification/archive/calendar-integration-2026-10-18.json,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/calendar-report-2026-10-18.md,docs,docs,114,docs/verification/archive/calendar-report-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/clean-architecture-2026-10-17.md,docs,docs,75,docs/verification/archive/clean-architecture-2026-10-17.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/common-layout-preflight-2026-10-18.md,docs,docs,39,docs/verification/archive/common-layout-preflight-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/common-layout-results-2026-10-18.md,docs,docs,51,docs/verification/archive/common-layout-results-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/container-readiness.md,docs,docs,104,docs/verification/archive/container-readiness.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/embed/compact-dark-en.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/compact-light-es.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/conversation-dark-en.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/expanded-dark-en.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/initial-desktop-light.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/landscape-light-es.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/mobile-light-es.png,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/embed/panel-demo.webm,docs,docs,0,,asset,delete,Former public-chat embed evidence; ADR 0004
+docs/verification/final-bundle.json,docs,docs,4,docs/verification/archive/final-bundle.json,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/final-desktop-dark.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/final-desktop-light.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/final-landscape.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/final-mobile-conversation.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/final-mobile-light.png,docs,docs,0,,asset,delete,Old UI screenshot or bundle snapshot of the pre-redesign UI; CI artifacts and visual baselines replace it
+docs/verification/iam-postgres-security-2026-10-18.md,docs,docs,77,docs/verification/archive/iam-postgres-security-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/interaction-polish.md,docs,docs,160,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/after-conversation-desktop.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/after-conversation-mobile.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/after-desktop.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/after-mobile.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/before-conversation-desktop.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/before-conversation-mobile.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/before-desktop.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/before-mobile.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/live-context-desktop.png,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/interaction-polish/signature-demo.webm,docs,docs,0,,asset,delete,Evidence of 2026-10 interaction polish superseded by redesign; recording 985 KB removed
+docs/verification/operations-workbench.md,docs,docs,105,docs/verification/archive/operations-workbench.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/paired-ci-profile-2026-10-18.md,docs,docs,36,docs/verification/archive/paired-ci-profile-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/product-feedback-2026-10-17.md,docs,docs,50,docs/verification/archive/product-feedback-2026-10-17.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/product-report-adapter-2026-10-18.md,docs,docs,34,docs/verification/archive/product-report-adapter-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/quality-chat.md,docs,docs,151,docs/verification/archive/quality-chat.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/readme-gallery.md,docs,docs,83,docs/verification/archive/readme-gallery.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/runtime-compatibility-2026-10-17.md,docs,docs,46,docs/verification/archive/runtime-compatibility-2026-10-17.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/shared-postgres-adoption-2026-10-18.md,docs,docs,83,docs/verification/archive/shared-postgres-adoption-2026-10-18.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/skill-discovery-2026-10-18.json,docs,docs,42,docs/verification/archive/skill-discovery-2026-10-18.json,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/verification/toolchain-security-2026-10-17.md,docs,docs,52,docs/verification/archive/toolchain-security-2026-10-17.md,docs,move,Dated evidence report kept under archive with an INDEX.md (no longer cited as current)
+docs/vps-ops-optimization-handoff.md,docs,docs,240,,docs,delete,Dated handoff; superseded by vps-ops plan and deployment-contract
+docs/work-checklist.md,docs,docs,105,,docs,delete,Superseded by roadmap.md and progress.md
+infra/docker/app/Dockerfile,infra,infra,31,infra/docker/app/Dockerfile,build,rewrite,"Canonical Next.js standalone Dockerfile: ARG NODE_IMAGE, labels, no Trivy-in-CI curl, container-structure-test, version stamp, SOURCE_DATE_EPOCH"
+infra/docker/app/Dockerfile.dockerignore,infra,infra,29,infra/docker/app/Dockerfile.dockerignore,build,keep,Allowlist stays; add design/ and src/instrumentation.ts
+migrations/001-access.sql,migration,migration,24,migrations/0001_access.sql,migration,move,Versioned names with schema_migrations runner (ADR 0016)
+migrations/runtime-grants.sql,migration,migration,16,migrations/0002_runtime_grants_append_only_audit.sql,migration,rewrite,Audit table INSERT and SELECT only for the runtime role; runner applies grants as a versioned step
+next-env.d.ts,config,config,7,next-env.d.ts,generated,keep,Next-generated; already tracked
+next.config.ts,config,config,3,next.config.ts,config,rewrite,"typedRoutes, reactCompiler decision at M4, no extra headers (CSP lives in proxy.ts), standalone kept"
+package-lock.json,config,config,3121,package-lock.json,config,keep,Regenerated by dependency changes
+package.json,config,config,54,package.json,config,rewrite,"Single npm run check, vitest/stryker/lighthouse scripts, exact pins, engines Node 26 at M4"
+playwright.config.ts,config,config,27,playwright.config.ts,test-config,rewrite,"Per-role projects, iPhone and Pixel profiles, visual project, retries 1 with failOnFlakyTests on main"
+public/avatar.png,asset,asset,0,public/avatar.png,asset,delete,Unused by src after shell redesign (owner confirms); monogram is SVG in icon.tsx
+public/licenses/inter-OFL.txt,asset,asset,93,public/licenses/inter-OFL.txt,asset,keep,OFL attribution travels with self-hosted fonts
+public/licenses/inter-tight-OFL.txt,asset,asset,93,public/licenses/inter-tight-OFL.txt,asset,keep,OFL attribution travels with self-hosted fonts
+public/licenses/jetbrains-mono-OFL.txt,asset,asset,93,public/licenses/jetbrains-mono-OFL.txt,asset,keep,OFL attribution travels with self-hosted fonts
+scripts/auth-fixture-session.ts,script,script,99,scripts/e2e/auth-fixture-session.ts,tooling,move,Test tooling grouped under scripts/e2e
+scripts/auth-migrate.ts,script,script,47,scripts/migrate.ts,tooling,rewrite,Becomes the versioned migration runner entry (ADR 0016); still copied into the runtime image
+scripts/check-boundaries.ts,script,script,413,scripts/guards/check-boundaries.ts,guard,move,Guard rules G1-G10 added; negative fixtures kept; moves under scripts/guards
+scripts/check-ci-profile.ts,script,script,412,scripts/ci/check-ci-profile.ts,ci-tooling,rewrite,Validates ci-profile.json (every file in a profile) instead of the vps-ops paired profile
+scripts/check-ci-results.ts,script,script,29,,ci-tooling,delete,Replaced by shared ci-gate job in engineering-standards
+scripts/check-contract.ts,script,script,137,scripts/contracts/check-contract.ts,contract-tooling,rewrite,Checks the four consumed snapshots with SHA-256 manifest; drops historical public contract
+scripts/check-docs.ts,script,script,35,scripts/docs/check-docs.ts,docs-tooling,rewrite,"Adds README heading check, ADR path and AGENTS.md command check"
+scripts/check-license.ts,script,script,83,scripts/security/check-license.ts,security-tooling,keep,Licence allow-list; extended with dependency licence allow-list (ecosystem 7)
+scripts/check-project-fixture.ts,script,script,122,scripts/e2e/check-project-fixture.ts,tooling,move,Fixture safety check
+scripts/check-public-files.ts,script,script,49,scripts/security/check-public-files.ts,security-tooling,keep,High-confidence secret scan stays as a fast pre-commit; gitleaks added in CI
+scripts/check-secret-history.ts,script,script,40,scripts/security/check-secret-history.ts,security-tooling,keep,History scan stays; gitleaks complements
+scripts/check-skills.ts,script,script,183,scripts/harness/check-skills.ts,harness,rewrite,"Adds canonical .agents/skills layout, evals presence, staleness"
+scripts/check-typescript-toolchain.ts,script,script,24,scripts/check-typescript-toolchain.ts,tooling,keep,Reports TS 7 and TS 6 alias versions
+scripts/check-workflows.ts,script,script,107,scripts/ci/check-workflows.ts,ci-tooling,replace,actionlint and zizmor come from shared workflow; keep only checksum-pinned local runner for pre-push
+scripts/ci-build-provenance.ts,script,script,149,,ci-tooling,delete,Replaced by attest-image.yml provenance and build-once artifact digest
+scripts/ci-postgres.ts,script,script,344,,ci-tooling,delete,Sibling-API Postgres clone and custom lifecycle replaced by Testcontainers with a digest-pinned postgres:18 image (PBO-D6)
+scripts/container-policy.ts,script,script,64,scripts/container/container-policy.ts,container-tooling,replace,Rules move to container-structure-test and hadolint; leftover runtime-flag policy kept
+scripts/dependency-automation.ts,script,script,370,,ci-tooling,delete,Superseded by deps-weekly-guard
+scripts/dependency-policy.ts,script,script,299,,ci-tooling,delete,Superseded by multi-ecosystem Dependabot group and shared guard
+scripts/json.ts,script,script,31,scripts/lib/json.ts,tooling,move,Script-only helper; grouped under scripts/lib
+scripts/operations-fixture.ts,script,script,118,scripts/e2e/operations-fixture.ts,tooling,move,Synthetic operations API for E2E
+scripts/postgres-image-security.ts,script,script,106,,ci-tooling,delete,Grype gate in shared workflow replaces custom Trivy JSON gate
+scripts/postgres-readiness.ts,script,script,17,,ci-tooling,delete,Testcontainers wait strategy replaces
+scripts/prepare-runtime.ts,script,script,138,scripts/container/prepare-runtime.ts,container-tooling,keep,Traces migration runtime into standalone output
+scripts/release-compatibility.ts,script,script,77,scripts/contracts/release-compatibility.ts,contract-tooling,rewrite,Reads manifest.json instead of historical source.json
+scripts/secret-patterns.ts,script,script,19,scripts/security/secret-patterns.ts,security-tooling,keep,Shared by scanners
+scripts/test-proxy.ts,script,script,36,scripts/e2e/test-proxy.ts,tooling,move,E2E helper
+scripts/test-server.ts,script,script,123,scripts/e2e/test-server.ts,tooling,move,E2E helper
+scripts/verify-container.ts,script,script,172,scripts/container/verify-container.ts,container-tooling,keep,Runtime budget/SIGTERM verification stays; becomes post-build job
+scripts/verify-postgres.ts,script,script,277,,ci-tooling,delete,Verified the API-owned Postgres artifact; ownership of that image stays in the API repo
+src/app/access/invitation/route.ts,app,src,35,src/app/access/invitation/route.ts,app,keep,Same route; moves token handling to POST-from-fragment if ADR 0015 chooses it
+src/app/access/page.tsx,app,src,108,src/app/(shell)/access/page.tsx,app,rewrite,"Access view on the shell: members, invitations, sessions, linked accounts; calls DAL listAccess"
+src/app/analytics/page.tsx,app,src,100,src/app/(shell)/analytics/page.tsx,app,rewrite,"Audience view on the shell, URL-synced range/filters"
+src/app/api/auth/[...all]/route.ts,app,src,23,src/app/api/auth/[...all]/route.ts,app,keep,Better Auth handler
+src/app/api/health/route.ts,app,src,6,src/app/api/health/route.ts,app,keep,"Liveness, add version"
+src/app/api/operations/route.ts,app,src,27,src/app/api/operations/route.ts,app,keep,Authorised JSON read; calls DAL
+src/app/api/ready/route.ts,app,src,8,src/app/api/ready/route.ts,app,rewrite,Add version and schema_version (ecosystem 8.5)
+src/app/fonts.ts,app,src,19,src/app/fonts.ts,app,rewrite,next/font/local with committed woff2 (hermetic build; removes build-time Google fetch retries seen in audit)
+src/app/layout.tsx,app,src,36,src/app/layout.tsx,app,rewrite,"Server-rendered html lang, data-theme, data-density from cookies; no inline script; nonce CSP"
+src/app/page.tsx,app,src,41,src/app/(shell)/page.tsx,app,rewrite,"Overview template: KPI row, trend and composition, needs-attention; Suspense per section"
+src/app/privacy/page.tsx,app,src,93,src/app/privacy/page.tsx,app,rewrite,Tailwind; public route outside shell
+src/app/sign-in/page.tsx,app,src,42,src/app/(auth)/sign-in/page.tsx,app,rewrite,Own auth layout with monogram and constellation backdrop
+src/app/style.css,app,src,358,src/app/globals.css,app,replace,Tailwind entry plus generated theme.css; 358 lines of hand CSS replaced by tokens and utilities
+src/features/analytics/adapters/calendar.ts,adapters,src,35,src/features/analytics/domain/calendar.ts,domain,move,Pure date logic belongs in domain
+src/features/analytics/adapters/http.ts,adapters,src,20,src/features/analytics/adapters/http.ts,adapters,keep,Bounded HTTP read
+src/features/analytics/adapters/read-json.ts,adapters,src,49,src/shared/http/read-json.ts,shared,move,Shared with operations and feedback adapters
+src/features/analytics/adapters/report-http.ts,adapters,src,30,src/features/analytics/adapters/report-http.ts,adapters,keep,Bounded HTTP read
+src/features/analytics/adapters/report-values.ts,adapters,src,77,src/features/analytics/adapters/report-mapper.ts,adapters,rename,Wire-to-domain mapper
+src/features/analytics/adapters/validate-report.ts,adapters,src,303,src/features/analytics/adapters/contract/report.validator.ts,adapters,rewrite,303 manual lines replaced by Ajv validator compiled from product-analytics-v2.schema.json (ADR 0010)
+src/features/analytics/adapters/validate.ts,adapters,src,88,src/features/analytics/adapters/contract/overview.validator.ts,adapters,rewrite,Ajv from product-analytics.schema.json
+src/features/analytics/application/read-report.ts,application,src,10,src/features/analytics/application/get-audience-report.ts,application,rename,Use case with explicit port and unavailable states
+src/features/analytics/application/read.ts,application,src,9,src/features/analytics/application/get-audience-summary.ts,application,rename,Use case for Overview tile
+src/features/analytics/domain/models.ts,domain,src,75,src/features/analytics/domain/models.ts,domain,keep,Pure types
+src/features/analytics/domain/report.ts,domain,src,103,src/features/analytics/domain/report.ts,domain,keep,Pure report logic
+src/features/analytics/presentation/copy.ts,presentation,src,109,src/shared/i18n/messages/analytics.ts,shared,move,Typed dictionaries live in shared/i18n (es-419 and en-US)
+src/features/analytics/presentation/metrics.module.css,presentation,src,51,,presentation,delete,CSS Modules removed; replaced by Tailwind utilities in components
+src/features/analytics/presentation/metrics.tsx,presentation,src,104,src/features/analytics/presentation/audience-kpis.tsx,presentation,rewrite,KpiRow on Metric component
+src/features/analytics/presentation/overview.tsx,presentation,src,63,src/features/analytics/presentation/audience-tile.tsx,presentation,rewrite,Overview deep-link tile
+src/features/analytics/presentation/report-chart.tsx,presentation,src,68,src/features/analytics/presentation/daily-chart.tsx,presentation,rewrite,ChartFrame with column chart and table twin; lazy chart chunk
+src/features/analytics/presentation/report-copy.ts,presentation,src,234,src/shared/i18n/messages/audience-report.ts,shared,move,Typed dictionary
+src/features/analytics/presentation/report-filters.tsx,presentation,src,154,src/features/analytics/presentation/audience-filters.tsx,presentation,rewrite,FilterChips and RangePicker; URL-synced
+src/features/analytics/presentation/report.module.css,presentation,src,199,,presentation,delete,CSS Modules removed
+src/features/analytics/presentation/report.tsx,presentation,src,364,src/features/analytics/presentation/audience-report.tsx,presentation,rewrite,"Split below 200 lines: countries table, heatmap, coverage"
+src/features/analytics/presentation/selection.ts,presentation,src,48,src/features/analytics/adapters/input/report-query.ts,adapters,move,Server code must not import presentation (guard G4)
+src/features/auth/adapters/browser-session.ts,adapters,src,58,src/features/auth/adapters/browser-session.ts,adapters,keep,Cookie/session reading
+src/features/auth/adapters/callback-response.ts,adapters,src,32,src/features/auth/adapters/callback-response.ts,adapters,keep,OAuth callback handling
+src/features/auth/adapters/client.ts,adapters,src,7,src/features/auth/adapters/client.ts,adapters,keep,Better Auth browser client
+src/features/auth/adapters/store.ts,adapters,src,182,src/features/auth/adapters/pg/membership-store.ts,adapters,split,"182 lines split into membership, invitation and session stores (ports only where unit fakes exist)"
+src/features/auth/application/browser-session.ts,application,src,9,src/features/auth/application/browser-session.ts,application,keep,Use case
+src/features/auth/application/manage-access.ts,application,src,69,"src/features/auth/application/{invite-viewer,revoke-access,list-access}.ts",application,split,Real use cases with audit and rate limits
+src/features/auth/domain/access.ts,domain,src,16,src/features/auth/domain/access.ts,domain,keep,Permission lattice as pure functions; property tests added
+src/features/auth/domain/locale.ts,domain,src,5,src/shared/i18n/locale.ts,shared,move,Locale negotiation is cross-feature
+src/features/auth/entry.tsx,entry.tsx,src,22,src/features/auth/entry.tsx,entry,keep,Entry composition
+src/features/auth/presentation/auth.module.css,presentation,src,85,,presentation,delete,CSS Modules removed
+src/features/auth/presentation/copy.ts,presentation,src,113,src/shared/i18n/messages/auth.ts,shared,move,Typed dictionary
+src/features/auth/presentation/invite-form.tsx,presentation,src,67,src/features/auth/presentation/invite-form.tsx,presentation,rewrite,"Field, role select, expiry; keeps email on error (WCAG 3.3.7)"
+src/features/auth/presentation/link-account.tsx,presentation,src,47,src/features/auth/presentation/link-account.tsx,presentation,rewrite,Linked accounts section
+src/features/auth/presentation/revoke-control.tsx,presentation,src,87,src/features/auth/presentation/revoke-control.tsx,presentation,rewrite,ConfirmDialog with consequence text
+src/features/auth/presentation/sign-in.tsx,presentation,src,82,src/features/auth/presentation/sign-in.tsx,presentation,rewrite,Auth layout card
+src/features/auth/presentation/sign-out.tsx,presentation,src,41,src/shared/shell/user-menu.tsx,shared,move,Lives in UserMenu
+src/features/operations/adapters/feedback-http.ts,adapters,src,54,src/features/feedback/adapters/http.ts,adapters,move,Feedback becomes its own feature
+src/features/operations/adapters/feedback-validate.ts,adapters,src,56,src/features/feedback/adapters/contract/feedback.validator.ts,adapters,rewrite,Ajv from feedback.schema.json
+src/features/operations/adapters/grafana-link.ts,adapters,src,26,src/features/operations/adapters/grafana-link.ts,adapters,keep,Reviewed external link
+src/features/operations/adapters/http.ts,adapters,src,73,src/features/operations/adapters/http.ts,adapters,keep,Bounded HTTP read
+src/features/operations/adapters/validate.ts,adapters,src,185,src/features/operations/adapters/contract/operations.validator.ts,adapters,rewrite,Ajv from operations.schema.json
+src/features/operations/application/read-feedback.ts,application,src,7,src/features/feedback/application/get-feedback-overview.ts,application,move,Feedback feature
+src/features/operations/application/read.ts,application,src,9,src/features/operations/application/get-overview.ts,application,rewrite,Use case: parallel reads with per-section states
+src/features/operations/domain/feedback.ts,domain,src,13,src/features/feedback/domain/feedback.ts,domain,move,Feedback feature
+src/features/operations/domain/insights.ts,domain,src,37,src/features/operations/domain/insights.ts,domain,keep,Pure; add Metric tagged union
+src/features/operations/domain/models.ts,domain,src,50,src/features/operations/domain/models.ts,domain,keep,Pure types; Metric<T> added
+src/features/operations/presentation/charts.tsx,presentation,src,153,src/shared/dataviz/proportion-bar.tsx,shared,replace,Redundant 3-bar chart replaced by server-rendered ProportionBar (zero client JS)
+src/features/operations/presentation/copy.ts,presentation,src,183,src/shared/i18n/messages/operations.ts,shared,move,Typed dictionary
+src/features/operations/presentation/dashboard.tsx,presentation,src,331,"src/features/operations/presentation/{overview-view,kpi-row,needs-attention}.tsx",presentation,split,331 lines split below 200; Overview template
+src/features/operations/presentation/feedback.tsx,presentation,src,80,src/features/feedback/presentation/feedback-view.tsx,presentation,move,Own route /feedback
+src/features/operations/presentation/preferences.tsx,presentation,src,69,src/shared/shell/user-menu.tsx,shared,merge,"Preferences join UserMenu (theme, density, language)"
+src/features/operations/presentation/trace-explorer.tsx,presentation,src,119,"src/features/operations/presentation/{runs-table,run-waterfall}.tsx",presentation,split,Runs list on DataTable; Waterfall with shared ms axis
+src/features/operations/presentation/workbench.module.css,presentation,src,441,,presentation,delete,CSS Modules removed (441 lines)
+src/proxy.ts,app,src,20,src/proxy.ts,app,rewrite,"CSP with nonce, HSTS, x-request-id, optimistic redirects only"
+src/server/analytics.ts,server,src,49,src/server/container.ts,server,merge,Composition root
+src/server/auth/actions.ts,server,src,44,src/server/auth/actions.ts,server,rewrite,"Pipeline validate, requireSession, authorize, use case, audit, revalidate; test asserts every use-server export authorises"
+src/server/auth/config.ts,server,src,77,src/server/env.ts,server,merge,Single typed env schema; fail at boot
+src/server/auth/runtime.ts,server,src,92,src/server/auth/runtime.ts,server,rewrite,Built from container; covered by integration tests
+src/server/auth/session.ts,server,src,71,src/server/dal/session.ts,server,move,requireSession and authorize live in DAL
+src/server/operations.ts,server,src,27,src/server/container.ts,server,merge,Composition root
+src/shared/accessibility/skip-link.tsx,shared,src,23,src/shared/shell/skip-link.tsx,shared,move,Part of shell
+src/shared/http/bounded-json.ts,shared,src,35,src/shared/http/bounded-json.ts,shared,keep,Bounded body reader
+src/shared/ui/button-link.tsx,shared,src,15,src/shared/ui/link-button.tsx,shared,rewrite,CVA LinkButton
+src/shared/ui/button.module.css,shared,src,61,,shared,delete,CSS Modules removed
+src/shared/ui/button.tsx,shared,src,22,src/shared/ui/button.tsx,shared,rewrite,CVA Button with five variants and loading state
+tests/browser/backoffice.spec.ts,test,test,766,"tests/e2e/{auth,overview,runs,usage,audience,access,privacy,a11y,responsive}.spec.ts",e2e,split,766 lines split per journey; adds per-role projects and iPhone/Pixel
+tests/fixtures/feedback.ts,test,test,9,tests/fixtures/feedback.ts,fixture,keep,Synthetic
+tests/fixtures/operations.ts,test,test,40,tests/fixtures/operations.ts,fixture,keep,Synthetic
+tests/fixtures/product-analytics.ts,test,test,40,tests/fixtures/product-analytics.ts,fixture,keep,Synthetic
+tests/fixtures/product-report.ts,test,test,96,tests/fixtures/product-report.ts,fixture,keep,Synthetic
+tests/integration/auth.test.ts,test,test,634,"tests/integration/{admission,invitations,revocation,audit,iam-runtime}.test.ts",integration,split,634 lines split; Testcontainers Postgres; third test no longer skipped
+tests/unit/auth-callback.test.ts,test,test,45,tests/unit/auth-callback.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/auth-config.test.ts,test,test,90,tests/unit/auth-config.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/boundaries.test.ts,test,test,267,tests/unit/boundaries.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/bounded-json.test.ts,test,test,53,tests/unit/bounded-json.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/browser-session.test.ts,test,test,74,tests/unit/browser-session.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/ci-postgres.test.ts,test,test,112,,unit,delete,Tests the deleted script (see scripts mapping)
+tests/unit/ci-profile.test.ts,test,test,393,tests/unit/ci-profile.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/container-policy.test.ts,test,test,61,tests/unit/container-policy.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/container-runtime.test.ts,test,test,125,tests/unit/container-runtime.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/dependency-policy.test.ts,test,test,639,,unit,delete,Tests the deleted script (see scripts mapping)
+tests/unit/docker-layout.test.ts,test,test,214,tests/unit/docker-layout.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/feedback.test.ts,test,test,84,tests/unit/feedback.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/fixture-safety.test.ts,test,test,47,tests/unit/fixture-safety.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/fixture-session-file.test.ts,test,test,79,tests/unit/fixture-session-file.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/layout.test.ts,test,test,87,tests/unit/layout.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/license.test.ts,test,test,127,tests/unit/license.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/manage-access.test.ts,test,test,89,tests/unit/manage-access.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/operational-insights.test.ts,test,test,81,tests/unit/operational-insights.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/operations-fixture.test.ts,test,test,65,tests/unit/operations-fixture.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/operations.test.ts,test,test,186,tests/unit/operations.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/postgres-image-security.test.ts,test,test,168,,unit,delete,Tests the deleted script (see scripts mapping)
+tests/unit/postgres-readiness.test.ts,test,test,59,,unit,delete,Tests the deleted script (see scripts mapping)
+tests/unit/product-analytics.test.ts,test,test,125,tests/unit/product-analytics.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/product-report.test.ts,test,test,224,tests/unit/product-report.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/project-fixture.test.ts,test,test,159,tests/unit/project-fixture.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/release-compatibility.test.ts,test,test,143,tests/unit/release-compatibility.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/secret-scanner.test.ts,test,test,75,tests/unit/secret-scanner.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tests/unit/skills.test.ts,test,test,131,tests/unit/skills.test.ts,unit,migrate,node:test to Vitest 4 mechanical port; same path; Stryker scope where in domain/dal/validators
+tooling/api-contract/package-lock.json,tooling,tooling,395,tooling/api-contract/package-lock.json,tooling,keep,Isolated generator lockfile
+tooling/api-contract/package.json,tooling,tooling,15,tooling/api-contract/package.json,tooling,keep,Isolated generator (openapi-typescript needs TS 5)
+tsconfig.json,config,config,38,tsconfig.json,config,rewrite,Extend standards tsconfig base; add noImplicitOverride; Node subpath imports instead of relative ../../../..
