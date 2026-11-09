@@ -179,7 +179,7 @@ no production publication, deployment or live OAuth/provider check is implied.
 ## Shared project PostgreSQL artifact
 
 The canonical database recipe is owned by
-[API source e6b2e67](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/e6b2e67c1a0ebded3d03209594e0cfce1b1720e5/infra/docker/postgres/Dockerfile).
+[API source 5d882dd](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3/infra/docker/postgres/Dockerfile).
 It supplies PostgreSQL18.6 and portable pgvector0.8.7 on immutable Alpine3.24,
 with UID/GID70. The API also owns the unchanged bootstrap and HBA resources;
 this repository retains its IAM migrations and grants. Private vps-ops confirmed

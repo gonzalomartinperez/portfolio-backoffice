@@ -82,7 +82,7 @@ engines and OS dependencies. Shared local Playwright caches must never be cleane
 ## Fixture privacy and retained evidence
 
 All three runtime jobs build the canonical database recipe from immutable API source
-`e6b2e67c1a0ebded3d03209594e0cfce1b1720e5`, using that checkout's repository-root context.
+`5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3`, using that checkout's repository-root context.
 The database job reuses its exact compiled image for IAM verification, the complete
 security inventory and the real dual-application scoped-role/recovery check; its
 second local tag is an alias, not another build. Container and browser fixtures use

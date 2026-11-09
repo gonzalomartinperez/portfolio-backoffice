@@ -225,7 +225,7 @@ committed source rather than a second IAM-only database recipe:
 git clone --filter=blob:none --no-checkout https://github.com/gonzalomartinperez/portfolio-assistant-api.git .artifacts/api-compatibility
 (
   cd .artifacts/api-compatibility
-  git checkout --detach e6b2e67c1a0ebded3d03209594e0cfce1b1720e5
+  git checkout --detach 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
   docker build -f infra/docker/postgres/Dockerfile -t portfolio-assistant-postgres:project-ci .
 )
 
