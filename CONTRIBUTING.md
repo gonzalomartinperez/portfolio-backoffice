@@ -60,7 +60,7 @@ validation. `allowJs: false`, `strict`, `noUncheckedIndexedAccess`,
 complete project, including tooling and generated Next route types. Do not exclude scripts
 or add casts/suppressions merely to satisfy the migration.
 
-Pinned Node 24.22.0 executes erasable TypeScript directly: `node scripts/check-docs.ts` and
+Pinned Node 24.22.2 executes erasable TypeScript directly: `node scripts/check-docs.ts` and
 `node --test tests/unit/*.test.ts`. This removes types at runtime; **it does not type-check**.
 `npm run typecheck` remains the required check. Use explicit relative `.ts` imports and
 `import type`; no enum/parameter-property transform, ts-node or additional execution runner.

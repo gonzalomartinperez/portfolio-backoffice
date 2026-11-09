@@ -584,7 +584,22 @@ test("contract generator compiler-major proposals respect the isolated API compa
 	assert.deepEqual(list(field(record(compiler), "update-types")), [
 		"version-update:semver-major",
 	]);
-	assert.equal(text(field(record(generator), "target-branch")), "develop");
+	assert.equal(
+		text(field(record(generator), "multi-ecosystem-group")),
+		"weekly-all",
+	);
+	const group = record(
+		field(record(field(config, "multi-ecosystem-groups")), "weekly-all"),
+	);
+	assert.equal(text(field(group, "target-branch")), "develop");
+	assert.equal(field(group, "open-pull-requests-limit"), 1);
+	for (const update of list(field(config, "updates"))) {
+		assert.equal(field(record(update), "open-pull-requests-limit"), undefined);
+		assert.equal(
+			text(field(record(update), "multi-ecosystem-group")),
+			"weekly-all",
+		);
+	}
 });
 
 test("manual profile assesses even an eligible candidate without any API mutation", async () => {

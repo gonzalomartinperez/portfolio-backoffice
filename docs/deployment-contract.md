@@ -16,8 +16,8 @@ Neither context admits environment files or keys.
 See [Docker build-context precedence](https://docs.docker.com/build/concepts/context/#filename-and-location).
 
 Build `docker buildx build --load -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:rc .`.
-The application Dockerfile pins its Node 24.22.0 builder and distroless Node 24 Debian 13 nonroot
-runtime by digest (both report Node 24.22.0). Local builds require Docker Buildx/BuildKit. CI installs a SHA-pinned Buildx action.
+The application Dockerfile pins its Node 24.22.2 builder and distroless Node 24 Debian 13 nonroot
+runtime by digest (builder reports Node 24.22.2). Local builds require Docker Buildx/BuildKit. CI installs a SHA-pinned Buildx action.
 It uses `npm ci`, Next standalone output,
 `.next/static`, public assets and a non-root runtime (UID/GID 65532). Linux amd64 is the
 verification target; arm64 is unverified. Build needs dependency and build-time font

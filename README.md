@@ -190,7 +190,7 @@ not invoice totals; availability does not certify the paid model provider.
 
 ### With your development OAuth applications
 
-Use Linux/WSL, Node **24.22.0** from `.nvmrc`, npm and a dedicated PostgreSQL database.
+Use Linux/WSL, Node **24.22.2** from `.nvmrc`, npm and a dedicated PostgreSQL database.
 
 ```sh
 gh repo clone gonzalomartinperez/portfolio-backoffice

@@ -1,12 +1,21 @@
 version: 2
+
+multi-ecosystem-groups:
+  weekly-all:
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    target-branch: develop
+    open-pull-requests-limit: 1
+
 updates:
   - package-ecosystem: npm
     directory: /
-    target-branch: develop
-    rebase-strategy: auto
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 3
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
+    labels: [dependencies]
     ignore:
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
@@ -14,46 +23,35 @@ updates:
         update-types: [version-update:semver-major]
     cooldown:
       default-days: 7
-    groups:
-      quality-tool-patches:
-        applies-to: version-updates
-        patterns: ["@biomejs/biome", "@types/node"]
-        update-types: [patch]
-      approved-react-types:
-        patterns: ["@types/react", "@types/react-dom"]
-        update-types: [patch]
+      semver-major-days: 14
+      semver-patch-days: 3
   - package-ecosystem: npm
     directory: /tooling/api-contract
-    target-branch: develop
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
+    labels: [dependencies]
     # openapi-typescript 7.13 requires the classic TypeScript 5 compiler API.
     ignore:
       - dependency-name: typescript
         update-types: [version-update:semver-major]
-    rebase-strategy: auto
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 2
     cooldown:
       default-days: 7
+      semver-major-days: 14
+      semver-patch-days: 3
   - package-ecosystem: github-actions
     directory: /
-    target-branch: develop
-    rebase-strategy: auto
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 2
-    groups:
-      reviewed-actions-maintenance:
-        applies-to: version-updates
-        patterns: ["actions/*", "docker/*"]
-        update-types: [patch, minor]
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
+    labels: [dependencies]
+    cooldown:
+      default-days: 7
   - package-ecosystem: docker
     directory: /infra/docker/app
-    target-branch: develop
-    rebase-strategy: auto
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 2
+    multi-ecosystem-group: weekly-all
+    patterns: ["*"]
+    labels: [dependencies]
     ignore:
       - dependency-name: node
         update-types: [version-update:semver-major]
+    cooldown:
+      default-days: 7
