@@ -27,8 +27,8 @@
 		"node": ">=24 <25"
 	},
 	"dependencies": {
-		"better-auth": "1.7.10",
-		"next": "16.4.2",
+		"better-auth": "1.7.15",
+		"next": "16.4.4",
 		"pg": "8.23.1",
 		"react": "19.3.1",
 		"react-dom": "19.3.1",
@@ -37,7 +37,7 @@
 		"server-only": "0.0.1"
 	},
 	"devDependencies": {
-		"@axe-core/playwright": "^4.13.0",
+		"@axe-core/playwright": "^4.14.0",
 		"@biomejs/biome": "2.5.15",
 		"@playwright/test": "1.64.1",
 		"@types/node": "24.19.2",
@@ -46,7 +46,7 @@
 		"@types/react-dom": "19.3.0",
 		"@typescript/typescript6": "6.0.2",
 		"@vercel/nft": "1.11.0",
-		"js-yaml": "5.4.3",
+		"js-yaml": "5.5.0",
 		"typescript": "7.0.2"
 	},
 	"overrides": {

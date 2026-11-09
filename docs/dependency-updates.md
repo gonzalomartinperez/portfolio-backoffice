@@ -9,9 +9,10 @@ and pull-requests/read permissions. Production publication/deployment is unrelat
 
 ## Proposals and review
 
-Version-update proposals run weekly, target `develop`, use native
-`rebase-strategy: auto`, bounded open-PR counts and small risk-based groups. The
-seven-day routine npm cooldown does not delay security updates. The contract-generator
+Version-update proposals form one weekly grouped PR (`weekly-all`, Monday 09:00
+America/Argentina/Buenos_Aires, target `develop`) covering npm, GitHub Actions and Docker,
+limited to one open PR through the group. The seven-day routine cooldown (14 days for
+npm majors, 3 for patches) does not delay security updates. The contract-generator
 workspace is independent; its compiler-major ignore preserves the documented TypeScript5
 programmatic API compatibility while the application uses TypeScript7. Do not hide
 security alerts to enforce that compatibility exception.
