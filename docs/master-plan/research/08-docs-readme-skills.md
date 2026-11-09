@@ -51,7 +51,7 @@ Use `<picture>` with `prefers-color-scheme` ([29], GitHub blog). The older `#gh-
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <img alt="PROJECT logo" src="docs/assets/logo-light.svg" height="64">
+    <img alt="PROJECT logo" src='docs/assets/logo-light.svg' height="64">
   </picture>
 
 # PROJECT_NAME
