@@ -52,3 +52,11 @@ Skill source is `.claude/skills/`; `.agents/skills/` provides Codex discovery li
 Skills are selected automatically by task; explicit invocation is optional.
 Read only the selected skill and relevant references. Catalog maintenance, validation and
 client compatibility evidence are in [docs/agent-skills.md](docs/agent-skills.md).
+
+## Master plan (2026-11)
+
+The excellence refactor is planned in [`docs/master-plan/`](docs/master-plan/README.md). Before
+acting on anything it covers, read
+[`docs/master-plan/owner-decisions.md`](docs/master-plan/owner-decisions.md) (binding owner
+decisions) and, to continue the work from any session,
+[`docs/master-plan/RESUME.md`](docs/master-plan/RESUME.md).

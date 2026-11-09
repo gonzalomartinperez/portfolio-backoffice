@@ -1,0 +1,5 @@
+
+> portfolio-backoffice@1.0.0 license:check
+> node scripts/check-license.ts
+
+License consistency: 0 findings. Not a legal audit.

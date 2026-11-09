@@ -1,0 +1,45 @@
+{
+ "lighthouseVersion": "13.5.0",
+ "requestedUrl": "http://localhost:3107/sign-in",
+ "formFactor": "mobile",
+ "categories": {
+  "performance": 0.79,
+  "accessibility": 1,
+  "best-practices": 0.96,
+  "seo": 0.6
+ },
+ "metrics": {
+  "first-contentful-paint": {
+   "numericValue": 941.789,
+   "displayValue": "0.9\u00a0s"
+  },
+  "largest-contentful-paint": {
+   "numericValue": 2487.7889999999998,
+   "displayValue": "2.5\u00a0s"
+  },
+  "total-blocking-time": {
+   "numericValue": 776.6054999999999,
+   "displayValue": "780\u00a0ms"
+  },
+  "cumulative-layout-shift": {
+   "numericValue": 0,
+   "displayValue": "0"
+  },
+  "interactive": {
+   "numericValue": 3606.330975,
+   "displayValue": "3.6\u00a0s"
+  },
+  "speed-index": {
+   "numericValue": 1010.7526000073432,
+   "displayValue": "1.0\u00a0s"
+  },
+  "total-byte-weight": {
+   "numericValue": 298104,
+   "displayValue": "Total size was 291\u00a0KiB"
+  },
+  "unused-javascript": {
+   "numericValue": 300,
+   "displayValue": "Est savings of 60\u00a0KiB"
+  }
+ }
+}

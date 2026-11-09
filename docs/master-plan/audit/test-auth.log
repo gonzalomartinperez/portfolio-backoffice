@@ -1,0 +1,15 @@
+
+> portfolio-backoffice@1.0.0 test:auth
+> node --test tests/integration/auth.test.ts
+
+✔ real PostgreSQL and Better Auth enforce invitation, role and revocation boundaries (1836.898437ms)
+✔ invitation landing cookie admits a verified OAuth viewer once and cannot restore revoked access (1708.504337ms)
+﹣ project IAM runtime cannot inherit owners or run DDL and its actual pool is bounded (0.4591ms) # SKIP
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 4876.555399

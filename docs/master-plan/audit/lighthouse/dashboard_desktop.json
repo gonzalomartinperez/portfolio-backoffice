@@ -1,0 +1,45 @@
+{
+ "lighthouseVersion": "13.5.0",
+ "requestedUrl": "http://localhost:3107/",
+ "formFactor": "desktop",
+ "categories": {
+  "performance": 0.84,
+  "accessibility": 1,
+  "best-practices": 0.96,
+  "seo": 0.6
+ },
+ "metrics": {
+  "first-contentful-paint": {
+   "numericValue": 301.13115,
+   "displayValue": "0.3\u00a0s"
+  },
+  "largest-contentful-paint": {
+   "numericValue": 748.39345,
+   "displayValue": "0.7\u00a0s"
+  },
+  "total-blocking-time": {
+   "numericValue": 348.565575,
+   "displayValue": "350\u00a0ms"
+  },
+  "cumulative-layout-shift": {
+   "numericValue": 0,
+   "displayValue": "0"
+  },
+  "interactive": {
+   "numericValue": 1222.6024675,
+   "displayValue": "1.2\u00a0s"
+  },
+  "speed-index": {
+   "numericValue": 847.1329236571187,
+   "displayValue": "0.8\u00a0s"
+  },
+  "total-byte-weight": {
+   "numericValue": 418737,
+   "displayValue": "Total size was 409\u00a0KiB"
+  },
+  "unused-javascript": {
+   "numericValue": 50,
+   "displayValue": "Est savings of 106\u00a0KiB"
+  }
+ }
+}

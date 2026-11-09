@@ -1,0 +1,5 @@
+
+> portfolio-backoffice@1.0.0 docs:check
+> node scripts/check-docs.ts
+
+Documentation: 290 local links checked, 0 missing.
