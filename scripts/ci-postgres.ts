@@ -15,7 +15,7 @@ import { pathToFileURL } from "node:url";
 import { field, list, record, text } from "./json.ts";
 import { waitForPostgres } from "./postgres-readiness.ts";
 
-export const postgresSource = "e6b2e67c1a0ebded3d03209594e0cfce1b1720e5";
+export const postgresSource = "5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3";
 export const postgresImage = "portfolio-backoffice-postgres:rc";
 const sourcePath = ".artifacts/api-compatibility";
 const label = "io.portfolio.backoffice.ci-postgres";

@@ -133,7 +133,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: gonzalomartinperez/portfolio-assistant-api
-          ref: e6b2e67c1a0ebded3d03209594e0cfce1b1720e5
+          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
           path: .artifacts/api-compatibility
           persist-credentials: false
       - name: Verify the canonical PostgreSQL source
@@ -273,7 +273,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: gonzalomartinperez/portfolio-assistant-api
-          ref: e6b2e67c1a0ebded3d03209594e0cfce1b1720e5
+          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
           path: .artifacts/api-compatibility
           persist-credentials: false
       - name: Verify the canonical PostgreSQL source
@@ -392,7 +392,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: gonzalomartinperez/portfolio-assistant-api
-          ref: e6b2e67c1a0ebded3d03209594e0cfce1b1720e5
+          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
           path: .artifacts/api-compatibility
           persist-credentials: false
       - name: Verify the canonical PostgreSQL source
