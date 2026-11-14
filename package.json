@@ -6,7 +6,7 @@
     "dev": "next dev --port 3001",
     "build": "next build --webpack && node scripts/prepare-runtime.ts",
     "start": "next start --port 3001",
-    "lint": "biome check --formatter-enabled=false src tests scripts next.config.ts vitest.config.ts",
+    "lint": "biome check --formatter-enabled=false src tests scripts next.config.ts vitest.config.ts vitest.mutation.config.ts stryker.config.json",
     "typecheck": "node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit",
     "test": "npm run contract:check && vitest run --project unit --coverage",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:check && npm run license:check && npm run skills:check && npm run security:check",
@@ -19,7 +19,7 @@
     "contract:check": "node scripts/check-contract.ts",
     "contract:generate": "npm run generate --prefix tooling/api-contract",
     "test:browser": "playwright test",
-    "format:check": "biome format src tests scripts docs package.json biome.json knip.json playwright.config.ts next.config.ts vitest.config.ts quality tsconfig.json tooling/api-contract/package.json",
+    "format:check": "biome format src tests scripts docs package.json biome.json knip.json playwright.config.ts next.config.ts vitest.config.ts quality tsconfig.json tooling/api-contract/package.json vitest.mutation.config.ts stryker.config.json",
     "security:check": "node scripts/check-public-files.ts",
     "docs:check": "node scripts/check-docs.ts",
     "license:check": "node scripts/check-license.ts",
@@ -32,7 +32,9 @@
     "toolchain:check": "node scripts/check-typescript-toolchain.ts",
     "test:coverage:scripts": "vitest run --project unit --coverage --coverage.include='scripts/**' --coverage.thresholds.lines=0 --coverage.thresholds.branches=0 --coverage.thresholds.functions=0 --coverage.thresholds.statements=0 --coverage.reportsDirectory=coverage/scripts",
     "test:coverage": "vitest run --project unit --project integration --coverage",
-    "coverage:diff": "node scripts/diff-coverage.ts"
+    "coverage:diff": "node scripts/diff-coverage.ts",
+    "mutation": "stryker run",
+    "mutation:gate": "node scripts/mutation-gate.ts reports/mutation/mutation.json"
   },
   "engines": {
     "node": ">=24 <25"
@@ -51,6 +53,8 @@
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "2.6.7",
     "@playwright/test": "1.64.1",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
     "@testcontainers/postgresql": "12.2.1",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",

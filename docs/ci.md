@@ -19,6 +19,7 @@ release tag in a comment.
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
 | browser | this repository | code, contract, workflow | Load that tarball and run the Playwright suite against it with the PostgreSQL service |
+| mutation | this repository | code, contract, workflow | StrykerJS on changed scoped files in pull requests; explicit no-op on other events |
 | ci-gate | shared `ci-gate` action | always | Fails unless every selected job succeeded; a skipped job passes only when classify did not select it |
 
 Pushes to `develop` and `main`, merge groups, manual dispatch and calls from `release.yml`
@@ -109,6 +110,29 @@ no serious or critical violation, then no violation at all (`expectNoWcagViolati
 `reflow.spec.ts` checks no horizontal overflow (document, body and elements in `main`, except
 intentional scrollers) at 320 and 640 CSS px (400 % and 200 % zoom of
 1280 px) in en and es. Dialog Escape and focus restoration stay in `access-control.spec.ts`.
+
+### Visual regression baseline (pre-redesign)
+
+`tests/browser/visual.spec.ts` (tag `@visual`) captures the **current** UI as the safety net for
+M3-M4: overview, analytics, access, sign-in (EN and ES) and privacy (EN), each in dark and light at
+390, 768 and 1440 px, full page, with reduced motion and CSS animations disabled
+(`maxDiffPixelRatio` 0.002). The baselines in `tests/browser/__screenshots__/` are labelled
+pre-redesign and are re-approved at M5. The `visual-*` projects exist only with `VISUAL=1`, and the
+default role projects exclude `@visual`. The browser job runs them first, on the fresh fixture
+database, inside the pinned image
+`mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a7…` with host networking. Rendering is
+therefore identical to the machine that generated the baselines. Diff images land under
+`test-results/visual/` and are kept with the other synthetic screenshots.
+
+To regenerate after an intended UI change, run the same image locally against a fresh isolated
+fixture database and the local build (no `WEB_UPSTREAM`). Then review every changed PNG before
+committing:
+
+```sh
+docker run --rm --network host --user "$(id -u):$(id -g)" -e HOME=/tmp -e VISUAL=1 \
+  -v "$PWD:/work" -w /work mcr.microsoft.com/playwright:v1.64.1-noble \
+  npx --no-install playwright test --project="visual-*" --update-snapshots
+```
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
@@ -325,3 +349,38 @@ is a regression; omitting the artifact flag produces a gap. Any ratchet may carr
 adds an age check that passes through day 14 and regresses thereafter, or for invalid,
 missing or future dates; metric regressions still fail. Output reading statuses are
 `pass` and `regression`, with unavailable evidence listed separately as gaps.
+
+## Mutation testing
+
+`npm run mutation` runs StrykerJS over framework-free domain/application logic, adapter
+validators and mappers, shared HTTP logic and authentication configuration. UI glue, TSX,
+`src/app` and the PostgreSQL store are excluded. A dedicated Vitest configuration runs only
+relevant unit tests, excluding process-spawning guard suites.
+
+Pull requests run incrementally on changed files in this scope. Other events run the selected
+job with an explicit no-op summary so the fail-closed aggregator can succeed. Thresholds are
+high 85%, low 75% and break 70%; `npm run mutation:gate` additionally requires the combined
+auth domain/application permission module to reach 85%. An absent permission subset in an
+incremental report has no mutants to assess and is treated as 100 % by the local gate.
+
+Pull request runs mutate whole changed files with concurrency 4 (60-minute timeout): touching
+one line of a weak file can fail on that file's older survivors. Changed-line ranges are a later
+refinement. A report whose changed files contain no mutants (type-only modules) passes with
+`--allow-empty`. Pull requests to `main` (release and hotfix) rely on the full run instead.
+
+The full run is `.github/workflows/mutation.yml`: weekly, on pushes to `develop` that change
+mutated code or its unit tests (the schedule reads the default branch, `main`, until M7), on
+manual dispatch and on pull requests that change the workflow. It mutates the whole scope with
+concurrency 4 (budget 90 minutes) and runs
+`npm run mutation:gate -- --full --ratchet quality/ratchets/mutation.json`, which adds the
+committed floors to the fixed thresholds. The baseline, measured on the runner on 2026-11-14
+over 1,591 mutants in about 3 minutes (CI run 43646475028): overall 74.73 % (floor 72, two
+points under for run-to-run variance, and below the 75 "low" mark, so raising it is M3+ test
+work) and permission module 98.94 % (floor 85). No-coverage
+mutants count against the score; compile errors, runtime errors, ignored and pending mutants do
+not. JSON and HTML reports stay under ignored `reports/mutation/`; the workflow keeps the JSON
+report for 14 days.
+
+TypeScript 7 has no JavaScript compiler API: no Stryker checker is enabled and `tsconfigFile`
+intentionally names a nonexistent file to skip Stryker's incompatible preprocessor. Type-invalid
+mutants are not filtered before execution. See [ADR 008](adrs/008-vitest-test-runner.md).
