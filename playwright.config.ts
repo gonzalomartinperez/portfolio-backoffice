@@ -14,6 +14,30 @@ const grepInvert =
     ? new RegExp(quarantined.map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"))
     : undefined;
 
+// Flaky tests fail the run on main or a release; elsewhere (pull requests) they only warn
+// (testing.md section 6). PLAYWRIGHT_FAIL_ON_FLAKY=1 forces the strict mode.
+const failOnFlakyTests =
+  process.env.GITHUB_BASE_REF === "main" ||
+  process.env.GITHUB_REF === "refs/heads/main" ||
+  process.env.PLAYWRIGHT_FAIL_ON_FLAKY === "1";
+
+// Role is a dimension only where a test needs it: every journey test carries exactly one of
+// @anonymous, @owner or @viewer, and each desktop browser runs it once in that role.
+const roles = ["anonymous", "owner", "viewer"] as const;
+type Role = (typeof roles)[number];
+const storageState = (role: Role) =>
+  role === "anonymous" ? undefined : `.artifacts/storage-state/${role}.json`;
+const desktopBrowsers = [
+  { name: "chromium", device: devices["Desktop Chrome"] },
+  { name: "firefox", device: devices["Desktop Firefox"] },
+  { name: "webkit", device: devices["Desktop Safari"] },
+];
+// Device profiles run only the @mobile journeys, all authored for the viewer role.
+const mobileDevices = [
+  { name: "iphone-15", device: devices["iPhone 15"] },
+  { name: "pixel-7", device: devices["Pixel 7"] },
+];
+
 export default defineConfig({
   testDir: "./tests/browser",
   timeout: 30_000,
@@ -22,16 +46,32 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   ...(grepInvert ? { grepInvert } : {}),
   ...(process.env.CI ? { workers: 2 } : {}),
-  reporter: [["list"], ["html", { open: "never" }]],
+  failOnFlakyTests,
+  // CI keeps a blob report (merge with `npx playwright merge-reports`); local runs get HTML.
+  reporter: process.env.CI ? [["list"], ["blob"]] : [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://localhost:3107",
-    trace: "retain-on-failure",
+    // Blob reports embed traces and CI uploads them, so CI records none (never upload traces).
+    trace: process.env.CI ? "off" : "retain-on-failure",
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    // Writes per-role storage state from .artifacts/fixture-sessions.json (test-server.ts).
+    { name: "setup", testMatch: /support\/auth\.setup\.ts$/ },
+    ...desktopBrowsers.flatMap(({ name, device }) =>
+      roles.map((role) => ({
+        name: `${name}-${role}`,
+        grep: new RegExp(`@${role}\\b`),
+        use: { ...device, storageState: storageState(role) },
+        ...(role === "anonymous" ? {} : { dependencies: ["setup"] }),
+      })),
+    ),
+    ...mobileDevices.map(({ name, device }) => ({
+      name,
+      grep: /@mobile\b/,
+      use: { ...device, storageState: storageState("viewer") },
+      dependencies: ["setup"],
+    })),
   ],
   webServer: {
     command: "node scripts/test-server.ts",

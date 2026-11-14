@@ -503,22 +503,35 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges \
             -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
       - name: Verify real-database authorization, operations and accessibility
-        run: npm run test:browser -- backoffice.spec.ts --grep-invert "operational failure" --output test-results/available
+        # Desktop chromium, firefox and webkit in every role plus the iPhone 15 WebKit profile for
+        # the @mobile journeys (Pixel 7 runs in the nightly); the `setup` project is a dependency.
+        run: npm run test:browser -- --project="chromium-*" --project="firefox-*" --project="webkit-*" --project=iphone-15 --grep-invert "operational failure" --output test-results/available
         env:
           WEB_UPSTREAM: http://127.0.0.1:3108
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/available
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/available
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: available.zip
       - name: Verify operational failure without shared mutable fixtures
-        run: npm run test:browser -- backoffice.spec.ts --grep "operational failure" --output test-results/unavailable
+        run: npm run test:browser -- --project="chromium-*" --project="firefox-*" --project="webkit-*" --project=iphone-15 --grep "operational failure" --output test-results/unavailable
         env:
           WEB_UPSTREAM: http://127.0.0.1:3108
           OPERATIONS_FIXTURE_MODE: unavailable
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/unavailable
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/unavailable
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: unavailable.zip
       - name: Retain synthetic UI screenshots (never session files or traces)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backoffice-ui-screenshots
           path: test-results/**/*.png
+          retention-days: 7
+          if-no-files-found: ignore
+          overwrite: true
+      - name: Retain the blob reports (CI records no traces; never session files)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-blob-report
+          path: blob-report/*/*.zip
           retention-days: 7
           if-no-files-found: ignore
           overwrite: true

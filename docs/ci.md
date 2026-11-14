@@ -62,8 +62,35 @@ readiness, anonymous workload and idle SIGTERM. The scan job runs container-stru
 or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept seven days), all
 checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
-screenshots, for seven days; images, logs, environment files, sessions, invitation links,
-traces and database dumps are never uploaded.
+screenshots and the Playwright blob reports, for seven days each; images, logs, environment
+files, sessions, invitation links, traces and database dumps are never uploaded.
+
+### Browser journeys, projects and reports
+
+Browser tests live in journey files under `tests/browser/` (`access-control`, `owner-overview`,
+`preferences`, `workbench`, `mobile-overview`, `product-analytics`, `operational-failure`,
+`privacy`); shared helpers are in `tests/browser/support/`. Each test carries one role tag
+(`@anonymous`, `@owner`, `@viewer`) and narrow-viewport journeys also carry `@mobile`.
+
+- `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
+  owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
+  uploaded). Role projects depend on it.
+- `chromium-`, `firefox-` and `webkit-` with `anonymous` (no storage state), `owner` and
+  `viewer`: each test runs once per browser, in the project whose role matches its tag.
+- `iphone-15` (WebKit) and `pixel-7` (Chromium) run the `@mobile` journeys as the viewer. Pull
+  requests run the desktop projects plus `iphone-15`; the nightly runs every project, so
+  `pixel-7` is nightly only. A narrow run is for example
+  `npm run test:browser -- --project=iphone-15`.
+- The unavailable-state fixture is selected with `--grep "operational failure"`, the available
+  one with `--grep-invert "operational failure"`; the `setup` project still runs under both.
+- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off
+  because blob reports embed them. The blob reports are kept as the `playwright-blob-report`
+  artifact (7 days, one zip per fixture mode). To merge them into one HTML report:
+  download the artifact, copy both zips into one folder and run
+  `npx playwright merge-reports --reporter html <folder>`.
+- `failOnFlakyTests` is on for runs targeting `main` or a release (`GITHUB_BASE_REF` or
+  `GITHUB_REF` is main) and when `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test
+  that passes only on its one retry is reported as flaky without failing the run.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
