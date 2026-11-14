@@ -41,6 +41,7 @@
         ".env.example",
         "release-please-config.json",
         ".release-please-manifest.json",
+        "standards.lock",
         "LICENSE"
       ],
       "adds": ["static", "database", "build", "scan", "container", "browser"],
