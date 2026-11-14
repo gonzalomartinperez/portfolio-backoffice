@@ -18,6 +18,7 @@ release tag in a comment.
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
 | browser | this repository | code, contract, workflow | Load that tarball and run the Playwright suite against it with the PostgreSQL service |
+| mutation | this repository | code, contract, workflow | StrykerJS on changed scoped files in pull requests; explicit no-op on other events |
 | ci-gate | shared `ci-gate` action | always | Fails unless every selected job succeeded; a skipped job passes only when classify did not select it |
 
 Pushes to `develop` and `main`, merge groups, manual dispatch and calls from `release.yml`
@@ -134,3 +135,29 @@ the `v*` tag ruleset is applied with the standards rulesets script (PBO-M1-11).
 
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.
+
+## Mutation testing
+
+`npm run mutation` runs StrykerJS over framework-free domain/application logic, adapter
+validators and mappers, shared HTTP logic and authentication configuration. UI glue, TSX,
+`src/app` and the PostgreSQL store are excluded. A dedicated Vitest configuration runs only
+relevant unit tests, excluding process-spawning guard suites.
+
+Pull requests run incrementally on changed files in this scope. Other events run the selected
+job with an explicit no-op summary so the fail-closed aggregator can succeed. Thresholds are
+high 85%, low 75% and break 70%; `npm run mutation:gate` additionally requires the combined
+auth domain/application permission module to reach 85%. An absent permission subset in an
+incremental report has no mutants to assess (100%, matching Stryker's empty-score convention).
+
+The full baseline and floors belong in `quality/ratchets/mutation.json`. The initial
+measurement is pending: the implementation sandbox rejected Stryker's logging server with
+`listen EPERM` before mutant generation, so no measured baseline has been recorded. Full runs use
+`node scripts/mutation-gate.ts reports/mutation/mutation.json --full --ratchet quality/ratchets/mutation.json`
+to enforce the overall ratchet as well. No-coverage mutants count against the score; compile
+errors, runtime errors, ignored and pending mutants do not. JSON and HTML reports stay under
+ignored `reports/mutation/`.
+
+TypeScript 7 has no JavaScript compiler API: no Stryker checker is enabled and `tsconfigFile`
+intentionally names a nonexistent file to skip Stryker's incompatible preprocessor. Type-invalid
+mutants are not filtered before execution. See [ADR 008](adrs/008-vitest-test-runner.md).
+The weekly full run will be added to the nightly workflow in a follow-up.
