@@ -1,413 +1,344 @@
 import path from "node:path";
 import ts from "@typescript/typescript6";
+
 const within = (file: string, directory: string) =>
-	file === directory || file.startsWith(directory + path.sep);
+  file === directory || file.startsWith(directory + path.sep);
 function destinationFor(file: string, specifier: string): string | null {
-	if (specifier.startsWith("."))
-		return path.resolve(path.dirname(file), specifier);
-	if (specifier.startsWith("@/"))
-		return path.resolve("src", specifier.slice(2));
-	return null;
+  if (specifier.startsWith(".")) return path.resolve(path.dirname(file), specifier);
+  if (specifier.startsWith("@/")) return path.resolve("src", specifier.slice(2));
+  return null;
 }
 const serverPath = (file: string) => within(file, path.resolve("src/server"));
 const actionPath = (file: string) =>
-	file.replace(/\.(?:[cm]?ts|tsx)$/, "") ===
-	path.resolve("src/server/auth/actions");
+  file.replace(/\.(?:[cm]?ts|tsx)$/, "") === path.resolve("src/server/auth/actions");
 
-export const architectureSourceFile = (file: string) =>
-	/\.(?:[cm]?ts|tsx)$/.test(file);
+export const architectureSourceFile = (file: string) => /\.(?:[cm]?ts|tsx)$/.test(file);
 
 type SourcePlacement =
-	| "domain"
-	| "application"
-	| "presentation"
-	| "adapters"
-	| "entry"
-	| "app"
-	| "server"
-	| "shared"
-	| "proxy";
+  | "domain"
+  | "application"
+  | "presentation"
+  | "adapters"
+  | "entry"
+  | "app"
+  | "server"
+  | "shared"
+  | "proxy";
 
 function sourcePlacement(file: string): SourcePlacement | null {
-	const relative = path.relative(path.resolve("src"), file);
-	const [root, name, layer, ...nested] = relative.split(path.sep);
-	if (relative === "proxy.ts") return "proxy";
-	if ((root === "app" || root === "server") && name) return root;
-	if (
-		root === "shared" &&
-		name &&
-		["ui", "http", "accessibility"].includes(name) &&
-		layer
-	)
-		return "shared";
-	if (root !== "features" || !name || !/^[a-z][a-z0-9-]*$/.test(name))
-		return null;
-	if (layer && /^entry\.(?:[cm]?ts|tsx)$/.test(layer) && nested.length === 0)
-		return "entry";
-	if (nested.length === 0) return null;
-	if (
-		layer === "domain" ||
-		layer === "application" ||
-		layer === "presentation" ||
-		layer === "adapters"
-	)
-		return layer;
-	return null;
+  const relative = path.relative(path.resolve("src"), file);
+  const [root, name, layer, ...nested] = relative.split(path.sep);
+  if (relative === "proxy.ts") return "proxy";
+  if ((root === "app" || root === "server") && name) return root;
+  if (root === "shared" && name && ["ui", "http", "accessibility"].includes(name) && layer)
+    return "shared";
+  if (root !== "features" || !name || !/^[a-z][a-z0-9-]*$/.test(name)) return null;
+  if (layer && /^entry\.(?:[cm]?ts|tsx)$/.test(layer) && nested.length === 0) return "entry";
+  if (nested.length === 0) return null;
+  if (
+    layer === "domain" ||
+    layer === "application" ||
+    layer === "presentation" ||
+    layer === "adapters"
+  )
+    return layer;
+  return null;
 }
 
 export function boundaryErrors(file: string, source: string) {
-	const filename = path.resolve(file);
-	const placement = sourcePlacement(filename);
-	const relative = path.relative(path.resolve("src/features"), filename);
-	const name = relative.split(path.sep)[0];
-	const feature = path.resolve(
-		"src/features",
-		name && name !== ".." ? name : "operations",
-	);
-	const domain = placement === "domain";
-	const application = placement === "application";
-	const presentation = placement === "presentation";
-	const adapter = placement === "adapters";
-	const tree = ts.createSourceFile(
-		filename,
-		source,
-		ts.ScriptTarget.Latest,
-		true,
-	);
-	const client = hasDirective(tree, "use client");
-	const errors: string[] = placement === null ? ["unclassified source"] : [];
-	function dependency(specifier: unknown) {
-		if (typeof specifier !== "string") {
-			if (domain || application || presentation)
-				errors.push("computed dependency");
-			return;
-		}
-		const destination = destinationFor(filename, specifier);
-		if (
-			client &&
-			(specifier === "server-only" ||
-				specifier.startsWith("node:") ||
-				specifier === "next/headers" ||
-				(destination &&
-					((serverPath(destination) && !actionPath(destination)) ||
-						destination.replace(/\.ts$/, "") ===
-							path.resolve("src/features/auth/adapters/store"))))
-		)
-			errors.push("client server dependency");
-		if (
-			domain &&
-			(!destination || !within(destination, path.join(feature, "domain")))
-		)
-			errors.push("domain dependency");
-		if (
-			application &&
-			(!destination ||
-				!["application", "domain"].some((layer) =>
-					within(destination, path.join(feature, layer)),
-				))
-		)
-			errors.push("application dependency");
-		if (
-			presentation &&
-			((destination && within(destination, path.join(feature, "adapters"))) ||
-				specifier === "server-only" ||
-				specifier.startsWith("node:"))
-		)
-			errors.push("presentation infrastructure dependency");
-		if (
-			adapter &&
-			destination &&
-			(within(destination, path.join(feature, "presentation")) ||
-				destination.replace(/\.(?:[cm]?ts|tsx)$/, "") ===
-					path.join(feature, "entry"))
-		)
-			errors.push("adapter outer dependency");
-		if (
-			!adapter &&
-			destination &&
-			within(destination, path.resolve("contracts"))
-		)
-			errors.push("wire schema dependency");
-	}
-	function inspect(node: ts.Node) {
-		if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-			if (node.moduleSpecifier)
-				dependency(
-					ts.isStringLiteral(node.moduleSpecifier)
-						? node.moduleSpecifier.text
-						: null,
-				);
-		}
-		if (
-			ts.isCallExpression(node) &&
-			(node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-				(ts.isIdentifier(node.expression) &&
-					node.expression.text === "require"))
-		) {
-			const argument = node.arguments[0];
-			dependency(
-				argument && ts.isStringLiteral(argument) ? argument.text : null,
-			);
-		}
-		if (ts.isImportTypeNode(node)) {
-			const argument = node.argument;
-			dependency(
-				ts.isLiteralTypeNode(argument) && ts.isStringLiteral(argument.literal)
-					? argument.literal.text
-					: null,
-			);
-		}
-		if (
-			ts.isImportEqualsDeclaration(node) &&
-			ts.isExternalModuleReference(node.moduleReference)
-		) {
-			const expression = node.moduleReference.expression;
-			dependency(
-				expression && ts.isStringLiteral(expression) ? expression.text : null,
-			);
-		}
-		if (
-			application &&
-			ts.isIdentifier(node) &&
-			!(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
-			!(
-				ts.isPropertyAccessExpression(node.parent) && node.parent.name === node
-			) &&
-			[
-				"window",
-				"document",
-				"navigator",
-				"fetch",
-				"localStorage",
-				"sessionStorage",
-				"process",
-				"globalThis",
-				"FormData",
-				"Headers",
-				"Request",
-				"Response",
-			].includes(node.text)
-		)
-			errors.push("application platform global");
-		if (
-			domain &&
-			ts.isIdentifier(node) &&
-			!(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
-			!(
-				ts.isPropertyAccessExpression(node.parent) && node.parent.name === node
-			) &&
-			[
-				"window",
-				"document",
-				"navigator",
-				"fetch",
-				"AbortController",
-				"AbortSignal",
-				"localStorage",
-				"sessionStorage",
-				"process",
-				"ReadableStream",
-				"TextDecoder",
-				"setTimeout",
-				"globalThis",
-				"FormData",
-				"Headers",
-				"Request",
-				"Response",
-			].includes(node.text)
-		)
-			errors.push("domain platform global");
-		ts.forEachChild(node, inspect);
-	}
-	inspect(tree);
-	for (const name of source.match(/NEXT_PUBLIC_[A-Z_]+/g) ?? [])
-		errors.push(`public environment variable: ${name}`);
-	return errors;
+  const filename = path.resolve(file);
+  const placement = sourcePlacement(filename);
+  const relative = path.relative(path.resolve("src/features"), filename);
+  const name = relative.split(path.sep)[0];
+  const feature = path.resolve("src/features", name && name !== ".." ? name : "operations");
+  const domain = placement === "domain";
+  const application = placement === "application";
+  const presentation = placement === "presentation";
+  const adapter = placement === "adapters";
+  const tree = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true);
+  const client = hasDirective(tree, "use client");
+  const errors: string[] = placement === null ? ["unclassified source"] : [];
+  function dependency(specifier: unknown) {
+    if (typeof specifier !== "string") {
+      if (domain || application || presentation) errors.push("computed dependency");
+      return;
+    }
+    const destination = destinationFor(filename, specifier);
+    if (
+      client &&
+      (specifier === "server-only" ||
+        specifier.startsWith("node:") ||
+        specifier === "next/headers" ||
+        (destination &&
+          ((serverPath(destination) && !actionPath(destination)) ||
+            destination.replace(/\.ts$/, "") === path.resolve("src/features/auth/adapters/store"))))
+    )
+      errors.push("client server dependency");
+    if (domain && (!destination || !within(destination, path.join(feature, "domain"))))
+      errors.push("domain dependency");
+    if (
+      application &&
+      (!destination ||
+        !["application", "domain"].some((layer) => within(destination, path.join(feature, layer))))
+    )
+      errors.push("application dependency");
+    if (
+      presentation &&
+      ((destination && within(destination, path.join(feature, "adapters"))) ||
+        specifier === "server-only" ||
+        specifier.startsWith("node:"))
+    )
+      errors.push("presentation infrastructure dependency");
+    if (
+      adapter &&
+      destination &&
+      (within(destination, path.join(feature, "presentation")) ||
+        destination.replace(/\.(?:[cm]?ts|tsx)$/, "") === path.join(feature, "entry"))
+    )
+      errors.push("adapter outer dependency");
+    if (!adapter && destination && within(destination, path.resolve("contracts")))
+      errors.push("wire schema dependency");
+  }
+  function inspect(node: ts.Node) {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      if (node.moduleSpecifier)
+        dependency(ts.isStringLiteral(node.moduleSpecifier) ? node.moduleSpecifier.text : null);
+    }
+    if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === "require"))
+    ) {
+      const argument = node.arguments[0];
+      dependency(argument && ts.isStringLiteral(argument) ? argument.text : null);
+    }
+    if (ts.isImportTypeNode(node)) {
+      const argument = node.argument;
+      dependency(
+        ts.isLiteralTypeNode(argument) && ts.isStringLiteral(argument.literal)
+          ? argument.literal.text
+          : null,
+      );
+    }
+    if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
+      const expression = node.moduleReference.expression;
+      dependency(expression && ts.isStringLiteral(expression) ? expression.text : null);
+    }
+    if (
+      application &&
+      ts.isIdentifier(node) &&
+      !(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
+      !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) &&
+      [
+        "window",
+        "document",
+        "navigator",
+        "fetch",
+        "localStorage",
+        "sessionStorage",
+        "process",
+        "globalThis",
+        "FormData",
+        "Headers",
+        "Request",
+        "Response",
+      ].includes(node.text)
+    )
+      errors.push("application platform global");
+    if (
+      domain &&
+      ts.isIdentifier(node) &&
+      !(ts.isPropertySignature(node.parent) && node.parent.name === node) &&
+      !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) &&
+      [
+        "window",
+        "document",
+        "navigator",
+        "fetch",
+        "AbortController",
+        "AbortSignal",
+        "localStorage",
+        "sessionStorage",
+        "process",
+        "ReadableStream",
+        "TextDecoder",
+        "setTimeout",
+        "globalThis",
+        "FormData",
+        "Headers",
+        "Request",
+        "Response",
+      ].includes(node.text)
+    )
+      errors.push("domain platform global");
+    ts.forEachChild(node, inspect);
+  }
+  inspect(tree);
+  for (const name of source.match(/NEXT_PUBLIC_[A-Z_]+/g) ?? [])
+    errors.push(`public environment variable: ${name}`);
+  return errors;
 }
 
 function hasDirective(tree: ts.SourceFile, directive: string): boolean {
-	for (const statement of tree.statements) {
-		if (
-			!ts.isExpressionStatement(statement) ||
-			!ts.isStringLiteral(statement.expression)
-		)
-			return false;
-		if (statement.expression.text === directive) return true;
-	}
-	return false;
+  for (const statement of tree.statements) {
+    if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression))
+      return false;
+    if (statement.expression.text === directive) return true;
+  }
+  return false;
 }
 
 function serverActionModule(tree: ts.SourceFile): boolean {
-	if (!hasDirective(tree, "use server")) return false;
-	let count = 0;
-	for (const statement of tree.statements) {
-		if (ts.isExportDeclaration(statement)) {
-			if (!statement.isTypeOnly) return false;
-			continue;
-		}
-		if (ts.isExportAssignment(statement)) return false;
-		if (
-			!ts.canHaveModifiers(statement) ||
-			!ts
-				.getModifiers(statement)
-				?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
-		)
-			continue;
-		if (
-			ts.isInterfaceDeclaration(statement) ||
-			ts.isTypeAliasDeclaration(statement)
-		)
-			continue;
-		if (
-			ts.isFunctionDeclaration(statement) &&
-			statement.modifiers?.some(
-				(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
-			)
-		) {
-			count++;
-			continue;
-		}
-		if (
-			ts.isVariableStatement(statement) &&
-			statement.declarationList.declarations.every(
-				(declaration) =>
-					declaration.initializer &&
-					(ts.isArrowFunction(declaration.initializer) ||
-						ts.isFunctionExpression(declaration.initializer)) &&
-					declaration.initializer.modifiers?.some(
-						(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
-					),
-			)
-		) {
-			count++;
-			continue;
-		}
-		return false;
-	}
-	return count > 0;
+  if (!hasDirective(tree, "use server")) return false;
+  let count = 0;
+  for (const statement of tree.statements) {
+    if (ts.isExportDeclaration(statement)) {
+      if (!statement.isTypeOnly) return false;
+      continue;
+    }
+    if (ts.isExportAssignment(statement)) return false;
+    if (
+      !ts.canHaveModifiers(statement) ||
+      !ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    )
+      continue;
+    if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) continue;
+    if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
+    ) {
+      count++;
+      continue;
+    }
+    if (
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.declarations.every(
+        (declaration) =>
+          declaration.initializer &&
+          (ts.isArrowFunction(declaration.initializer) ||
+            ts.isFunctionExpression(declaration.initializer)) &&
+          declaration.initializer.modifiers?.some(
+            (modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
+          ),
+      )
+    ) {
+      count++;
+      continue;
+    }
+    return false;
+  }
+  return count > 0;
 }
 
 export function moduleGraphErrors(sources: Record<string, string>): string[] {
-	const modules = new Map(
-		Object.entries(sources).map(([file, source]) => [
-			path.resolve(file),
-			source,
-		]),
-	);
-	const graph = new Map<string, string[]>();
-	const clients = new Set<string>();
-	const actions = new Set<string>();
-	const serverModules = new Set<string>();
-	const computedModules = new Set<string>();
-	const errors: string[] = [];
-	for (const [file, source] of modules) {
-		if (sourcePlacement(file) === null)
-			errors.push(`unclassified source: ${path.relative(process.cwd(), file)}`);
-		const edges: string[] = [];
-		const tree = ts.createSourceFile(
-			file,
-			source,
-			ts.ScriptTarget.Latest,
-			true,
-		);
-		if (hasDirective(tree, "use client")) clients.add(file);
-		if (serverActionModule(tree)) actions.add(file);
-		if (serverPath(file)) serverModules.add(file);
-		function inspect(node: ts.Node) {
-			let specifier: string | undefined;
-			if (
-				(ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-				node.moduleSpecifier &&
-				ts.isStringLiteral(node.moduleSpecifier)
-			)
-				specifier = node.moduleSpecifier.text;
-			if (
-				ts.isImportTypeNode(node) &&
-				ts.isLiteralTypeNode(node.argument) &&
-				ts.isStringLiteral(node.argument.literal)
-			)
-				specifier = node.argument.literal.text;
-			if (
-				ts.isCallExpression(node) &&
-				(node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-					(ts.isIdentifier(node.expression) &&
-						node.expression.text === "require"))
-			) {
-				const argument = node.arguments[0];
-				if (argument && ts.isStringLiteral(argument)) specifier = argument.text;
-				else computedModules.add(file);
-			}
-			if (
-				ts.isImportEqualsDeclaration(node) &&
-				ts.isExternalModuleReference(node.moduleReference)
-			) {
-				const expression = node.moduleReference.expression;
-				if (expression && ts.isStringLiteral(expression))
-					specifier = expression.text;
-			}
-			if (
-				specifier === "server-only" ||
-				specifier?.startsWith("node:") ||
-				specifier === "pg" ||
-				specifier === "better-auth"
-			)
-				serverModules.add(file);
-			const base = specifier ? destinationFor(file, specifier) : null;
-			if (base) {
-				const target = [
-					base,
-					`${base}.ts`,
-					`${base}.tsx`,
-					`${base}.mts`,
-					`${base}.cts`,
-					base.replace(/\.js$/, ".ts"),
-					base.replace(/\.jsx$/, ".tsx"),
-					base.replace(/\.mjs$/, ".mts"),
-					base.replace(/\.cjs$/, ".cts"),
-					path.join(base, "index.ts"),
-					path.join(base, "index.tsx"),
-					path.join(base, "index.mts"),
-					path.join(base, "index.cts"),
-				].find((candidate) => modules.has(candidate));
-				if (target) edges.push(target);
-			}
-			ts.forEachChild(node, inspect);
-		}
-		inspect(tree);
-		graph.set(file, edges);
-	}
-	const visited = new Set<string>();
-	const stack = new Set<string>();
-	function visit(file: string) {
-		if (stack.has(file)) {
-			errors.push(`import cycle: ${path.relative(process.cwd(), file)}`);
-			return;
-		}
-		if (visited.has(file)) return;
-		stack.add(file);
-		for (const target of graph.get(file) ?? []) visit(target);
-		stack.delete(file);
-		visited.add(file);
-	}
-	for (const file of modules.keys()) visit(file);
-	for (const file of clients) {
-		const seen = new Set<string>();
-		function inspectClient(target: string) {
-			if (seen.has(target)) return;
-			seen.add(target);
-			// Next turns explicitly marked Server Actions into RPC references.
-			if (actions.has(target)) return;
-			if (computedModules.has(target))
-				errors.push(
-					`client computed dependency: ${path.relative(process.cwd(), target)}`,
-				);
-			if (serverModules.has(target))
-				errors.push(
-					`client reaches server module: ${path.relative(process.cwd(), file)} -> ${path.relative(process.cwd(), target)}`,
-				);
-			for (const child of graph.get(target) ?? []) inspectClient(child);
-		}
-		inspectClient(file);
-	}
-	return errors;
+  const modules = new Map(
+    Object.entries(sources).map(([file, source]) => [path.resolve(file), source]),
+  );
+  const graph = new Map<string, string[]>();
+  const clients = new Set<string>();
+  const actions = new Set<string>();
+  const serverModules = new Set<string>();
+  const computedModules = new Set<string>();
+  const errors: string[] = [];
+  for (const [file, source] of modules) {
+    if (sourcePlacement(file) === null)
+      errors.push(`unclassified source: ${path.relative(process.cwd(), file)}`);
+    const edges: string[] = [];
+    const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+    if (hasDirective(tree, "use client")) clients.add(file);
+    if (serverActionModule(tree)) actions.add(file);
+    if (serverPath(file)) serverModules.add(file);
+    function inspect(node: ts.Node) {
+      let specifier: string | undefined;
+      if (
+        (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      )
+        specifier = node.moduleSpecifier.text;
+      if (
+        ts.isImportTypeNode(node) &&
+        ts.isLiteralTypeNode(node.argument) &&
+        ts.isStringLiteral(node.argument.literal)
+      )
+        specifier = node.argument.literal.text;
+      if (
+        ts.isCallExpression(node) &&
+        (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+          (ts.isIdentifier(node.expression) && node.expression.text === "require"))
+      ) {
+        const argument = node.arguments[0];
+        if (argument && ts.isStringLiteral(argument)) specifier = argument.text;
+        else computedModules.add(file);
+      }
+      if (
+        ts.isImportEqualsDeclaration(node) &&
+        ts.isExternalModuleReference(node.moduleReference)
+      ) {
+        const expression = node.moduleReference.expression;
+        if (expression && ts.isStringLiteral(expression)) specifier = expression.text;
+      }
+      if (
+        specifier === "server-only" ||
+        specifier?.startsWith("node:") ||
+        specifier === "pg" ||
+        specifier === "better-auth"
+      )
+        serverModules.add(file);
+      const base = specifier ? destinationFor(file, specifier) : null;
+      if (base) {
+        const target = [
+          base,
+          `${base}.ts`,
+          `${base}.tsx`,
+          `${base}.mts`,
+          `${base}.cts`,
+          base.replace(/\.js$/, ".ts"),
+          base.replace(/\.jsx$/, ".tsx"),
+          base.replace(/\.mjs$/, ".mts"),
+          base.replace(/\.cjs$/, ".cts"),
+          path.join(base, "index.ts"),
+          path.join(base, "index.tsx"),
+          path.join(base, "index.mts"),
+          path.join(base, "index.cts"),
+        ].find((candidate) => modules.has(candidate));
+        if (target) edges.push(target);
+      }
+      ts.forEachChild(node, inspect);
+    }
+    inspect(tree);
+    graph.set(file, edges);
+  }
+  const visited = new Set<string>();
+  const stack = new Set<string>();
+  function visit(file: string) {
+    if (stack.has(file)) {
+      errors.push(`import cycle: ${path.relative(process.cwd(), file)}`);
+      return;
+    }
+    if (visited.has(file)) return;
+    stack.add(file);
+    for (const target of graph.get(file) ?? []) visit(target);
+    stack.delete(file);
+    visited.add(file);
+  }
+  for (const file of modules.keys()) visit(file);
+  for (const file of clients) {
+    const seen = new Set<string>();
+    function inspectClient(target: string) {
+      if (seen.has(target)) return;
+      seen.add(target);
+      // Next turns explicitly marked Server Actions into RPC references.
+      if (actions.has(target)) return;
+      if (computedModules.has(target))
+        errors.push(`client computed dependency: ${path.relative(process.cwd(), target)}`);
+      if (serverModules.has(target))
+        errors.push(
+          `client reaches server module: ${path.relative(process.cwd(), file)} -> ${path.relative(process.cwd(), target)}`,
+        );
+      for (const child of graph.get(target) ?? []) inspectClient(child);
+    }
+    inspectClient(file);
+  }
+  return errors;
 }
