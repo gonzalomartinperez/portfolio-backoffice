@@ -167,6 +167,34 @@ in the same PR (`node scripts/check-static-ratchets.ts --write` rewrites `static
 refuses to raise a count). Property tests (`tests/unit/properties.test.ts`) run 100 cases per
 property; set `FC_NUM_RUNS=1000` for the nightly run.
 
+## Security tests
+
+The `unit` project carries the PBO-M2-6 security suite (no database, no network; the shared seam
+is `tests/security/auth-harness.ts`, a scripted Better Auth runtime):
+
+- `tests/unit/authz-matrix.test.ts` enumerates every page, route handler method and `"use server"`
+  export in `src/` (and fails if a Pages Router directory appears) and fails when
+  `tests/security/authz-matrix.ts` lacks one or lists one that no longer exists. Each guarded
+  surface must call its guard as its first await and have a behavioral probe. It runs the real
+  `requireAccess`, `requireOwner`, `inviteUser`, `revokeAccess` and `GET /api/operations` as
+  anonymous, unverified-email, revoked, viewer and owner. Actions are keyed by module path and
+  export name, and duplicate identities fail. Page bodies are not executed in unit tests:
+  branch-dependent guards (for example behind a query parameter) are covered only by the
+  first-await rule and the browser journeys.
+- `tests/unit/security-headers.test.ts` pins the proxy and per-handler headers at the unit level
+  (proxy and handler layers; it does not exercise the wire or the merged Next response). The
+  proxy matcher is checked with Next's `unstable_doesMiddlewareMatch` against every enumerated
+  page and route path.
+- `tests/unit/dto-leak.test.ts` allowlists client-island props and the data loaders return.
+- `tests/unit/log-redaction.test.ts` is the logging skeleton: literal-only `console` calls.
+- `tests/unit/better-auth-advisories.test.ts` pins the Better Auth floor and mitigating config.
+
+Origin and CSRF: the unit tests pin configuration only (`disableOriginCheck`/`disableCSRFCheck`
+false, trusted origins, and no `serverActions` option so Next's same-origin Server Action check
+stays). Hostile-Origin behavior is covered by `tests/integration/auth.test.ts` for one mutation,
+`POST /api/auth/sign-out` with a foreign Origin (403), plus an invalid OAuth `state` callback.
+Known gap: no test sends a hostile Origin to a Server Action, which relies on Next's built-in check.
+
 ## Nightly contract consumer check
 
 `nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
@@ -218,6 +246,43 @@ Mode, `@vitest/browser-playwright`, `vitest-browser-react`). Locally, install th
 with `npx playwright install chromium webkit`. The same components render on the `/__kit` gallery,
 which the test server enables with `BACKOFFICE_KIT=enabled`; the runtime image and the deployment
 contract never set it, so the route answers 404 in production.
+
+## Scorecard
+
+`npm run scorecard` aggregates committed `quality/ratchets/*.json` and optional coverage,
+mutation, flaky, bundle, Lighthouse and axe JSON artifacts. It reuses the local static and
+contrast checkers, including the same knip category and per-file complexity comparisons
+as `quality:static`. Locally, only a tool spawn error with code `EPERM` or `ENOENT`
+permits the labelled committed baseline; tool output never triggers fallback. When `CI`
+is set, measurement errors return 2 without fallback. Readings
+carry their source and threshold; absent inputs are named gaps, never zero. Evaluator
+scores for P1–P6 and R1–R7 come from `quality/ratchets/scorecard.json` when available.
+
+The command writes `scorecard.json` before returning 1 for a regression, including any
+warn-mode ratchet older than 14 days or missing a valid `warnSince` date (future dates are invalid). Invalid flags
+or malformed input, including an explicit path that does not exist, return 2; a successful evaluation returns 0. The nightly `scorecard`
+job measures unit coverage, downloads the flaky report when available and retains the
+scorecard artifact for 14 days, including when evaluation finds a regression.
+
+Scorecard artifact formats:
+
+- `--bundle`: `{ "routes": { "/": { "bytes": 1234 } } }`; every numeric metric is lower-is-better.
+- `--lighthouse`: `{ "routes": { "/": { "performance": 90, "tbt": 120 } } }`.
+  `tbt`, `cls`, `lcp`, `fcp`, `si`, `ttfb` and metric names ending in `Ms` or `Bytes`
+  are lower-is-better; other metrics are higher-is-better. Use consistent units in artifacts
+  and baselines.
+- `--a11y`: `{ "violations": 2 }` (the serious/critical count), or an axe-style array
+  such as `[{ "impact": "serious" }, { "impact": "minor" }]`. Arrays count only
+  `serious` and `critical` impacts.
+
+Bundle and Lighthouse ratchets use
+`{ "baseline": { "routes": { "/": { "bytes": 1234 } } } }`, with the same route and
+metric keys as the artifact. A baseline route or metric absent from a supplied artifact
+is a regression; omitting the artifact flag produces a gap. Any ratchet may carry
+`"mode": "warn"` with `"warnSince": "2026-11-14"` (UTC `YYYY-MM-DD`). Warn mode
+adds an age check that passes through day 14 and regresses thereafter, or for invalid,
+missing or future dates; metric regressions still fail. Output reading statuses are
+`pass` and `regression`, with unavailable evidence listed separately as gaps.
 
 ## Mutation testing
 
