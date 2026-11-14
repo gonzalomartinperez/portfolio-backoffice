@@ -139,6 +139,33 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           overwrite: true
+  component:
+    name: Component tests
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'component')
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium and WebKit with their system libraries
+        run: npx --no-install playwright install --with-deps --only-shell chromium webkit
+      - name: Component tests in real browsers
+        run: npm run test:component
   build:
     name: Build image once
     needs: [classify, static]
@@ -561,7 +588,7 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, docs, security, static, database, build, scan, container, browser]
+    needs: [classify, docs, security, static, database, component, build, scan, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}

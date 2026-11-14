@@ -14,6 +14,7 @@ release tag in a comment.
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, Vitest unit/contract/architecture tests with the coverage floors of `quality/ratchets/coverage.json`, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
 | database | this repository | code, contract, workflow | Unit and `integration` Vitest projects with coverage (`npm run test:coverage`, Testcontainers PostgreSQL 18, digest pinned); on pull requests the diff coverage gate (`scripts/diff-coverage.ts`): changed executable lines of TypeScript modules under `src/` outside `src/app/` need 90 % on auth and DAL code and 80 % elsewhere (`.tsx` joins with the component project) |
+| component | this repository | code, contract, workflow | The `component` Vitest project (Browser Mode, Playwright provider, headless Chromium and WebKit) against `tests/component/**/*.test.tsx`; browsers installed with `playwright install --with-deps --only-shell chromium webkit`; no PostgreSQL |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
@@ -180,3 +181,11 @@ the `v*` tag ruleset is applied with the standards rulesets script (PBO-M1-11).
 
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.
+
+## Component tests
+
+`npm run test:component` runs the `component` project in real Chromium and WebKit (Vitest Browser
+Mode, `@vitest/browser-playwright`, `vitest-browser-react`). Locally, install the browsers once
+with `npx playwright install chromium webkit`. The same components render on the `/__kit` gallery,
+which the test server enables with `BACKOFFICE_KIT=enabled`; the runtime image and the deployment
+contract never set it, so the route answers 404 in production.

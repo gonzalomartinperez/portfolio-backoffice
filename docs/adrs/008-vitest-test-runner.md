@@ -38,6 +38,8 @@ floors restart from the honest all-files measurement.
 
 ## Consequences
 
+- A third project, `component`, runs Vitest Browser Mode in Chromium and WebKit (PBO-M2-2,
+  `npm run test:component`); `npm test` stays unit only.
 - One more dev dependency family (Vitest, Vite, Rolldown). Under load the unit run takes about
   2 minutes locally, against about 80 s on `node:test`; transform and import dominate.
 - Re-enable Stryker's TypeScript checker when Stryker supports TypeScript 7, or when the
