@@ -1,7 +1,15 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": ["**", "!**/*.md", "!docs/verification/**/*.json", "!docs/master-plan/audit/**"]
+    "includes": [
+      "**",
+      "!**/*.md",
+      "!docs/verification/**/*.json",
+      "!docs/master-plan/audit",
+      "!contracts",
+      "!.agents",
+      "!.next"
+    ]
   },
   "formatter": {
     "enabled": true,
