@@ -1,0 +1,57 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "mutate": [
+    "src/features/*/domain/**/*.ts",
+    "src/features/*/application/**/*.ts",
+    "src/features/*/adapters/validate*.ts",
+    "src/features/*/adapters/*-validate.ts",
+    "src/features/*/adapters/report-values.ts",
+    "src/features/*/adapters/calendar.ts",
+    "src/features/*/adapters/read-json.ts",
+    "src/features/*/adapters/callback-response.ts",
+    "src/features/*/adapters/browser-session.ts",
+    "src/features/*/adapters/grafana-link.ts",
+    "src/shared/http/**/*.ts",
+    "src/server/auth/config.ts",
+    "!src/**/store.ts"
+  ],
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.mutation.config.ts",
+    "related": false
+  },
+  "tsconfigFile": "tsconfig.stryker-absent.json",
+  "tempDirName": ".stryker-tmp",
+  "ignorePatterns": [
+    ".claude",
+    ".agents",
+    "docs",
+    "coverage",
+    ".next",
+    ".artifacts",
+    "playwright-report",
+    "test-results",
+    "public",
+    "flake-reports",
+    "reports",
+    ".env*",
+    ".auth-fixture",
+    ".integration",
+    ".codex"
+  ],
+  "coverageAnalysis": "perTest",
+  "concurrency": 2,
+  "dryRunTimeoutMinutes": 10,
+  "thresholds": {
+    "high": 85,
+    "low": 75,
+    "break": 70
+  },
+  "reporters": ["clear-text", "progress", "json", "html"],
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "htmlReporter": {
+    "fileName": "reports/mutation/mutation.html"
+  }
+}

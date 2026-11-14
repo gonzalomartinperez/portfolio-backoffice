@@ -43,21 +43,23 @@
         ".git-blame-ignore-revs",
         ".env.example",
         "standards.lock",
-        "LICENSE"
+        "LICENSE",
+        "stryker.config.json",
+        "vitest.mutation.config.ts"
       ],
-      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
     "contract": {
       "paths": ["contracts/**"],
-      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets", "mutation"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 12
     },
     "workflow": {
       "paths": [".github/**"],
-      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "budgets", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },

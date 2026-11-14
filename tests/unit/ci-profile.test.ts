@@ -17,6 +17,7 @@ const ownJobs = [
   "container",
   "browser",
   "budgets",
+  "mutation",
 ];
 const sharedJobs = ["docs", "security"];
 
@@ -84,6 +85,7 @@ test("profiles select the expected jobs", () => {
     "container",
     "browser",
     "budgets",
+    "mutation",
   ]);
   for (const path of [".github/workflows/ci.yml", "contracts/openapi.json", "migrations/x.sql"])
     assert.ok(jobsFor(profilesFor(path)).includes("browser"), path);
