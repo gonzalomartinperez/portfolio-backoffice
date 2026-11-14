@@ -45,6 +45,13 @@ test("invitation boundary accepts only bounded opaque tokens", () => {
   assert.equal(invitationToken(undefined), null);
   assert.equal(validEmail("hello@example.com"), true);
   assert.equal(validEmail("hello\n@example.com"), false);
+  // Length bound is inclusive at 254 (RFC 5321 path limit) and the pattern is anchored.
+  const at254 = `${"a".repeat(242)}@example.com`;
+  assert.equal(at254.length, 254);
+  assert.equal(validEmail(at254), true);
+  assert.equal(validEmail(`a${at254}`), false);
+  assert.equal(validEmail("x y@example.com"), false);
+  assert.equal(validEmail("hello@example.com trailing"), false);
 });
 
 test("auth dictionaries are complete and locale parsing remains narrow", async () => {

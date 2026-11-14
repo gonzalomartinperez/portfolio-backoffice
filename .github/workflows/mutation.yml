@@ -24,7 +24,8 @@ on:
 permissions: {}
 concurrency:
   group: mutation-${{ github.ref }}
-  cancel-in-progress: true
+  # Only pull requests cancel stale runs; a push to develop never cancels the running baseline.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 defaults:
   run:
     shell: bash

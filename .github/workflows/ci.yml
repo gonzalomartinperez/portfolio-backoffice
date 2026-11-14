@@ -173,7 +173,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Harden the runner (audit)
         uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
@@ -199,6 +199,11 @@ jobs:
           if [ "$EVENT_NAME" != pull_request ]; then
             echo "Mutation runs on pull requests (changed files) and in the scheduled full run" >> "$GITHUB_STEP_SUMMARY"
             echo "files=" >> "$GITHUB_OUTPUT"
+          elif [ "$BASE_REF" = main ]; then
+            # Release and hotfix pull requests rely on the full run of mutation.yml on develop
+            # (testing.md section 5: full scoped, or the last full run within 24 h).
+            echo "Pull requests to main use the full mutation run on develop" >> "$GITHUB_STEP_SUMMARY"
+            echo "files=" >> "$GITHUB_OUTPUT"
           else
             files=$(node scripts/mutation-changed.ts --base "origin/$BASE_REF")
             if [ -z "$files" ]; then
@@ -210,10 +215,10 @@ jobs:
         if: steps.changed.outputs.files != ''
         env:
           FILES: ${{ steps.changed.outputs.files }}
-        run: npx --no-install stryker run --mutate "$FILES"
+        run: npx --no-install stryker run --concurrency 4 --mutate "$FILES"
       - name: Enforce mutation thresholds
         if: steps.changed.outputs.files != ''
-        run: npm run mutation:gate
+        run: npm run mutation:gate -- --allow-empty
   build:
     name: Build image once
     needs: [classify, static]

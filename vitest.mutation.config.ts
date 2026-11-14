@@ -19,6 +19,7 @@ export default defineConfig({
       "tests/unit/operations-fixture.test.ts",
       "tests/unit/operations.test.ts",
       "tests/unit/product-report.test.ts",
+      "tests/unit/properties.test.ts",
     ],
   },
 });

@@ -2,8 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "vitest";
 import { field, list, text } from "../../scripts/json.ts";
-import { filterMutationFiles } from "../../scripts/mutation-changed.ts";
-import { mutationGate, mutationScore, mutationScores } from "../../scripts/mutation-gate.ts";
+import { filterMutationFiles, unsafeTargets } from "../../scripts/mutation-changed.ts";
+import {
+  emptyReport,
+  mutationGate,
+  mutationScore,
+  mutationScores,
+  parseGateArgs,
+} from "../../scripts/mutation-gate.ts";
 
 const file = (...statuses: string[]) => ({ mutants: statuses.map((status) => ({ status })) });
 const report = {
@@ -98,4 +104,28 @@ test("changed-file filter follows mutation includes and exclusions", () => {
   );
   assert.deepEqual(filterMutationFiles(["src/features/auth/domain/store.ts"], globs), []);
   assert.deepEqual(filterMutationFiles([], globs), []);
+});
+
+test("gate flags: ratchet needs a full run and an empty report is only for pull requests", () => {
+  assert.deepEqual(parseGateArgs(["r.json", "--allow-empty"]), {
+    reportPath: "r.json",
+    full: false,
+    allowEmpty: true,
+    ratchetPath: "",
+  });
+  assert.equal(parseGateArgs(["r.json", "--full", "--ratchet", "m.json"]).ratchetPath, "m.json");
+  assert.throws(() => parseGateArgs(["r.json", "--ratchet", "m.json"]), /requires --full/);
+  assert.throws(() => parseGateArgs(["r.json", "--full", "--allow-empty"]), /incremental only/);
+  assert.throws(() => parseGateArgs(["r.json", "--ratchet"]), /Usage/);
+  assert.throws(() => parseGateArgs(["--full"]), /report path/);
+  assert.equal(emptyReport({ files: {} }), true);
+  assert.equal(emptyReport(report), false);
+});
+
+test("mutation targets that Stryker would split or expand are refused", () => {
+  assert.deepEqual(unsafeTargets(["src/a.ts", "src/a,b.ts", "src/[x].ts", "src/a b.ts"]), [
+    "src/a,b.ts",
+    "src/[x].ts",
+    "src/a b.ts",
+  ]);
 });
