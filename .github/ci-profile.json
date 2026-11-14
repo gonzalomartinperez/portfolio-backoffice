@@ -1,11 +1,11 @@
 {
-  "$schema": "https://raw.githubusercontent.com/gonzalomartinperez/engineering-standards/main/schemas/ci-profile.schema.json",
-  "$comment": "CI profile map (ecosystem 6.0, master plan ci-cd.md section 3). Job names equal the job ids in .github/workflows/ci.yml. Fail closed: a changed file outside every profile, or a change to this file, runs everything; tests/unit/ci-profile.test.ts fails if a tracked file matches no profile.",
+  "$schema": "https://raw.githubusercontent.com/gonzalomartinperez/engineering-standards/v1.0.0/schemas/ci-profile.schema.json",
+  "$comment": "CI profile map (ecosystem 6.0, master plan ci-cd.md section 3). Job names equal the job ids in .github/workflows/ci.yml. Fail closed: a changed file outside every profile, or a change to this file, runs everything; tests/unit/ci-profile.test.ts fails if a tracked file matches no profile. Budgets follow master plan ci-cd.md section 3, not the ecosystem 6.0 defaults: workflow changes run the full image pipeline (6/12 min, not 3), hotfix 12/15 min. The weekly CI duration report (master plan section 4) checks them.",
   "version": 1,
   "base": ["docs", "security"],
   "profiles": {
     "docs": {
-      "paths": ["**/*.md", "docs/**", "LICENSE", ".markdownlint-cli2.jsonc", "lychee.toml"],
+      "paths": ["**/*.md", "docs/**", ".markdownlint-cli2.jsonc", "lychee.toml"],
       "adds": ["static"],
       "budgetP50Minutes": 2,
       "budgetP95Minutes": 4
@@ -37,7 +37,8 @@
         ".gitignore",
         ".githooks/**",
         ".git-blame-ignore-revs",
-        ".env.example"
+        ".env.example",
+        "LICENSE"
       ],
       "adds": ["static", "database", "container", "browser"],
       "budgetP50Minutes": 6,

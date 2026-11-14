@@ -73,9 +73,10 @@ the default branch, so they start when these files reach `main` (M7) unless the 
 
 ## Required check and publication
 
-Branch protection still requires the context **Required checks**, so the `ci-gate` job keeps
-that display name until the owner-supervised ruleset step (PBO-M1-11) switches the requirement
-to `ci-gate` and removes the name in one change, without a protection gap.
+Branch protection still requires the context **Required checks**. A tiny `required-checks`
+alias job with that display name mirrors `ci-gate` (it passes only when `ci-gate` succeeded),
+so both contexts exist on every run. The owner-supervised ruleset step (PBO-M1-11) can then
+require `ci-gate` without a protection gap and delete the alias afterwards.
 
 `release.yml` is dispatch-only and calls `ci.yml` for the complete validation. It has no
 publication path; PBO-M1-8 adds build, attestation and a publish job gated on owner

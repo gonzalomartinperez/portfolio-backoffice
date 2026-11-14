@@ -343,7 +343,7 @@ jobs:
           PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/unavailable
       - name: Retain synthetic UI screenshots (never session files or traces)
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backoffice-ui-screenshots
           path: test-results/**/*.png
@@ -355,10 +355,7 @@ jobs:
           docker rm -f assistant-browser
           rm -f /tmp/backoffice-fixture.env
   ci-gate:
-    # Transitional display name: branch protection still requires the "Required checks" context.
-    # The owner-supervised ruleset step (PBO-M1-11) switches the required check to `ci-gate` and
-    # drops this name in the same change.
-    name: Required checks
+    name: ci-gate
     if: always()
     needs: [classify, docs, security, static, database, container, browser]
     runs-on: ubuntu-24.04
@@ -373,3 +370,18 @@ jobs:
         with:
           needs: ${{ toJSON(needs) }}
           expected: ${{ needs.classify.outputs.jobs }}
+  required-checks:
+    # Transitional alias: branch protection still requires the "Required checks" context. It
+    # mirrors ci-gate, so the owner can switch the required check to `ci-gate` (PBO-M1-11) with
+    # both contexts present, then delete this job. Not listed in ci-gate.needs on purpose.
+    name: Required checks
+    if: always()
+    needs: [ci-gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require a successful ci-gate
+        env:
+          GATE_RESULT: ${{ needs.ci-gate.result }}
+        run: test "$GATE_RESULT" = success

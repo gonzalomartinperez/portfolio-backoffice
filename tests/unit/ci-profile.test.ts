@@ -87,7 +87,7 @@ test("job names in the profile map and ci.yml agree and ci-gate needs every job"
   assert.deepEqual([...named].sort(), [...ownJobs, ...sharedJobs].sort());
   assert.deepEqual(
     Object.keys(jobs).sort(),
-    ["classify", "ci-gate", ...ownJobs, ...sharedJobs].sort(),
+    ["classify", "ci-gate", "required-checks", ...ownJobs, ...sharedJobs].sort(),
   );
   for (const id of [...ownJobs, ...sharedJobs]) {
     assert.equal(
@@ -98,11 +98,18 @@ test("job names in the profile map and ci.yml agree and ci-gate needs every job"
     assert.ok([field(jobs, id, "needs")].flat().includes("classify"), id);
   }
   const gate = record(jobs["ci-gate"]);
+  assert.equal(gate.name, "ci-gate");
   assert.equal(gate.if, "always()");
+  // Transitional alias for the branch-protection context "Required checks" (PBO-M1-11).
+  const alias = record(jobs["required-checks"]);
+  assert.equal(alias.name, "Required checks");
+  assert.equal(alias.if, "always()");
+  assert.deepEqual(alias.needs, ["ci-gate"]);
+  assert.match(text(field(list(alias.steps)[0], "run")), /^test "\$GATE_RESULT" = success$/);
   assert.deepEqual(
     list(gate.needs).map(text).sort(),
     Object.keys(jobs)
-      .filter((id) => id !== "ci-gate")
+      .filter((id) => id !== "ci-gate" && id !== "required-checks")
       .sort(),
   );
   assert.deepEqual(gate.permissions, {});
