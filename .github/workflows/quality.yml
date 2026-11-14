@@ -87,12 +87,8 @@ jobs:
         run: npm run contract:install
       - name: Audit all locked dependencies
         run: npm audit --audit-level=moderate && npm audit --prefix tooling/api-contract --audit-level=moderate
-      - name: Check formatting, lint and strict types
-        run: npm run format:check && npm run lint && npm run typecheck
-      - name: Enforce architecture and test authorization, operations and contracts
-        run: npm test
-      - name: Validate documentation, licenses and repository skills
-        run: npm run docs:check && npm run license:check && npm run skills:check
+      - name: Run the repository check (same command as the pre-commit hook and AGENTS.md)
+        run: npm run check
       - name: Verify dependency protection access or mandatory disabled state
         run: node scripts/dependency-automation.ts
         env:

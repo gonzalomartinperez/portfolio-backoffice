@@ -1,0 +1,12 @@
+#!/bin/sh
+# Versioned pre-commit hook: runs the same command as the CI static job and AGENTS.md.
+# Installed by `npm run prepare` (core.hooksPath=.githooks, only when no hooks path is set).
+set -eu
+if [ ! -d node_modules ]; then
+  echo "pre-commit: node_modules is missing; run npm ci, then commit again." >&2
+  exit 1
+fi
+# Git exports hook variables (GIT_INDEX_FILE, GIT_DIR, ...). Tests that create throwaway
+# repositories must not inherit them, or they would write to this repository's index.
+unset GIT_INDEX_FILE GIT_DIR GIT_WORK_TREE GIT_PREFIX GIT_OBJECT_DIRECTORY
+exec npm run --silent check

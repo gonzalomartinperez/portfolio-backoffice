@@ -102,10 +102,7 @@ export function validateCiProfile(value: unknown): void {
 		],
 		secrets: [/npm run security:check/],
 		static: [
-			/npm run format:check/,
-			/npm run lint/,
-			/npm run typecheck/,
-			/npm test/,
+			/^npm run check$/m,
 			/npm run contract:generate/,
 			/git diff --exit-code/,
 		],

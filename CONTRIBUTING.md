@@ -104,6 +104,10 @@ rule names and file/object locations, never matched values. It complements revie
 does not prove absence of secrets. See [CI guidance](docs/ci.md#local-browser-lease-and-redacted-history-checks)
 for safe shared-cache browser installation and local history prerequisites.
 
+`npm run check` is the single local and CI gate (the CI static job runs it and the versioned
+`.githooks/pre-commit` hook calls it; `npm run prepare`, run by `npm ci`, points
+`core.hooksPath` at `.githooks`). Use `npm run check:fast` while editing.
+
 `npm ci` installs the main toolchain; `npm run contract:install` performs the frozen
 independent generator install. `npm run typecheck` verifies and explicitly invokes the
 native 7.0.2 checker, including generated Next route types. Do not invoke bare `tsc`: the

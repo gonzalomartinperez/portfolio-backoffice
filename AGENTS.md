@@ -2,6 +2,16 @@
 
 Use English for code, documentation and commits; UX is US English and neutral Latin American Spanish. No API keys in browser bundles. Use the versioned API contract snapshot. Integrate task branches through PRs into develop. Promote develop to main only with explicit owner authorization and a passing full PR validation run; production deployment requires separate authorization.
 
+## Commands
+
+- `npm run check`: the one gate. It equals the CI static job and the versioned pre-commit hook
+  (`.githooks/pre-commit`, enabled by `npm run prepare`): format, lint, strict types, unit,
+  contract and architecture tests, docs, licences, skills and the public-file secret scan.
+- `npm run check:fast`: format, lint, types and the architecture and layout tests (editor loop).
+- `npm run test:auth`: IAM integration tests on a Testcontainers PostgreSQL (Docker required).
+- `npm run test:browser`: Playwright journeys (see README for the fixture database).
+- `npm run build`: production build and standalone runtime preparation.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
