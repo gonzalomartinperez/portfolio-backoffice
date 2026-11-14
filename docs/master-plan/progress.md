@@ -6,13 +6,13 @@ Milestone log for the master refactor of `portfolio-backoffice`. The "In-flight 
 
 | Field | Value |
 |---|---|
-| Milestone | **M0** Plans merged (this file starts the log) |
-| Date | 2026-11-09 |
-| `develop` SHA at baseline | `e356b13d81d509e640b3b318c0d37c7b4abcce1c` (update to the plan merge commit when M0 closes) |
+| Milestone | **M1** Foundation: every task merged on `develop` (PBO-M1-11 partly: owner settings parked); exit verification and the `checkpoint/M1` tag belong to the orchestrator |
+| Date | 2026-11-14 |
+| `develop` SHA | `f39d2f2` (before this docs PR) |
 | `main` SHA | `0df93abfdb9e63ebe74322533fd5cd148a41aa2a` (untouched until M7) |
-| Next item | **PBO-M1-1** `standards.lock` and shared templates (see [roadmap.md](roadmap.md)); in parallel PBO-M1-2 (Dependabot sandbox proof) and PBO-M1-4 (Testcontainers) |
-| Known issues | `/` mobile Lighthouse 60; Recharts 374 KB raw on `/`; no single `check` script; audit mutable; CSP without `script-src`; sibling-API clone in CI; dead `publish` job |
-| Owner inputs | 1. PBO-D16: enable GitHub private vulnerability reporting. 2. MV: VPS purchase and activation authorization. Every other decision is resolved by delegation (README) |
+| Next item | Owner settings in [`docs/reference/repository-settings.md`](../reference/repository-settings.md) (PVR, `ci-gate` required check and rulesets, CodeQL default setup); then **PBO-M2-1** (see [roadmap.md](roadmap.md)); Node 26 flip after two green weeks of `node-next` (about 2026-11-28) |
+| Known issues | `/` mobile Lighthouse 60; Recharts 374 KB raw on `/`; audit mutable; CSP without `script-src`; PR wall-clock over 9 first-attempt `ci` runs: p50 7.7 min (budget 6, not met) and p95 9.8 min (budget 12, met), measured while eight repos shared the account runners (about 3 min of queueing; compute critical path about 4.4 min); re-measure 10 uncontended runs; harden-runner's StepSecurity API occasionally times out and skips a job (gate fails closed; re-run failed jobs); scheduled workflows (vuln-daily, Scorecard, drift, guard schedule) and Dependabot read the default branch `main`, so they start at M7 unless `develop` becomes the default; dependency review will fail a PR that bumps the LGPL `@img/sharp-*` binaries until the owner decides; `file-index.csv` predates the M1 moves (skills canonical in `.agents/skills`, CI scripts deleted) |
+| Owner inputs | 1. PBO-D16: enable GitHub private vulnerability reporting. 2. Apply the standard rulesets and switch the required check to `ci-gate` (then delete the `required-checks` alias). 3. CodeQL default setup. 4. Immutable releases and a protected `production` environment before the first release. 5. release-please GitHub App. 6. Default branch: keep `main` or switch to `develop`. 7. LGPL-3.0 allow-list decision for `@img/sharp-*`. 8. MV: VPS purchase and activation authorization. Commands: [`docs/reference/repository-settings.md`](../reference/repository-settings.md) |
 
 ## In-flight tasks
 
@@ -20,7 +20,17 @@ Updated on each task merge (the same PR that sets the roadmap row to `done (PR #
 
 | Task ID | Branch | PR | Status | Note |
 |---|---|---|---|---|
-| none | - | - | - | M0 not started; first task is PBO-M1-1 |
+| PBO-M1-1 | `chore/m1-standards-lock` | #129 | merged | engineering-standards v1.0.0 lock, shared templates, drift workflow |
+| PBO-M1-2 | `chore/m1-dependabot-weekly` | #128 | merged | proven weekly group, deps-weekly-guard (PR-author check, not `github.actor`) |
+| PBO-M1-3 | `ci/m1-ci-gate-classify` | #122 | merged | classify, `ci-profile.json`, `ci-gate` plus `Required checks` alias, shared security and docs jobs, vuln-daily, Scorecard |
+| PBO-M1-4 | `chore/m1-testcontainers-postgres` | #118 | merged | Testcontainers PostgreSQL 18; no sibling-repo clone |
+| PBO-M1-5 | `ci/m1-build-once` | #123 | merged | image tarball built once and shared |
+| PBO-M1-6 | `chore/m1-check-command` | #119 | merged | `npm run check`, pre-commit hook, AGENTS commands test |
+| PBO-M1-7 | `ci/m1-container-dockerfile`, `ci/m1-image-gates`, `ci/m1-node26-matrix` | #124, #125, #127 | merged | canonical Dockerfile and hadolint; structure test, dockle, Grype, SBOM; informational Node 26 job |
+| PBO-M1-8 | `ci/m1-release` | #126 | merged | verify, attest, gated publish; release-please config |
+| PBO-M1-9 | `chore/m1-biome-preset` | #121 (and #117) | merged | Biome 2.6.7 preset and one mechanical reformat |
+| PBO-M1-10 | `chore/m1-skills-canonical` | #120 | merged | canonical `.agents/skills`, metadata, evals, short AGENTS.md |
+| PBO-M1-11 | `docs/m1-repository-settings` | #130 | merged, owner steps parked | runbook and CODEOWNERS |
 
 ## Scorecard snapshot (baseline, rubrics v2; prov. = planner estimate until the M2 evaluator run)
 
