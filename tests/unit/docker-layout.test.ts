@@ -5,9 +5,6 @@ import { load } from "js-yaml";
 import { field, list, record, text } from "../../scripts/json.ts";
 
 const app = "infra/docker/app/Dockerfile";
-const foreignPostgres =
-	".artifacts/api-compatibility/infra/docker/postgres/Dockerfile";
-const postgresSource = "5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3";
 function rules(file: string) {
 	return readFileSync(file, "utf8")
 		.split("\n")
@@ -108,7 +105,7 @@ test("each context fails closed for private, unrelated and secret-shaped inputs"
 	}
 });
 
-test("CI and dependency discovery select owned recipes and validate the reviewed foreign recipe", () => {
+test("CI and dependency discovery select owned recipes and never build a sibling repository", () => {
 	const workflow = record(
 		load(readFileSync(".github/workflows/quality.yml", "utf8")),
 	);
@@ -116,52 +113,16 @@ test("CI and dependency discovery select owned recipes and validate the reviewed
 	const build = steps.find((step) => field(step, "with", "file") === app);
 	assert.equal(field(build, "with", "context"), ".");
 	assert.equal(field(build, "with", "file"), app);
-	const databaseSteps = list(field(workflow, "jobs", "database", "steps"));
-	for (const job of ["database", "container", "browser"]) {
-		assert.equal(field(workflow, "jobs", job, "services"), undefined);
-		const runtimeSteps = list(field(workflow, "jobs", job, "steps"));
-		const checkout = runtimeSteps.find(
-			(step) => field(step, "name") === "Read the canonical PostgreSQL source",
-		);
-		assert.equal(
-			field(checkout, "with", "repository"),
-			"gonzalomartinperez/portfolio-assistant-api",
-		);
-		assert.equal(field(checkout, "with", "ref"), postgresSource);
-		assert.equal(field(checkout, "with", "persist-credentials"), false);
-		const databaseBuilds = runtimeSteps.filter(
-			(step) =>
-				field(step, "name") === "Build the canonical PostgreSQL artifact",
-		);
-		assert.equal(databaseBuilds.length, 1);
-		assert.equal(
-			field(databaseBuilds[0], "with", "context"),
-			".artifacts/api-compatibility",
-		);
-		assert.equal(field(databaseBuilds[0], "with", "file"), foreignPostgres);
-		assert.equal(
-			field(databaseBuilds[0], "with", "tags"),
-			"portfolio-backoffice-postgres:rc",
-		);
+	for (const job of Object.keys(record(workflow.jobs))) {
+		for (const step of list(field(workflow, "jobs", job, "steps"))) {
+			assert.equal(field(step, "with", "repository"), undefined, job);
+			assert.doesNotMatch(
+				JSON.stringify(step),
+				/portfolio-assistant-api|api-compatibility/,
+				job,
+			);
+		}
 	}
-	const foreign = databaseSteps.find(
-		(step) =>
-			field(step, "name") ===
-			"Verify restricted IAM with both real applications and this exact image",
-	);
-	assert.equal(
-		field(foreign, "working-directory"),
-		".artifacts/api-compatibility",
-	);
-	assert.doesNotMatch(text(field(foreign, "run")), /docker build/);
-	assert.match(
-		text(field(foreign, "run")),
-		/docker tag portfolio-backoffice-postgres:rc portfolio-assistant-postgres:project-ci/,
-	);
-	assert.match(
-		text(field(foreign, "run")),
-		/--postgres-image portfolio-assistant-postgres:project-ci/,
-	);
 	const dependabot = record(
 		load(readFileSync(".github/dependabot.yml", "utf8")),
 	);
@@ -187,24 +148,7 @@ test("current documented builds use explicit recipes and root context", () => {
 		];
 		assert.ok(commands.length > 0, file);
 		for (const [command] of commands) {
-			assert.ok(
-				command.includes(`-f ${app}`) ||
-					command.includes("-f infra/docker/postgres/Dockerfile"),
-				`${file}: ${command}`,
-			);
-			if (command.includes("-f infra/docker/postgres/Dockerfile")) {
-				assert.equal(file, "README.md");
-				assert.ok(
-					readFileSync(file, "utf8").includes(
-						`git checkout --detach ${postgresSource}`,
-					),
-				);
-				assert.ok(
-					readFileSync(file, "utf8").includes(
-						"cd .artifacts/api-compatibility",
-					),
-				);
-			}
+			assert.ok(command.includes(`-f ${app}`), `${file}: ${command}`);
 			assert.ok(
 				command.trimEnd().endsWith(" ."),
 				`${file}: root context required`,

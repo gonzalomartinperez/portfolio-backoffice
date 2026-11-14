@@ -18,157 +18,89 @@ test("committed paired workflow has exact names, DAG, events and real job adapte
 	validateCiProfile(profile());
 	validateWorkflowTrust(profile());
 });
-test("database acceptance rejects missing, substituted or bypassed PostgreSQL inventory gates", () => {
-	const changes: Array<(steps: Record<string, unknown>[]) => void> = [
-		(steps) => {
-			const index = steps.findIndex(
-				(step) => step.name === "Verify pinned PostgreSQL image scanner",
-			);
-			if (index >= 0) steps.splice(index, 1);
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) => step.name === "Inventory the exact PostgreSQL image",
-			);
-			if (step)
-				step.run = String(step.run).replace(
-					"portfolio-backoffice-postgres:rc",
-					"portfolio-backoffice:rc",
-				);
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) => step.name === "Inventory the exact PostgreSQL image",
-			);
-			if (step)
-				step.run = String(step.run).replace(
-					"--list-all-pkgs",
-					"--ignore-unfixed",
-				);
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) =>
-					step.name === "Gate PostgreSQL critical and fixable high findings",
-			);
-			if (step) step.if = "false";
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) =>
-					step.name === "Gate PostgreSQL critical and fixable high findings",
-			);
-			if (step) step.run = `${step.run} || true`;
-		},
-		(steps) => {
-			steps.push({
-				uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
-				with: { path: "/tmp/postgres-image-vulnerabilities.json" },
-			});
-		},
-		...[
-			"Inventory the exact PostgreSQL image",
-			"Gate PostgreSQL critical and fixable high findings",
-		].map((name) => (steps: Record<string, unknown>[]) => {
-			const index = steps.findIndex((step) => step.name === name);
-			if (index >= 0) steps.splice(index, 1);
-		}),
-		(steps) => {
-			const step = steps.find(
-				(step) => step.name === "Verify pinned PostgreSQL image scanner",
-			);
-			if (step)
-				step.run = String(step.run).replace(
-					"c6e65abddb348e25f",
-					"0000000000000000",
-				);
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) => step.name === "Inventory the exact PostgreSQL image",
-			);
-			if (step) step.env = { TRIVY_IGNORE_UNFIXED: "true" };
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) => step.name === "Inventory the exact PostgreSQL image",
-			);
-			if (step)
-				step.run = String(step.run).replace(
-					"--scanners vuln",
-					"--scanners vuln --severity CRITICAL",
-				);
-		},
-		(steps) => {
-			const step = steps.find(
-				(step) =>
-					step.name === "Gate PostgreSQL critical and fixable high findings",
-			);
-			if (step)
-				step.run = String(step.run).replace(
-					"docker image inspect portfolio-backoffice-postgres:rc",
-					"docker image inspect portfolio-backoffice:rc",
-				);
-		},
-	];
-	for (const change of changes) {
-		const workflow = profile();
-		const steps = list(field(workflow, "jobs", "database", "steps")).map(
-			record,
-		);
-		change(steps);
-		record(field(workflow, "jobs", "database")).steps = steps;
-		assert.throws(() => validateCiProfile(workflow));
-	}
+test("container scanner rejects a substituted installer or environment overrides", () => {
+	const tampered = profile();
+	const steps = list(field(tampered, "jobs", "container", "steps")).map(record);
+	const installer = record(
+		steps.find((step) => step.name === "Verify pinned image scanner"),
+	);
+	installer.run = String(installer.run).replace(
+		"c6e65abddb348e25f",
+		"0000000000000000",
+	);
+	record(field(tampered, "jobs", "container")).steps = steps;
+	assert.throws(() => validateCiProfile(tampered));
 	const override = profile();
 	record(override.env).TRIVY_IGNORE_UNFIXED = "true";
 	assert.throws(() => validateCiProfile(override));
 });
-test("all runtime jobs reject mutable PostgreSQL source, wrong builds and skipped cleanup", () => {
-	for (const job of ["database", "container", "browser"]) {
-		for (const mutate of [
-			(step: Record<string, unknown>) => {
-				record(step.with).ref = "develop";
+test("runtime jobs reject a floating, published or missing PostgreSQL service and sibling builds", () => {
+	for (const job of ["container", "browser"]) {
+		const changes: Array<(job: Record<string, unknown>) => void> = [
+			(j) => {
+				delete j.services;
 			},
-			(step: Record<string, unknown>) => {
-				step.if = "false";
+			(j) => {
+				record(field(j, "services", "postgres")).image = "postgres:18-trixie";
 			},
-		]) {
+			(j) => {
+				record(field(j, "services", "postgres")).ports = ["5432:5432"];
+			},
+			(j) => {
+				record(j.services).redis = { image: "redis" };
+			},
+			(j) => {
+				delete record(field(j, "services", "postgres")).options;
+			},
+			(j) => {
+				record(field(j, "services", "postgres")).options = "--no-healthcheck";
+			},
+			(j) => {
+				record(field(j, "services", "postgres", "env")).POSTGRES_DB =
+					"postgres";
+			},
+			(j) => {
+				record(j.env).CI_POSTGRES_HOST = "localhost";
+			},
+			(j) => {
+				j.steps = list(j.steps).filter(
+					(step) =>
+						field(step, "name") !==
+						"Expose this job's PostgreSQL service network",
+				);
+			},
+			(j) => {
+				const steps = list(j.steps).map(record);
+				const expose = record(
+					steps.find(
+						(step) =>
+							step.name === "Expose this job's PostgreSQL service network",
+					),
+				);
+				expose.if = "false";
+				j.steps = steps;
+			},
+			(j) => {
+				const steps = list(j.steps).map(record);
+				steps.push({ run: "node scripts/ci-postgres.ts start" });
+				j.steps = steps;
+			},
+		];
+		for (const change of changes) {
 			const workflow = profile();
-			const steps = list(field(workflow, "jobs", job, "steps")).map(record);
-			const checkout = steps.find(
-				(step) => step.name === "Read the canonical PostgreSQL source",
-			);
-			mutate(record(checkout));
-			assert.throws(() => validateCiProfile(workflow));
+			change(record(field(workflow, "jobs", job)));
+			assert.throws(() => validateCiProfile(workflow), job);
 		}
-		for (const fieldName of ["context", "file", "tags", "platforms"]) {
-			const workflow = profile();
-			const steps = list(field(workflow, "jobs", job, "steps")).map(record);
-			const build = record(
-				steps.find(
-					(step) => step.name === "Build the canonical PostgreSQL artifact",
-				),
-			);
-			record(build.with)[fieldName] = "unreviewed";
-			assert.throws(() => validateCiProfile(workflow));
-		}
-		const workflow = profile();
-		const steps = list(field(workflow, "jobs", job, "steps")).map(record);
-		const stop = record(
-			steps.find(
-				(step) =>
-					step.name === "Remove only this job's canonical PostgreSQL fixture",
-			),
-		);
-		delete stop.if;
-		assert.throws(() => validateCiProfile(workflow));
-		const legacy = profile();
-		record(field(legacy, "jobs", job)).services = {
-			postgres: { image: "postgres:18.6-trixie" },
-		};
-		assert.throws(() => validateCiProfile(legacy));
 	}
+	const published = profile();
+	record(field(published, "jobs", "container", "services", "postgres")).ports =
+		["5432"];
+	assert.throws(() => validateCiProfile(published));
+	const database = profile();
+	record(field(database, "jobs", "database")).services = {
+		postgres: { image: "postgres:18.7-trixie" },
+	};
+	assert.throws(() => validateCiProfile(database));
 });
 test("paired profile rejects cosmetic parity, bypasses and missing prerequisite edges", () => {
 	const changes: Array<(workflow: Record<string, unknown>) => void> = [
@@ -279,7 +211,7 @@ test("private rebuild provenance rejects source/run/image/config substitutions",
 		buildFingerprint([["Dockerfile", "changed"]]),
 	);
 	const workflow = profile();
-	for (const job of ["database", "container", "browser"]) {
+	for (const job of ["container", "browser"]) {
 		const steps = list(field(workflow, "jobs", job, "steps"));
 		assert.ok(
 			steps.some(

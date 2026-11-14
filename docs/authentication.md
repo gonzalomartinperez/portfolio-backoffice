@@ -65,12 +65,13 @@ no frontend analytics or session replay is included.
 ## Verification
 
 - `node --test tests/unit/auth-config.test.ts`: configuration and token boundaries.
-- `BACKOFFICE_DATABASE_URL=<isolated-test-db> node --test tests/integration/auth.test.ts`:
+- `npm run test:auth` (`node --test tests/integration/auth.test.ts`, Docker required):
   actual PostgreSQL schema, supported OAuth plugin authorization/callback/token
   exchange with a loopback provider, state rejection, owner admission, verified
-  email, one-use invitation, roles, expiry, revocation and CSRF protection.
-  **This test truncates its configured database. It requires a loopback host and test/fixture
-  database name. Never use production or a shared database.**
+  email, one-use invitation, roles, expiry, revocation, CSRF protection and the restricted
+  IAM runtime role (no inheritance, no DDL, bounded pool). The test starts and owns a
+  throwaway digest-pinned PostgreSQL container (Testcontainers) and never reads a database URL
+  from the environment, so it cannot touch a production or shared database.
 - `scripts/auth-fixture-session.ts` creates sessions through Better Auth's actual
   adapter for browser tests. It requires loopback origin and a database name
   containing `test` or `fixture`; there is no application authentication bypass.

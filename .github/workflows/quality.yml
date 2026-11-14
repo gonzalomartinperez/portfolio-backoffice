@@ -107,16 +107,7 @@ jobs:
     name: Database tests
     needs: static
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
-      BACKOFFICE_ORIGIN: http://localhost:3107
-      BETTER_AUTH_SECRET: public-fixture-only-at-least-32-characters
-      BACKOFFICE_OWNER_EMAIL: owner@example.test
-      GOOGLE_CLIENT_ID: public-fixture-client
-      GOOGLE_CLIENT_SECRET: public-fixture-secret
-      GITHUB_CLIENT_ID: public-fixture-client
-      GITHUB_CLIENT_SECRET: public-fixture-secret
-      CI_JOB_ID: database
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -128,121 +119,10 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-      - name: Read the canonical PostgreSQL source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: gonzalomartinperez/portfolio-assistant-api
-          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
-          path: .artifacts/api-compatibility
-          persist-credentials: false
-      - name: Verify the canonical PostgreSQL source
-        run: node scripts/ci-postgres.ts source
-      - name: Build the canonical PostgreSQL artifact
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .artifacts/api-compatibility
-          file: .artifacts/api-compatibility/infra/docker/postgres/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice-postgres:rc
-          cache-from: type=gha,scope=canonical-postgres18-amd64
-          cache-to: type=gha,mode=max,scope=canonical-postgres18-amd64
-      - name: Start this job's canonical PostgreSQL fixture
-        run: node scripts/ci-postgres.ts start
-      - name: Bind build start to this candidate
-        run: node scripts/ci-build-provenance.ts start
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .
-          file: infra/docker/app/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice:rc
-          cache-from: type=gha,scope=backoffice-node24-amd64
-      - name: Verify and record private source-bound image provenance
-        run: node scripts/ci-build-provenance.ts record
-      - name: Verify the project-owned PostgreSQL18.6 IAM artifact
-        run: |
-          node scripts/verify-postgres.ts portfolio-backoffice:rc portfolio-backoffice-postgres:rc
-      - name: Verify pinned PostgreSQL image scanner
-        run: |
-          mkdir -p /tmp/image-scanner
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz \
-            --output /tmp/image-scanner/trivy.tar.gz
-          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check
-          tar -xzf /tmp/image-scanner/trivy.tar.gz -C /tmp/image-scanner trivy
-      - name: Inventory the exact PostgreSQL image
-        run: |
-          umask 077
-          if ! /tmp/image-scanner/trivy --config '' image --image-src docker \
-            --ignorefile '' --scanners vuln --list-all-pkgs --format json \
-            --output /tmp/postgres-image-vulnerabilities.json portfolio-backoffice-postgres:rc \
-            > /tmp/postgres-image-scan.log 2>&1; then
-            echo 'PostgreSQL image inventory failed; raw diagnostics remain ephemeral.'
-            exit 1
-          fi
-      - name: Gate PostgreSQL critical and fixable high findings
-        run: |
-          postgres_image_id=$(docker image inspect portfolio-backoffice-postgres:rc --format '{{.Id}}')
-          node scripts/postgres-image-security.ts /tmp/postgres-image-vulnerabilities.json "$postgres_image_id"
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          version: 0.13.1
-          enable-cache: true
-          cache-dependency-glob: |
-            .artifacts/api-compatibility/uv.lock
-            .artifacts/api-compatibility/.python-version
-      - name: Verify restricted IAM with both real applications and this exact image
-        working-directory: .artifacts/api-compatibility
-        run: |
-          uv sync --frozen
-          docker tag portfolio-backoffice-postgres:rc portfolio-assistant-postgres:project-ci
-          uv run python -m scripts.verify_project_databases --authorize-fixture \
-            --postgres-image portfolio-assistant-postgres:project-ci \
-            --backoffice-path "$GITHUB_WORKSPACE" \
-            --backoffice-image portfolio-backoffice:rc \
-            --output "$GITHUB_WORKSPACE/.artifacts/project-databases.json"
-      - name: Write synthetic container configuration
-        run: |
-          node --input-type=module <<'NODE'
-          import { writeFileSync } from 'node:fs';
-          const names = ['BACKOFFICE_ORIGIN', 'BETTER_AUTH_SECRET', 'BACKOFFICE_OWNER_EMAIL',
-            'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'];
-          const values = names.map(name => `${name}=${process.env[name]}`);
-          values.push('OPERATIONS_API_ORIGIN=http://host.docker.internal:8117');
-          values.push('OPERATIONS_READ_TOKEN=public-loopback-operations-fixture');
-          values.push('OPERATIONS_SOURCE_MODE=fixture');
-          values.push('PRODUCT_ANALYTICS_ENABLED=true');
-          values.push('FEEDBACK_OVERVIEW_ENABLED=true');
-          values.push(`BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@${process.env.CI_POSTGRES_HOST}:5432/backoffice_test`);
-          writeFileSync('/tmp/backoffice-fixture.env', values.join('\n') + '\n', { mode: 0o600 });
-          NODE
-      - name: Migrate the isolated authentication database
-        run: |
-          docker run --rm --network "$CI_POSTGRES_NETWORK" --add-host host.docker.internal:host-gateway \
-            --env-file /tmp/backoffice-fixture.env \
-            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
-            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
-            --cap-drop ALL --security-opt no-new-privileges \
-            portfolio-backoffice:rc node scripts/auth-migrate.ts
       - name: Verify real PostgreSQL authorization and OAuth boundaries
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
         run: node --test tests/integration/auth.test.ts
-      - name: Retain safe synthetic database recovery receipt
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: project-database-verification
-          path: .artifacts/project-databases.json
-          retention-days: 7
-          if-no-files-found: ignore
-      - name: Remove only synthetic database configuration
-        if: always()
-        run: rm -f /tmp/backoffice-fixture.env
-      - name: Remove only this job's canonical PostgreSQL fixture
-        if: always()
-        run: node scripts/ci-postgres.ts cleanup
   container:
     name: Container verification
     needs: static
@@ -257,6 +137,17 @@ jobs:
       GITHUB_CLIENT_ID: public-fixture-client
       GITHUB_CLIENT_SECRET: public-fixture-secret
       CI_JOB_ID: container
+      CI_POSTGRES_HOST: postgres
+    services:
+      postgres:
+        image: postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+        env:
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+          POSTGRES_DB: backoffice_test
+        options: >-
+          --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -269,26 +160,10 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-      - name: Read the canonical PostgreSQL source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: gonzalomartinperez/portfolio-assistant-api
-          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
-          path: .artifacts/api-compatibility
-          persist-credentials: false
-      - name: Verify the canonical PostgreSQL source
-        run: node scripts/ci-postgres.ts source
-      - name: Build the canonical PostgreSQL artifact
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .artifacts/api-compatibility
-          file: .artifacts/api-compatibility/infra/docker/postgres/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice-postgres:rc
-          cache-from: type=gha,scope=canonical-postgres18-amd64
-      - name: Start this job's canonical PostgreSQL fixture
-        run: node scripts/ci-postgres.ts start
+      - name: Expose this job's PostgreSQL service network
+        env:
+          SERVICE_NETWORK: ${{ job.services.postgres.network }}
+        run: echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
       - name: Bind build start to this candidate
         run: node scripts/ci-build-provenance.ts start
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
@@ -359,9 +234,6 @@ jobs:
         run: |
           docker rm -f assistant-browser
           rm -f /tmp/backoffice-fixture.env
-      - name: Remove only this job's canonical PostgreSQL fixture
-        if: always()
-        run: node scripts/ci-postgres.ts cleanup
   browser:
     name: Browser tests
     needs: static
@@ -376,6 +248,19 @@ jobs:
       GITHUB_CLIENT_ID: public-fixture-client
       GITHUB_CLIENT_SECRET: public-fixture-secret
       CI_JOB_ID: browser
+      CI_POSTGRES_HOST: postgres
+    services:
+      postgres:
+        image: postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+        env:
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+          POSTGRES_DB: backoffice_test
+        ports:
+          - '5432'
+        options: >-
+          --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -388,26 +273,13 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-      - name: Read the canonical PostgreSQL source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: gonzalomartinperez/portfolio-assistant-api
-          ref: 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
-          path: .artifacts/api-compatibility
-          persist-credentials: false
-      - name: Verify the canonical PostgreSQL source
-        run: node scripts/ci-postgres.ts source
-      - name: Build the canonical PostgreSQL artifact
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .artifacts/api-compatibility
-          file: .artifacts/api-compatibility/infra/docker/postgres/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice-postgres:rc
-          cache-from: type=gha,scope=canonical-postgres18-amd64
-      - name: Start this job's canonical PostgreSQL fixture
-        run: node scripts/ci-postgres.ts start
+      - name: Expose this job's PostgreSQL service network
+        env:
+          SERVICE_NETWORK: ${{ job.services.postgres.network }}
+          SERVICE_PORT: ${{ job.services.postgres.ports['5432'] }}
+        run: |
+          echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
+          echo "BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@127.0.0.1:$SERVICE_PORT/backoffice_test" >> "$GITHUB_ENV"
       - name: Bind build start to this candidate
         run: node scripts/ci-build-provenance.ts start
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
@@ -479,9 +351,6 @@ jobs:
         run: |
           docker rm -f assistant-browser
           rm -f /tmp/backoffice-fixture.env
-      - name: Remove only this job's canonical PostgreSQL fixture
-        if: always()
-        run: node scripts/ci-postgres.ts cleanup
   checks:
     if: always()
     needs:
