@@ -41,19 +41,19 @@
         ".env.example",
         "LICENSE"
       ],
-      "adds": ["static", "database", "build", "container", "browser"],
+      "adds": ["static", "database", "build", "scan", "container", "browser"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
     "contract": {
       "paths": ["contracts/**"],
-      "adds": ["static", "database", "build", "container", "browser"],
+      "adds": ["static", "database", "build", "scan", "container", "browser"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 12
     },
     "workflow": {
       "paths": [".github/**"],
-      "adds": ["static", "database", "build", "container", "browser"],
+      "adds": ["static", "database", "build", "scan", "container", "browser"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },

@@ -291,7 +291,8 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 | `static` | `npm run check` (format, lint, types, unit/contract/boundary tests, docs, skills, secret scan), audits and contract drift. |
 | `database` | Testcontainers PostgreSQL 18 (digest-pinned): IAM migrations, restricted runtime role, invitations, revocation and OAuth boundaries. |
 | `build` | Build the image once as a one-day tarball artifact (SHA-256 recorded, file and secret checks before upload). |
-| `container` | Verify that exact non-root distroless image: HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
+| `scan` | Structure test, dockle, Grype (fixable HIGH/CRITICAL) and a CycloneDX SBOM of that exact image. |
+| `container` | Run that exact non-root distroless image: readiness, resource bounds and shutdown. |
 | `browser` | Run that exact image against the digest-pinned PostgreSQL service; verify admission, three browser engines and accessibility. |
 | `ci-gate` | The single required check: fails unless every selected job succeeded. |
 

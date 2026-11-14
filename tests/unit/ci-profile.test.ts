@@ -8,7 +8,7 @@ import { postgresImage } from "../../scripts/postgres-image.ts";
 
 const profileMap = () => record(JSON.parse(readFileSync(".github/ci-profile.json", "utf8")));
 const workflow = () => record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
-const ownJobs = ["static", "database", "build", "container", "browser"];
+const ownJobs = ["static", "database", "build", "scan", "container", "browser"];
 const sharedJobs = ["docs", "security"];
 
 // Same glob semantics as the shared classify workflow (engineering-standards classify.yml).
@@ -70,6 +70,7 @@ test("profiles select the expected jobs", () => {
     "static",
     "database",
     "build",
+    "scan",
     "container",
     "browser",
   ]);
@@ -199,24 +200,29 @@ test("runtime jobs use the digest-pinned PostgreSQL service and no sibling build
   assert.equal(field(workflow(), "jobs", "database", "services"), undefined);
 });
 
-test("the container job keeps the checksum-pinned scanner and the HIGH/CRITICAL gate", () => {
-  const steps = list(field(workflow(), "jobs", "container", "steps"));
-  const installer = text(
-    field(
-      steps.find((step) => field(step, "name") === "Verify pinned image scanner"),
-      "run",
-    ),
-  );
-  assert.match(installer, /trivy_0\.75\.0_Linux-64bit\.tar\.gz/);
-  assert.match(
-    installer,
-    /c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f {2}\/tmp\/image-scanner\/trivy\.tar\.gz' \| sha256sum --check/,
-  );
+test("the scan job gates the exact image with pinned tools and keeps an SBOM", () => {
+  const steps = list(field(workflow(), "jobs", "scan", "steps"));
   const runs = steps.map((step) => text(field(step, "run") ?? "")).join("\n");
-  assert.match(runs, /--severity HIGH,CRITICAL/);
-  assert.match(runs, /node scripts\/verify-container\.ts measure/);
-  for (const env of [field(workflow(), "env"), field(workflow(), "jobs", "container", "env")])
-    assert.ok(!Object.keys(record(env ?? {})).some((key) => key.startsWith("TRIVY_")));
+  for (const sum of [
+    "8bfc9183d1d3d67800edb45bea4bb63ddf1d28bec5f89944075a07007d79caad  dockle_0.4.15_Linux-64bit.tar.gz",
+    "fa35e89512a8978585f76cf41397956d2e3a30c62c2ad3fb857b1597074d14ca  container-structure-test-linux-amd64",
+    "e9da18cc1429e786722e32161288103600efffd8e483c90761f90485bd1bec85  grype_0.121.3_linux_amd64.tar.gz",
+    "bf52519eb57f675d47c07d43213cb6dff6449f3d6d1147ff6701ed91f44eef0c  syft_1.57.1_linux_amd64.tar.gz",
+  ])
+    assert.ok(runs.includes(sum), sum);
+  assert.match(runs, /sha256sum --check/);
+  assert.match(runs, /container-structure-test test --driver docker .*structure-test\.yaml/);
+  assert.match(runs, /dockle --exit-code 1 --exit-level warn/);
+  assert.match(runs, /grype docker:portfolio-backoffice:rc --only-fixed --fail-on high/);
+  assert.match(runs, /syft docker:portfolio-backoffice:rc --output cyclonedx-json=/);
+  const sbom = steps.find((step) => field(step, "with", "name") === "backoffice-sbom");
+  assert.ok(sbom, "SBOM artifact");
+  const build = list(field(workflow(), "jobs", "build", "steps"));
+  const buildRuns = build.map((step) => text(field(step, "run") ?? "")).join("\n");
+  assert.match(buildRuns, /hadolint --config \.hadolint\.yaml infra\/docker\/app\/Dockerfile/);
+  assert.match(buildRuns, /c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507/);
+  for (const env of [field(workflow(), "env"), field(workflow(), "jobs", "scan", "env")])
+    assert.ok(!Object.keys(record(env ?? {})).some((key) => /^(TRIVY|GRYPE)_/.test(key)));
 });
 
 test("the image is built once and the runtime jobs load that exact tarball", () => {
@@ -244,7 +250,7 @@ test("the image is built once and the runtime jobs load that exact tarball", () 
       build.findIndex((step) => text(step.run ?? "").includes("--scanners secret")),
     "scan before upload",
   );
-  for (const id of ["container", "browser"]) {
+  for (const id of ["scan", "container", "browser"]) {
     assert.deepEqual(field(jobs, id, "needs"), ["classify", "build"]);
     const steps = list(field(jobs, id, "steps")).map(record);
     assert.ok(
