@@ -13,7 +13,7 @@ release tag in a comment.
 | docs | shared `docs.yml` | every run (`base`) | markdownlint (`.markdownlint-cli2.jsonc`) and lychee offline link and fragment check |
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, Vitest unit/contract/architecture tests with the coverage floors of `quality/ratchets/coverage.json`, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
-| database | this repository | code, contract, workflow | Vitest `integration` project (`npm run test:auth`) on a Testcontainers PostgreSQL 18 (digest pinned) |
+| database | this repository | code, contract, workflow | Unit and `integration` Vitest projects with coverage (`npm run test:coverage`, Testcontainers PostgreSQL 18, digest pinned); on pull requests the diff coverage gate (`scripts/diff-coverage.ts`): changed executable lines of TypeScript modules under `src/` outside `src/app/` need 90 % on auth and DAL code and 80 % elsewhere (`.tsx` joins with the component project) |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
