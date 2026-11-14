@@ -4,9 +4,9 @@ import { ButtonLink } from "../../../shared/ui/button-link";
 import { SignOut } from "../../auth/entry";
 import { summarizeOperations } from "../domain/insights";
 import type { OperationalRead } from "../domain/models";
-import { SnapshotChart } from "./charts";
 import { type OperationsLocale, operationsCopy } from "./copy";
 import { Preferences } from "./preferences";
+import { StaticBars } from "./static-bars";
 import { TraceExplorer } from "./trace-explorer";
 import styles from "./workbench.module.css";
 
@@ -184,9 +184,7 @@ export function Dashboard({
             )}
           </section>
         </div>
-        {snapshot && (
-          <SnapshotChart executions={snapshot.executions} usage={snapshot.usage} locale={locale} />
-        )}
+        {snapshot && <StaticBars executions={snapshot.executions} locale={locale} />}
       </div>
       {assistantFeedback}
       <div className={styles.detailGrid}>
