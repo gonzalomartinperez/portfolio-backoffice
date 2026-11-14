@@ -16,6 +16,7 @@ const ownJobs = [
   "scan",
   "container",
   "browser",
+  "budgets",
   "mutation",
 ];
 const sharedJobs = ["docs", "security"];
@@ -83,6 +84,7 @@ test("profiles select the expected jobs", () => {
     "scan",
     "container",
     "browser",
+    "budgets",
     "mutation",
   ]);
   for (const path of [".github/workflows/ci.yml", "contracts/openapi.json", "migrations/x.sql"])

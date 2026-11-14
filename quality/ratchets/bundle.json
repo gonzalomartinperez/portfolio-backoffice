@@ -1,0 +1,23 @@
+{
+  "$comment": "Script transfer bytes per route from Lighthouse's network records (Next 16 has no First Load JS), same run as lighthouse.json: CI run 43642010798 on 2026-11-14 (PBO-M2-9). Values only fall; the M3 target is at most 170 KB gzip excluding the lazy chart chunk.",
+  "mode": "enforce",
+  "baseline": {
+    "routes": {
+      "/": {
+        "scriptBytes": 266569
+      },
+      "/analytics": {
+        "scriptBytes": 258050
+      },
+      "/access": {
+        "scriptBytes": 152004
+      },
+      "/sign-in": {
+        "scriptBytes": 150923
+      },
+      "/privacy": {
+        "scriptBytes": 135834
+      }
+    }
+  }
+}
