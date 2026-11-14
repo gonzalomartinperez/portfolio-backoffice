@@ -29,6 +29,7 @@
         "package-lock.json",
         "tsconfig.json",
         "biome.json",
+        "knip.json",
         "next.config.ts",
         "next-env.d.ts",
         "playwright.config.ts",

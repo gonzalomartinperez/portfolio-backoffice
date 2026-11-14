@@ -116,6 +116,38 @@ within 7 days; the cap is min(2 % of tests, 5) entries. Like other scheduled wor
 reads the default branch, so it also runs on every push to `develop` until `main` carries it,
 and on pull requests that change the detector itself.
 
+## Static quality ratchets
+
+`npm run quality:static` runs after `npm run check` in the `static` job and measures three things
+that may only improve. Baselines are committed; a count that rises, or a new location, fails.
+
+- **knip** (`knip.json`, `npm run knip`): unused files, exports, types and dependencies. The
+  counts per category are in `quality/ratchets/static.json`. Removing what knip reports is
+  PBO-M3-1; this task only records the baseline.
+- **Cognitive complexity**: Biome `noExcessiveCognitiveComplexity` at threshold 10 over `src/` and
+  `scripts/`, run separately through `quality/biome-complexity.json` so it is not a failing lint
+  rule. `static.json` lists the offending functions; the check compares the count, the new files
+  and the per-file scores (line numbers are informational).
+- **Design tokens** (`scripts/check-tokens.ts`): WCAG 2.2 contrast of the text and non-text
+  pairs in `src/app/style.css` for both themes. Baseline ratios are in
+  `quality/ratchets/tokens.json`; a pair already below the WCAG minimum is recorded with
+  `"belowWcag": true` until the M5 redesign.
+
+Ratchets only tighten: when a check prints a hint that a number fell, lower it in the JSON file
+in the same PR (`node scripts/check-static-ratchets.ts --write` rewrites `static.json` and
+refuses to raise a count). Property tests (`tests/unit/properties.test.ts`) run 100 cases per
+property; set `FC_NUM_RUNS=1000` for the nightly run.
+
+## Nightly contract consumer check
+
+`nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
+and replays available published examples through the backoffice runtime validators.
+Schema drift means a snapshot refresh is due through the `web-refresh-contract` skill;
+a rejected example fails the run. The JSON consumer report is retained for 14 days.
+The paired-API PostgreSQL job remains a stub until the repository variable
+`ASSISTANT_API_POSTGRES_DIGEST` is published. A set digest must be valid and fails closed
+until the publishing task implements the paired run.
+
 ## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
