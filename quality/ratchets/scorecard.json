@@ -1,0 +1,21 @@
+{
+  "$comment": "First independent evaluator run (PBO-M2-11), rubrics v2, judgement axes only. Two fresh evaluators with the rubric and evidence only (no planner scores): lens 2 from the 54 pre-redesign screenshots of tests/browser/__screenshots__ (PBO-M2-4) plus source, tokens and measured axe/Lighthouse facts; lens 3 from the public default branch (main) README, docs and screenshots. Replaces the provisional planner baselines. Record: docs/master-plan/evaluator-run-2026-11-14.md.",
+  "evaluatedAt": "2026-11-14",
+  "commit": "181a88c",
+  "method": "independent-evaluator-agents-rubric-v2",
+  "scores": {
+    "P1": 72,
+    "P2": 70,
+    "P3": 88,
+    "P4": 72,
+    "P5": 86,
+    "P6": 62,
+    "R1": 78,
+    "R2": 62,
+    "R3": 74,
+    "R4": 88,
+    "R5": 50,
+    "R6": 82,
+    "R7": 72
+  }
+}
