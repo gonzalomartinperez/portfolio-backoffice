@@ -34,6 +34,7 @@
         "playwright.config.ts",
         ".nvmrc",
         ".dockerignore",
+        ".hadolint.yaml",
         ".gitignore",
         ".githooks/**",
         ".git-blame-ignore-revs",

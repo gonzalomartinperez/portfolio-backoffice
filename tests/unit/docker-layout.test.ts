@@ -128,3 +128,28 @@ test("current documented builds use explicit recipes and root context", () => {
     }
   }
 });
+
+test("the canonical Dockerfile pins bases by digest and stamps OCI labels", () => {
+  const source = readFileSync(app, "utf8");
+  assert.match(source, /^ARG NODE_IMAGE=node:\d+\.\d+\.\d+-trixie-slim@sha256:[a-f0-9]{64}$/m);
+  assert.match(
+    source,
+    /^ARG RUNTIME_IMAGE=gcr\.io\/distroless\/nodejs\d+-debian13:nonroot@sha256:[a-f0-9]{64}$/m,
+  );
+  assert.match(source, /^FROM \$\{NODE_IMAGE\} AS build$/m);
+  assert.match(source, /^FROM \$\{RUNTIME_IMAGE\} AS runtime$/m);
+  assert.match(source, /npm ci --ignore-scripts/);
+  for (const label of [
+    "title",
+    "description",
+    "documentation",
+    "source",
+    "version",
+    "revision",
+    "created",
+    "licenses",
+  ])
+    assert.match(source, new RegExp(`org\\.opencontainers\\.image\\.${label}=`), label);
+  assert.match(source, /^USER 65532:65532$/m);
+  assert.doesNotMatch(source, /\bARG\b[^\n]*(SECRET|TOKEN|PASSWORD|KEY)/i);
+});
