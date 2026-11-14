@@ -27,7 +27,7 @@
     "contract:install": "npm ci --prefix tooling/api-contract --no-audit --no-fund",
     "toolchain:check": "node scripts/check-typescript-toolchain.ts",
     "test:coverage:scripts": "vitest run --project unit --coverage --coverage.include='scripts/**' --coverage.thresholds.lines=0 --coverage.thresholds.branches=0 --coverage.thresholds.functions=0 --coverage.thresholds.statements=0 --coverage.reportsDirectory=coverage/scripts",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --project unit --project integration --coverage",
     "coverage:diff": "node scripts/diff-coverage.ts"
   },
   "engines": {

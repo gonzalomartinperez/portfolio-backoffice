@@ -19,13 +19,19 @@ test("the page decides at request time and answers not found when disabled", () 
   assert.match(page, /robots: \{ index: false, follow: false \}/);
 });
 
-test("the runtime image and the deployment contract never set the kit flag", () => {
-  const files = execFileSync("git", ["ls-files", "-z", "infra", "docs/deployment-contract.md"], {
-    encoding: "utf8",
-  })
+test("the runtime image, deployment contract, env template and workflows never set the kit flag", () => {
+  const tracked = [
+    "infra",
+    "docs/deployment-contract.md",
+    ".env.example",
+    ".github",
+    "next.config.ts",
+  ];
+  const files = execFileSync("git", ["ls-files", "-z", ...tracked], { encoding: "utf8" })
     .split("\0")
     .filter(Boolean);
   assert.ok(files.some((file) => file.startsWith("infra/docker/")));
+  assert.ok(files.some((file) => file.startsWith(".github/workflows/")));
   for (const file of files) assert.doesNotMatch(readFileSync(file, "utf8"), /BACKOFFICE_KIT/, file);
   assert.match(readFileSync("scripts/test-server.ts", "utf8"), /BACKOFFICE_KIT: "enabled"/);
 });

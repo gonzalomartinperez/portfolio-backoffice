@@ -70,6 +70,7 @@ describe("Button", () => {
     const element = page.getByRole("button", { name: "Merge" }).element();
     expect(element.classList.contains("extra-class")).toBe(true);
     expect(element.classList.length).toBeGreaterThan(2);
+    expect(element.classList.item(element.classList.length - 1)).toBe("extra-class");
   });
 
   test("calls the click handler exactly once per click", async () => {

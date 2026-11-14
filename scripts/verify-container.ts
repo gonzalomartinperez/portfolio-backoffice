@@ -93,6 +93,9 @@ if (mode === "shutdown") {
     signal: AbortSignal.timeout(6000),
   });
   assert.equal(denied.status, 401);
+  // The component kit (PBO-M2-2) ships in the image but must stay hidden in production.
+  const kit = await fetch(`${origin}/__kit`, { signal: AbortSignal.timeout(6000) });
+  assert.equal(kit.status, 404, "The /__kit route must answer 404 in the runtime image.");
   const writable = record(
     JSON.parse(
       await docker(
