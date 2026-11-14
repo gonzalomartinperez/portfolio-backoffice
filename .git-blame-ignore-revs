@@ -1,0 +1,4 @@
+# Mechanical reformats skipped by `git blame`; enable once with
+# `git config blame.ignoreRevsFile .git-blame-ignore-revs` (GitHub applies it automatically).
+# PBO-M1-9: Biome preset (2 spaces, 100 columns, sorted imports).
+70c7893de0ef3486bfc33f0346e63c50d8132cf9
