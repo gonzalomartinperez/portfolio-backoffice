@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 import { writeFixtureSessions } from "../../scripts/auth-fixture-session.ts";
 
 test("session artifacts reject existing files and symlinks before minting credentials", async () => {

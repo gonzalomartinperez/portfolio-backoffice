@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import test from "node:test";
+import { test } from "vitest";
 import { fixtureSession } from "../../scripts/auth-fixture-session.ts";
 
 test("destructive integration owns its database and never reads a URL from the environment", () => {

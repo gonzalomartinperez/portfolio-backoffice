@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import test from "node:test";
+import { test } from "vitest";
 import { createOperationsHttp } from "../../src/features/operations/adapters/http.ts";
 import { parseOperationalSnapshot } from "../../src/features/operations/adapters/validate.ts";
 import { readOperations } from "../../src/features/operations/application/read.ts";

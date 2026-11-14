@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
-import test from "node:test";
 import { load } from "js-yaml";
+import { test } from "vitest";
 import { field, list, record, text } from "../../scripts/json.ts";
 import { postgresImage } from "../../scripts/postgres-image.ts";
 

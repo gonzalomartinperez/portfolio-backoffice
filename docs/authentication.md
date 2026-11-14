@@ -64,8 +64,8 @@ no frontend analytics or session replay is included.
 
 ## Verification
 
-- `node --test tests/unit/auth-config.test.ts`: configuration and token boundaries.
-- `npm run test:auth` (`node --test tests/integration/auth.test.ts`, Docker required):
+- `npx vitest run --project unit tests/unit/auth-config.test.ts`: configuration and token boundaries.
+- `npm run test:auth` (Vitest `integration` project, Docker required):
   actual PostgreSQL schema, supported OAuth plugin authorization/callback/token
   exchange with a loopback provider, state rejection, owner admission, verified
   email, one-use invitation, roles, expiry, revocation, CSRF protection and the restricted

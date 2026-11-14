@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
-import test from "node:test";
 import { load } from "js-yaml";
+import { test } from "vitest";
 import { field, list, record } from "../../scripts/json.ts";
 
 const scripts = record(record(JSON.parse(readFileSync("package.json", "utf8"))).scripts);
@@ -33,7 +33,7 @@ test("npm run check:fast keeps the editor loop on real guards", () => {
     "npm run format:check",
     "npm run lint",
     "npm run typecheck",
-    "node --test tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
+    "vitest run --project unit tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
   ]);
 });
 

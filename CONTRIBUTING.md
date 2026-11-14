@@ -66,10 +66,11 @@ validation. `allowJs: false`, `strict`, `noUncheckedIndexedAccess`,
 complete project, including tooling and generated Next route types. Do not exclude scripts
 or add casts/suppressions merely to satisfy the migration.
 
-Pinned Node 24.22.2 executes erasable TypeScript directly: `node scripts/check-docs.ts` and
-`node --test tests/unit/*.test.ts`. This removes types at runtime; **it does not type-check**.
-`npm run typecheck` remains the required check. Use explicit relative `.ts` imports and
-`import type`; no enum/parameter-property transform, ts-node or additional execution runner.
+Pinned Node 24.22.2 executes erasable TypeScript directly (`node scripts/check-docs.ts`), and
+Vitest runs the tests (`vitest.config.ts`: `unit` and `integration` projects, `node:assert` stays
+the assertion library). Neither type-checks: `npm run typecheck` remains the required check. Use
+explicit relative `.ts` imports and `import type`; no enum/parameter-property transform or
+ts-node. `npm test` enforces the coverage floors in `quality/ratchets/coverage.json`.
 The official TypeScript 6 compatibility API supports architecture tooling and in-memory
 TypeScript transformation for migration dependency tracing. Published `@vercel/nft`
 traces that entry outside Next's route graph; original `.ts` sources execute on Node.
@@ -128,7 +129,7 @@ Google/Microsoft primary references and cross-session ownership. Apply inward de
 rules, capability-based ports and behavior-focused review; do not copy .NET project/class
 patterns into React or replace Biome/Next conventions. `npm test` includes the architecture
 guard and negative fixtures in the required static CI job. For focused feedback use
-`node --test tests/unit/boundaries.test.ts tests/unit/manage-access.test.ts`.
+`npx vitest run --project unit tests/unit/boundaries.test.ts tests/unit/manage-access.test.ts`.
 New aliases, exceptions or client/server composition patterns require meaningful guard
 coverage and a documented compatibility reason. Do not relax a rule to silence a failure.
 
