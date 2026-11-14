@@ -22,6 +22,12 @@ const failOnFlakyTests =
   process.env.GITHUB_REF?.startsWith("refs/heads/gh-readonly-queue/main/") === true ||
   process.env.PLAYWRIGHT_FAIL_ON_FLAKY === "1";
 
+// Visual regression (PBO-M2-4) runs only with VISUAL=1, in the pinned Playwright container, so
+// the default role projects never run @visual tests. A project-level grepInvert replaces the
+// top-level one, so the quarantine pattern is carried over.
+const visual = process.env.VISUAL === "1";
+const withoutVisual = grepInvert ? new RegExp(`${grepInvert.source}|@visual\\b`) : /@visual\b/;
+
 // Role is a dimension only where a test needs it: every journey test carries exactly one of
 // @anonymous, @owner or @viewer, and each desktop browser runs it once in that role.
 const roles = ["anonymous", "owner", "viewer"] as const;
@@ -65,6 +71,7 @@ export default defineConfig({
       roles.map((role) => ({
         name: `${name}-${role}`,
         grep: new RegExp(`@${role}\\b`),
+        grepInvert: withoutVisual,
         use: { ...device, storageState: storageState(role) },
         ...(role === "anonymous" ? {} : { dependencies: ["setup"] }),
       })),
@@ -72,10 +79,25 @@ export default defineConfig({
     ...mobileDevices.map(({ name, device }) => ({
       name,
       grep: /@mobile\b/,
+      grepInvert: withoutVisual,
       use: { ...device, storageState: storageState("viewer") },
       dependencies: ["setup"],
     })),
+    // Pre-redesign visual baseline: desktop Chromium per role; viewports are set by the tests.
+    ...(visual
+      ? roles.map((role) => ({
+          name: `visual-${role}`,
+          grep: new RegExp(`(?=.*@visual\\b)(?=.*@${role}\\b)`),
+          use: { ...devices["Desktop Chrome"], storageState: storageState(role) },
+          ...(role === "anonymous" ? {} : { dependencies: ["setup"] }),
+        }))
+      : []),
   ],
+  // Baselines live next to the specs; one image per name, independent of the project.
+  snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
+  expect: {
+    toHaveScreenshot: { maxDiffPixelRatio: 0.002, animations: "disabled", caret: "hide" },
+  },
   webServer: {
     command: "node scripts/test-server.ts",
     gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },

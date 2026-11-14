@@ -95,6 +95,29 @@ Browser tests live in journey files under `tests/browser/` (`access-control`, `o
   `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
   retry is reported as flaky without failing the run.
 
+### Visual regression baseline (pre-redesign)
+
+`tests/browser/visual.spec.ts` (tag `@visual`) captures the **current** UI as the safety net for
+M3-M4: overview, analytics, access, sign-in (EN and ES) and privacy (EN), each in dark and light at
+390, 768 and 1440 px, full page, with reduced motion and CSS animations disabled
+(`maxDiffPixelRatio` 0.002). The baselines in `tests/browser/__screenshots__/` are labelled
+pre-redesign and are re-approved at M5. The `visual-*` projects exist only with `VISUAL=1`, and the
+default role projects exclude `@visual`. The browser job runs them first, on the fresh fixture
+database, inside the pinned image
+`mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a7…` with host networking. Rendering is
+therefore identical to the machine that generated the baselines. Diff images land under
+`test-results/visual/` and are kept with the other synthetic screenshots.
+
+To regenerate after an intended UI change, run the same image locally against a fresh isolated
+fixture database and the local build (no `WEB_UPSTREAM`). Then review every changed PNG before
+committing:
+
+```sh
+docker run --rm --network host --user "$(id -u):$(id -g)" -e HOME=/tmp -e VISUAL=1 \
+  -v "$PWD:/work" -w /work mcr.microsoft.com/playwright:v1.64.1-noble \
+  npx --no-install playwright test --project="visual-*" --update-snapshots
+```
+
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
 filesystem and runs a Trivy secret scan (application files; third-party `node_modules` are
