@@ -67,10 +67,13 @@ complete project, including tooling and generated Next route types. Do not exclu
 or add casts/suppressions merely to satisfy the migration.
 
 Pinned Node 24.22.2 executes erasable TypeScript directly (`node scripts/check-docs.ts`), and
-Vitest runs the tests (`vitest.config.ts`: `unit` and `integration` projects, `node:assert` stays
+Vitest runs the tests (`vitest.config.ts`: `unit`, `component` and `integration` projects, `node:assert` stays
 the assertion library). Neither type-checks: `npm run typecheck` remains the required check. Use
 explicit relative `.ts` imports and `import type`; no enum/parameter-property transform or
 ts-node. `npm test` enforces the coverage floors in `quality/ratchets/coverage.json`.
+Component tests (`tests/component/**/*.test.tsx`) run in real Chromium and WebKit through Vitest
+Browser Mode: install the browsers once with `npx playwright install chromium webkit`, then run
+`npm run test:component`. Query by role and name, and add each new component to `/__kit`.
 The official TypeScript 6 compatibility API supports architecture tooling and in-memory
 TypeScript transformation for migration dependency tracing. Published `@vercel/nft`
 traces that entry outside Next's route graph; original `.ts` sources execute on Node.
