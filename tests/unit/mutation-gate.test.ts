@@ -73,7 +73,7 @@ test("ratchet applies only on full runs and never replaces fixed thresholds", ()
       { files: { x: file("Survived") } },
       { full: true, ratchet: { floors: { overall: 0, permission: 0 } } },
     ).failures.length,
-    1,
+    2,
   );
 });
 
@@ -120,6 +120,16 @@ test("gate flags: ratchet needs a full run and an empty report is only for pull 
   assert.throws(() => parseGateArgs(["--full"]), /report path/);
   assert.equal(emptyReport({ files: {} }), true);
   assert.equal(emptyReport(report), false);
+});
+
+test("a full run without permission-module mutants fails", () => {
+  const other = { files: { "src/features/analytics/domain/models.ts": file("Killed") } };
+  assert.deepEqual(mutationGate(other).failures, []);
+  assert.deepEqual(
+    mutationGate(other, { full: true, ratchet: { floors: { overall: 0, permission: 0 } } })
+      .failures,
+    ["Full run has no counted permission-module mutants"],
+  );
 });
 
 test("mutation targets that Stryker would split or expand are refused", () => {

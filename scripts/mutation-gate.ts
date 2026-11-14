@@ -51,11 +51,19 @@ export function mutationScores(report: unknown) {
   };
 }
 
-export function mutationGate(report: unknown, options: { full?: boolean; ratchet?: unknown } = {}) {
-  const scores = mutationScores(report);
+function fixedFailures(scores: ReturnType<typeof mutationScores>, full: boolean): string[] {
   const failures: string[] = [];
   if (scores.overall.score < 70) failures.push("Overall score is below 70%");
   if (scores.permission.score < 85) failures.push("Permission score is below 85%");
+  // A full run must assess the permission module; only an incremental run may leave it empty.
+  if (full && scores.permission.counted === 0)
+    failures.push("Full run has no counted permission-module mutants");
+  return failures;
+}
+
+export function mutationGate(report: unknown, options: { full?: boolean; ratchet?: unknown } = {}) {
+  const scores = mutationScores(report);
+  const failures = fixedFailures(scores, options.full === true);
   if (options.full && options.ratchet !== undefined) {
     for (const key of ["overall", "permission"] as const) {
       const floor = ratchetFloor(options.ratchet, key);
