@@ -115,6 +115,16 @@ within 7 days; the cap is min(2 % of tests, 5) entries. Like other scheduled wor
 reads the default branch, so it also runs on every push to `develop` until `main` carries it,
 and on pull requests that change the detector itself.
 
+## Nightly contract consumer check
+
+`nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
+and replays available published examples through the backoffice runtime validators.
+Schema drift means a snapshot refresh is due through the `web-refresh-contract` skill;
+a rejected example fails the run. The JSON consumer report is retained for 14 days.
+The paired-API PostgreSQL job remains a stub until the repository variable
+`ASSISTANT_API_POSTGRES_DIGEST` is published. A set digest must be valid and fails closed
+until the publishing task implements the paired run.
+
 ## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
