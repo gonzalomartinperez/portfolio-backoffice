@@ -243,10 +243,13 @@ async function measure(routes: Route[], runs: number) {
   const { chromium } = await import("@playwright/test");
   const server = spawn(process.execPath, ["scripts/test-server.ts"], { stdio: "inherit" });
   const port = 9300 + Math.floor(Math.random() * 500);
-  const browser = await waitForServer(server).then(() =>
-    chromium.launch({ channel: "chromium", args: [`--remote-debugging-port=${port}`] }),
-  );
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
+    await waitForServer(server);
+    browser = await chromium.launch({
+      channel: "chromium",
+      args: [`--remote-debugging-port=${port}`],
+    });
     const cookies = sessionCookies();
     const measured: Record<string, Metrics> = {};
     for (const route of routes) {
@@ -279,7 +282,7 @@ async function measure(routes: Route[], runs: number) {
     }
     return measured;
   } finally {
-    await browser.close();
+    await browser?.close().catch(() => undefined);
     if (server.pid !== undefined && server.exitCode === null) server.kill("SIGTERM");
   }
 }
@@ -287,6 +290,7 @@ async function measure(routes: Route[], runs: number) {
 function parse(argv: string[]) {
   const options = {
     routes: Object.keys(ROUTES) as Route[],
+    subset: false,
     runs: 5,
     out: "reports/budgets/summary.json",
     write: false,
@@ -300,6 +304,7 @@ function parse(argv: string[]) {
       const routes = value.split(",");
       for (const route of routes) if (!(route in ROUTES)) throw new Error(`Unknown route ${route}`);
       options.routes = routes as Route[];
+      options.subset = true;
       i++;
     } else if (flag === "--runs" && value && /^[1-9]\d*$/.test(value)) {
       options.runs = Number(value);
@@ -334,10 +339,16 @@ async function main() {
   let failed = false;
   for (const { path, keys } of Object.values(ratchetFiles)) {
     const { file, routes } = readBaseline(path);
-    // Only the routes measured in this run are compared (the PR run may measure a subset).
-    const scoped = Object.fromEntries(
-      Object.entries(routes).filter(([route]) => route in measured),
-    );
+    // Enforcement needs a recorded baseline; only --write (recording) may start from none.
+    if (Object.keys(routes).length === 0 && !options.write) {
+      console.error(`regression ${path}: no baseline recorded (record one with --write)`);
+      failed = true;
+      continue;
+    }
+    // A full run compares every ratchet route; only an explicit --routes subset narrows it.
+    const scoped = options.subset
+      ? Object.fromEntries(Object.entries(routes).filter(([route]) => route in measured))
+      : routes;
     const { failures, improvements } = compare(measured, scoped, keys);
     for (const line of improvements) console.log(`improved ${path}: ${line}`);
     for (const line of failures) console.error(`regression ${path}: ${line}`);
