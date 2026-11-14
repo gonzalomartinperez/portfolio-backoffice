@@ -62,8 +62,8 @@ readiness, anonymous workload and idle SIGTERM. The scan job runs container-stru
 or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept seven days), all
 checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
-screenshots and the Playwright blob reports, for seven days each; images, logs, environment
-files, sessions, invitation links, traces and database dumps are never uploaded.
+screenshots, for seven days; images, logs, environment files, sessions, invitation links,
+traces, Playwright blob reports and database dumps are never uploaded.
 
 ### Browser journeys, projects and reports
 
@@ -84,11 +84,10 @@ Browser tests live in journey files under `tests/browser/` (`access-control`, `o
   `npm run test:browser -- --project=iphone-15`.
 - The unavailable-state fixture is selected with `--grep "operational failure"`, the available
   one with `--grep-invert "operational failure"`; the `setup` project still runs under both.
-- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off
-  because blob reports embed them. The blob reports are kept as the `playwright-blob-report`
-  artifact (7 days, one zip per fixture mode). To merge them into one HTML report:
-  download the artifact, copy both zips into one folder and run
-  `npx playwright merge-reports --reporter html <folder>`.
+- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off.
+  The blob reports stay on the runner, ready for `npx playwright merge-reports` when the job
+  is sharded; they are not uploaded, because failure attachments (`error-context.md` page
+  snapshots) can contain a fixture invitation link.
 - `failOnFlakyTests` is on for runs targeting `main`, which includes the release pull request
   (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
   `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
