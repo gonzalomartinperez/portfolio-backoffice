@@ -131,8 +131,6 @@ Frames identify trust boundaries. This overview describes implemented responsibi
 not production deployment or a security certification. Open the original to zoom. [Diagram source and visual conventions](docs/diagrams.md)
 explain the symbols and review procedure.
 
-
-
 <details>
 <summary>Editable Mermaid source</summary>
 
@@ -288,13 +286,13 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 
 | CI job | Purpose |
 | --- | --- |
-| `workflows` | Validate SHA-pinned actions, shell syntax, the seven-job graph and negative policy fixtures. |
-| `secrets` | Scan tracked files and reachable history without printing suspected values. |
-| `static` | Frozen installs/audits, Biome, strict types, unit/contract/boundary checks and documentation/security/skill validation. |
+| `classify` | Select jobs from the changed files through `.github/ci-profile.json`; unknown paths run everything. |
+| `docs`, `security` | Shared standards jobs: markdownlint and links; zizmor, actionlint, gitleaks and dependency review. |
+| `static` | `npm run check` (format, lint, types, unit/contract/boundary tests, docs, skills, secret scan), audits and contract drift. |
 | `database` | Testcontainers PostgreSQL 18 (digest-pinned): IAM migrations, restricted runtime role, invitations, revocation and OAuth boundaries. |
 | `container` | Verify the actual non-root distroless image, HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
 | `browser` | Build the reviewed app source against the digest-pinned PostgreSQL service; verify actual-image admission, three browser engines and accessibility. |
-| `checks` | Fail closed unless every required validation job succeeds. |
+| `ci-gate` | The single required check: fails unless every selected job succeeded. |
 
 The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict
 indexed/optional checks. The official TypeScript 6 compiler API is isolated to tooling;

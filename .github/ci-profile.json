@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/gonzalomartinperez/engineering-standards/v1.0.0/schemas/ci-profile.schema.json",
+  "$comment": "CI profile map (ecosystem 6.0, master plan ci-cd.md section 3). Job names equal the job ids in .github/workflows/ci.yml. Fail closed: a changed file outside every profile, or a change to this file, runs everything; tests/unit/ci-profile.test.ts fails if a tracked file matches no profile. Budgets follow master plan ci-cd.md section 3, not the ecosystem 6.0 defaults: workflow changes run the full image pipeline (6/12 min, not 3), hotfix 12/15 min. The weekly CI duration report (master plan section 4) checks them.",
+  "version": 1,
+  "base": ["docs", "security"],
+  "profiles": {
+    "docs": {
+      "paths": ["**/*.md", "docs/**", ".markdownlint-cli2.jsonc", "lychee.toml"],
+      "adds": ["static"],
+      "budgetP50Minutes": 2,
+      "budgetP95Minutes": 4
+    },
+    "harness": {
+      "paths": [".agents/**", ".claude/**", "AGENTS.md", "CLAUDE.md"],
+      "adds": ["static"],
+      "budgetP50Minutes": 3,
+      "budgetP95Minutes": 5
+    },
+    "code": {
+      "paths": [
+        "src/**",
+        "tests/**",
+        "scripts/**",
+        "migrations/**",
+        "infra/**",
+        "public/**",
+        "tooling/**",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "biome.json",
+        "next.config.ts",
+        "next-env.d.ts",
+        "playwright.config.ts",
+        ".nvmrc",
+        ".dockerignore",
+        ".gitignore",
+        ".githooks/**",
+        ".git-blame-ignore-revs",
+        ".env.example",
+        "LICENSE"
+      ],
+      "adds": ["static", "database", "container", "browser"],
+      "budgetP50Minutes": 6,
+      "budgetP95Minutes": 12
+    },
+    "contract": {
+      "paths": ["contracts/**"],
+      "adds": ["static", "database", "container", "browser"],
+      "budgetP50Minutes": 8,
+      "budgetP95Minutes": 12
+    },
+    "workflow": {
+      "paths": [".github/**"],
+      "adds": ["static", "database", "container", "browser"],
+      "budgetP50Minutes": 6,
+      "budgetP95Minutes": 12
+    },
+    "deps-weekly": {
+      "trigger": "branch dependabot/** or label deps-weekly (built-in): runs every profile",
+      "adds": ["all-profiles"],
+      "budgetP50Minutes": 9,
+      "budgetP95Minutes": 14
+    },
+    "release": {
+      "trigger": "develop -> main or label release (built-in): runs every profile",
+      "adds": ["all-profiles"],
+      "budgetP50Minutes": 30,
+      "budgetP95Minutes": 40
+    },
+    "hotfix": {
+      "trigger": "hotfix/** -> main (built-in): runs every profile",
+      "adds": ["all-profiles"],
+      "budgetP50Minutes": 12,
+      "budgetP95Minutes": 15
+    }
+  },
+  "required": "ci-gate"
+}

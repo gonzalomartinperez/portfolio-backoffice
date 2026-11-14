@@ -42,7 +42,7 @@ test("the pre-commit hook and the CI static job run the same command", () => {
   assert.match(hook, /^exec npm run --silent check$/m);
   assert.ok(statSync(".githooks/pre-commit").mode & 0o111, "hook must be executable");
   assert.match(String(scripts.prepare), /git config core\.hooksPath \.githooks/);
-  const workflow = load(readFileSync(".github/workflows/quality.yml", "utf8"));
+  const workflow = load(readFileSync(".github/workflows/ci.yml", "utf8"));
   const runs = list(field(workflow, "jobs", "static", "steps")).map((step) =>
     String(field(step, "run") ?? ""),
   );

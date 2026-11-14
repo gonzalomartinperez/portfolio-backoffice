@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { requireCiSuccess } from "../../scripts/check-ci-results.ts";
 import { releaseCompatibility } from "../../scripts/release-compatibility.ts";
 
 const commit = "a".repeat(40);
@@ -42,46 +41,19 @@ test("rejects mutable tags and unverifiable revisions or provenance", () => {
   );
 });
 
-test("release verification remains explicit, pinned and publication disabled", async () => {
+test("release verification is explicit, reuses CI and has no publication path yet", async () => {
   const { readFileSync } = await import("node:fs");
   const { load } = await import("js-yaml");
-  const { field, list, record, text } = await import("../../scripts/json.ts");
-  const quality = record(load(readFileSync(".github/workflows/quality.yml", "utf8")));
-
+  const { field, record } = await import("../../scripts/json.ts");
   const release = record(load(readFileSync(".github/workflows/release.yml", "utf8")));
   assert.deepEqual(Object.keys(record(release.on)), ["workflow_dispatch"]);
   assert.equal(
     field(release, "on", "workflow_dispatch", "inputs", "publication_authorized", "default"),
     false,
   );
-  assert.equal(field(release, "jobs", "publish", "environment"), "container-release");
-  assert.match(text(field(release, "jobs", "verify", "if")), /refs\/heads\/develop/);
-  assert.match(text(field(release, "jobs", "publish", "if")), /^\$\{\{\s*false\s*\}\}$/);
-  assert.equal(field(release, "jobs", "publish", "permissions", "packages"), undefined);
-  for (const workflow of [quality, release]) {
-    for (const job of Object.values(record(workflow.jobs))) {
-      if (field(job, "runs-on") !== undefined) assert.equal(field(job, "runs-on"), "ubuntu-24.04");
-      const steps = field(job, "steps");
-      if (steps === undefined) continue;
-      for (const step of list(steps)) {
-        const action = field(step, "uses");
-        if (typeof action === "string") assert.match(action, /@[a-f0-9]{40}$/);
-      }
-    }
-  }
-});
-
-test("required gate fails closed for every missing, failed, pending or skipped prerequisite", () => {
-  const jobs = ["workflows", "secrets", "static", "database", "container", "browser"];
-  const success = Object.fromEntries(jobs.map((name) => [name, { result: "success" }]));
-  assert.doesNotThrow(() => requireCiSuccess(success));
-  for (const name of jobs) {
-    for (const result of ["failure", "cancelled", "skipped", "pending", "in_progress", undefined])
-      assert.throws(() => requireCiSuccess({ ...success, [name]: { result } }));
-    const missing = { ...success };
-    delete missing[name];
-    assert.throws(() => requireCiSuccess(missing));
-  }
-  assert.throws(() => requireCiSuccess({ ...success, unexpected: { result: "success" } }));
-  for (const invalid of [null, [], "success", {}]) assert.throws(() => requireCiSuccess(invalid));
+  assert.deepEqual(release.permissions, {});
+  assert.deepEqual(Object.keys(record(release.jobs)), ["verify"]);
+  assert.equal(field(release, "jobs", "verify", "uses"), "./.github/workflows/ci.yml");
+  assert.match(String(field(release, "jobs", "verify", "if")), /refs\/heads\/develop/);
+  assert.doesNotMatch(JSON.stringify(release), /packages|id-token|attestations/);
 });
