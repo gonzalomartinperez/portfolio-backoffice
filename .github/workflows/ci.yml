@@ -531,6 +531,21 @@ jobs:
             --stop-timeout=20 --log-driver=local --log-opt max-size=10m --log-opt max-file=3 \
             --cap-drop ALL --security-opt no-new-privileges \
             -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
+      - name: Compare the pre-redesign visual baseline in the pinned Playwright container
+        # Runs first, on the fresh fixture database (no invitations yet). Same image and digest
+        # that generated tests/browser/__screenshots__ (PBO-M2-4); host network reaches the
+        # PostgreSQL service port, the image on 3108 and the operations fixture on 8117.
+        run: |
+          docker run --rm --network host --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp -e CI -e VISUAL=1 -e WEB_UPSTREAM=http://127.0.0.1:3108 \
+            -e BACKOFFICE_ORIGIN -e BACKOFFICE_DATABASE_URL -e BETTER_AUTH_SECRET \
+            -e BACKOFFICE_OWNER_EMAIL -e GOOGLE_CLIENT_ID -e GOOGLE_CLIENT_SECRET \
+            -e GITHUB_CLIENT_ID -e GITHUB_CLIENT_SECRET \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            "$PLAYWRIGHT_IMAGE" \
+            npx --no-install playwright test --project="visual-*" --output test-results/visual
+        env:
+          PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
       - name: Verify real-database authorization, operations and accessibility
         # Desktop chromium, firefox and webkit in every role plus the iPhone 15 WebKit profile for
         # the @mobile journeys (Pixel 7 runs in the nightly); the `setup` project is a dependency.
