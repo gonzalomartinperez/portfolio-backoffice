@@ -1,63 +1,63 @@
 {
-	"name": "portfolio-backoffice",
-	"version": "1.0.0",
-	"private": false,
-	"scripts": {
-		"dev": "next dev --port 3001",
-		"build": "next build --webpack && node scripts/prepare-runtime.ts",
-		"start": "next start --port 3001",
-		"lint": "biome check --formatter-enabled=false src tests scripts next.config.ts",
-		"typecheck": "node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit",
-		"test": "npm run contract:check && node --test tests/unit/*.test.ts",
-		"check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:check && npm run license:check && npm run skills:check && npm run security:check",
-		"check:fast": "npm run format:check && npm run lint && npm run typecheck && node --test tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
-		"prepare": "git config core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true",
-		"contract:check": "node scripts/check-contract.ts",
-		"contract:generate": "npm run generate --prefix tooling/api-contract",
-		"test:browser": "playwright test",
-		"format:check": "biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts tsconfig.json tooling/api-contract/package.json",
-		"security:check": "node scripts/check-public-files.ts",
-		"docs:check": "node scripts/check-docs.ts",
-		"license:check": "node scripts/check-license.ts",
-		"preview:fixture": "node scripts/test-server.ts",
-		"skills:check": "node scripts/check-skills.ts",
-		"auth:migrate": "node scripts/auth-migrate.ts",
-		"test:auth": "node --test tests/integration/auth.test.ts",
-		"contract:install": "npm ci --prefix tooling/api-contract --no-audit --no-fund",
-		"toolchain:check": "node scripts/check-typescript-toolchain.ts"
-	},
-	"engines": {
-		"node": ">=24 <25"
-	},
-	"dependencies": {
-		"better-auth": "1.7.15",
-		"next": "16.4.4",
-		"pg": "8.23.1",
-		"react": "19.3.1",
-		"react-dom": "19.3.1",
-		"react-is": "19.3.1",
-		"recharts": "3.10.1",
-		"server-only": "0.0.1"
-	},
-	"devDependencies": {
-		"@axe-core/playwright": "^4.14.0",
-		"@biomejs/biome": "2.6.7",
-		"@playwright/test": "1.64.1",
-		"@testcontainers/postgresql": "12.2.1",
-		"@types/node": "24.19.2",
-		"@types/pg": "8.23.1",
-		"@types/react": "19.3.0",
-		"@types/react-dom": "19.3.0",
-		"@typescript/typescript6": "6.0.2",
-		"@vercel/nft": "1.11.0",
-		"js-yaml": "5.5.0",
-		"testcontainers": "12.2.1",
-		"typescript": "7.0.2"
-	},
-	"overrides": {
-		"glob": "14.0.4",
-		"minimatch": "11.0.5"
-	},
-	"type": "module",
-	"license": "MIT"
+  "name": "portfolio-backoffice",
+  "version": "1.0.0",
+  "private": false,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build --webpack && node scripts/prepare-runtime.ts",
+    "start": "next start --port 3001",
+    "lint": "biome check --formatter-enabled=false src tests scripts next.config.ts",
+    "typecheck": "node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit",
+    "test": "npm run contract:check && node --test tests/unit/*.test.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:check && npm run license:check && npm run skills:check && npm run security:check",
+    "check:fast": "npm run format:check && npm run lint && npm run typecheck && node --test tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
+    "prepare": "git config core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true",
+    "contract:check": "node scripts/check-contract.ts",
+    "contract:generate": "npm run generate --prefix tooling/api-contract",
+    "test:browser": "playwright test",
+    "format:check": "biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts tsconfig.json tooling/api-contract/package.json",
+    "security:check": "node scripts/check-public-files.ts",
+    "docs:check": "node scripts/check-docs.ts",
+    "license:check": "node scripts/check-license.ts",
+    "preview:fixture": "node scripts/test-server.ts",
+    "skills:check": "node scripts/check-skills.ts",
+    "auth:migrate": "node scripts/auth-migrate.ts",
+    "test:auth": "node --test tests/integration/auth.test.ts",
+    "contract:install": "npm ci --prefix tooling/api-contract --no-audit --no-fund",
+    "toolchain:check": "node scripts/check-typescript-toolchain.ts"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "dependencies": {
+    "better-auth": "1.7.15",
+    "next": "16.4.4",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-is": "19.3.1",
+    "recharts": "3.10.1",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@biomejs/biome": "2.6.7",
+    "@playwright/test": "1.64.1",
+    "@testcontainers/postgresql": "12.2.1",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@typescript/typescript6": "6.0.2",
+    "@vercel/nft": "1.11.0",
+    "js-yaml": "5.5.0",
+    "testcontainers": "12.2.1",
+    "typescript": "7.0.2"
+  },
+  "overrides": {
+    "glob": "14.0.4",
+    "minimatch": "11.0.5"
+  },
+  "type": "module",
+  "license": "MIT"
 }

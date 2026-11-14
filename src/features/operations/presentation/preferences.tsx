@@ -1,69 +1,67 @@
 "use client";
 import { useEffect, useId, useState } from "react";
-import { operationsCopy, type OperationsLocale } from "./copy";
+import { type OperationsLocale, operationsCopy } from "./copy";
 import styles from "./workbench.module.css";
 export function Preferences({ locale }: { locale: OperationsLocale }) {
-	const t = operationsCopy[locale];
-	const preferenceId = useId();
-	const [theme, setTheme] = useState("dark");
-	useEffect(() => {
-		document.documentElement.lang = locale;
-		setTheme(
-			document.documentElement.dataset.theme === "light" ? "light" : "dark",
-		);
-	}, [locale]);
-	return (
-		<details
-			className={styles.preferences}
-			onKeyDown={(event) => {
-				if (event.key === "Escape") {
-					event.preventDefault();
-					event.currentTarget.open = false;
-					event.currentTarget.querySelector("summary")?.focus();
-				}
-			}}
-		>
-			<summary>{t.preferences}</summary>
-			<div className="settings-fields">
-				<div className={styles.preferenceField}>
-					<label htmlFor={`${preferenceId}-locale`}>{t.language}</label>
-					<select
-						id={`${preferenceId}-locale`}
-						value={locale}
-						onChange={(event) => {
-							const target = new URL(window.location.href);
-							const nextLocale = event.target.value === "es" ? "es" : "en";
-							target.searchParams.set("locale", nextLocale);
-							// biome-ignore lint/suspicious/noDocumentCookie: cross-browser locale preference only; session credentials remain HttpOnly.
-							document.cookie = `backoffice-locale=${nextLocale}; Path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
-							window.location.assign(target);
-						}}
-					>
-						<option value="en">English</option>
-						<option value="es">Español</option>
-					</select>
-				</div>
-				<div className={styles.preferenceField}>
-					<label htmlFor={`${preferenceId}-theme`}>{t.theme}</label>
-					<select
-						id={`${preferenceId}-theme`}
-						value={theme}
-						onChange={(event) => {
-							const value = event.target.value === "light" ? "light" : "dark";
-							setTheme(value);
-							document.documentElement.dataset.theme = value;
-							try {
-								localStorage.setItem("assistant-theme", value);
-							} catch {
-								/* Preference changes still apply when storage is blocked. */
-							}
-						}}
-					>
-						<option value="dark">{t.dark}</option>
-						<option value="light">{t.light}</option>
-					</select>
-				</div>
-			</div>
-		</details>
-	);
+  const t = operationsCopy[locale];
+  const preferenceId = useId();
+  const [theme, setTheme] = useState("dark");
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+  }, [locale]);
+  return (
+    <details
+      className={styles.preferences}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.currentTarget.open = false;
+          event.currentTarget.querySelector("summary")?.focus();
+        }
+      }}
+    >
+      <summary>{t.preferences}</summary>
+      <div className="settings-fields">
+        <div className={styles.preferenceField}>
+          <label htmlFor={`${preferenceId}-locale`}>{t.language}</label>
+          <select
+            id={`${preferenceId}-locale`}
+            value={locale}
+            onChange={(event) => {
+              const target = new URL(window.location.href);
+              const nextLocale = event.target.value === "es" ? "es" : "en";
+              target.searchParams.set("locale", nextLocale);
+              // biome-ignore lint/suspicious/noDocumentCookie: cross-browser locale preference only; session credentials remain HttpOnly.
+              document.cookie = `backoffice-locale=${nextLocale}; Path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
+              window.location.assign(target);
+            }}
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+        <div className={styles.preferenceField}>
+          <label htmlFor={`${preferenceId}-theme`}>{t.theme}</label>
+          <select
+            id={`${preferenceId}-theme`}
+            value={theme}
+            onChange={(event) => {
+              const value = event.target.value === "light" ? "light" : "dark";
+              setTheme(value);
+              document.documentElement.dataset.theme = value;
+              try {
+                localStorage.setItem("assistant-theme", value);
+              } catch {
+                /* Preference changes still apply when storage is blocked. */
+              }
+            }}
+          >
+            <option value="dark">{t.dark}</option>
+            <option value="light">{t.light}</option>
+          </select>
+        </div>
+      </div>
+    </details>
+  );
 }

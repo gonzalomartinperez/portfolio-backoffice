@@ -1,36 +1,36 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { fontClassName } from "./fonts";
 import { SkipLink } from "../shared/accessibility/skip-link";
+import { fontClassName } from "./fonts";
 import "./style.css";
 export const viewport: Viewport = {
-	width: "device-width",
-	initialScale: 1,
-	viewportFit: "cover",
-	interactiveWidget: "resizes-content",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 export const metadata: Metadata = {
-	title: "GMP · Portfolio backoffice",
-	description:
-		"Authenticated website interactions, assistant health and access for Gonzalo’s portfolio.",
-	robots: { index: false, follow: false },
+  title: "GMP · Portfolio backoffice",
+  description:
+    "Authenticated website interactions, assistant health and access for Gonzalo’s portfolio.",
+  robots: { index: false, follow: false },
 };
 export default function Layout({ children }: { children: ReactNode }) {
-	return (
-		<html lang="en" className={fontClassName} suppressHydrationWarning>
-			<head>
-				<script
-					// biome-ignore lint/security/noDangerouslySetInnerHtml: fixed pre-paint theme replay, no user HTML.
-					dangerouslySetInnerHTML={{
-						__html:
-							'try{var t=localStorage.getItem("assistant-theme");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}',
-					}}
-				/>
-			</head>
-			<body>
-				<SkipLink />
-				{children}
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" className={fontClassName} suppressHydrationWarning>
+      <head>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: fixed pre-paint theme replay, no user HTML.
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{var t=localStorage.getItem("assistant-theme");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}',
+          }}
+        />
+      </head>
+      <body>
+        <SkipLink />
+        {children}
+      </body>
+    </html>
+  );
 }
