@@ -46,6 +46,8 @@ async function capture(page: Page, { name, path }: Case, locale: "en" | "es") {
         await expect.soft(page).toHaveScreenshot(`${name}-${locale}-${theme}-${viewport}.png`, {
           fullPage: true,
           timeout: 20_000,
+          // Request-time values (e.g. the operations "checked" time) change on every run.
+          mask: [page.locator("time")],
         });
       });
     }
