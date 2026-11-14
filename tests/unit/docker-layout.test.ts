@@ -99,7 +99,7 @@ test("each context fails closed for private, unrelated and secret-shaped inputs"
 
 test("CI and dependency discovery select owned recipes and never build a sibling repository", () => {
   const workflow = record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
-  const steps = list(field(workflow, "jobs", "browser", "steps"));
+  const steps = list(field(workflow, "jobs", "build", "steps"));
   const build = steps.find((step) => field(step, "with", "file") === app);
   assert.equal(field(build, "with", "context"), ".");
   assert.equal(field(build, "with", "file"), app);

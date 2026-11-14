@@ -290,8 +290,9 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 | `docs`, `security` | Shared standards jobs: markdownlint and links; zizmor, actionlint, gitleaks and dependency review. |
 | `static` | `npm run check` (format, lint, types, unit/contract/boundary tests, docs, skills, secret scan), audits and contract drift. |
 | `database` | Testcontainers PostgreSQL 18 (digest-pinned): IAM migrations, restricted runtime role, invitations, revocation and OAuth boundaries. |
-| `container` | Verify the actual non-root distroless image, HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
-| `browser` | Build the reviewed app source against the digest-pinned PostgreSQL service; verify actual-image admission, three browser engines and accessibility. |
+| `build` | Build the image once as a one-day tarball artifact (SHA-256 recorded, file and secret checks before upload). |
+| `container` | Verify that exact non-root distroless image: HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
+| `browser` | Run that exact image against the digest-pinned PostgreSQL service; verify admission, three browser engines and accessibility. |
 | `ci-gate` | The single required check: fails unless every selected job succeeded. |
 
 The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict

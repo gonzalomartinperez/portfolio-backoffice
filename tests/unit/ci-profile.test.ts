@@ -8,7 +8,7 @@ import { postgresImage } from "../../scripts/postgres-image.ts";
 
 const profileMap = () => record(JSON.parse(readFileSync(".github/ci-profile.json", "utf8")));
 const workflow = () => record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
-const ownJobs = ["static", "database", "container", "browser"];
+const ownJobs = ["static", "database", "build", "container", "browser"];
 const sharedJobs = ["docs", "security"];
 
 // Same glob semantics as the shared classify workflow (engineering-standards classify.yml).
@@ -69,6 +69,7 @@ test("profiles select the expected jobs", () => {
     "security",
     "static",
     "database",
+    "build",
     "container",
     "browser",
   ]);
@@ -216,4 +217,51 @@ test("the container job keeps the checksum-pinned scanner and the HIGH/CRITICAL 
   assert.match(runs, /node scripts\/verify-container\.ts measure/);
   for (const env of [field(workflow(), "env"), field(workflow(), "jobs", "container", "env")])
     assert.ok(!Object.keys(record(env ?? {})).some((key) => key.startsWith("TRIVY_")));
+});
+
+test("the image is built once and the runtime jobs load that exact tarball", () => {
+  const jobs = record(workflow().jobs);
+  const build = list(field(jobs, "build", "steps")).map(record);
+  const builder = build.find((step) =>
+    text(step.uses ?? "").startsWith("docker/build-push-action@"),
+  );
+  assert.match(text(field(builder, "with", "outputs")), /^type=docker,dest=/);
+  assert.equal(field(builder, "with", "push"), false);
+  const upload = build.find((step) => text(step.uses ?? "").startsWith("actions/upload-artifact@"));
+  assert.equal(field(upload, "with", "name"), "backoffice-image");
+  assert.equal(field(upload, "with", "retention-days"), 1);
+  assert.equal(field(upload, "with", "overwrite"), true);
+  assert.equal(
+    field(workflow(), "on", "workflow_call", "outputs", "image-sha256", "value"),
+    `$${"{{"} jobs.build.outputs.image-sha256 }}`,
+  );
+  const runs = build.map((step) => text(step.run ?? "")).join("\n");
+  assert.match(runs, /sha256sum/);
+  assert.match(runs, /--scanners secret/);
+  assert.match(runs, /docker export/);
+  assert.ok(
+    build.findIndex((step) => step === upload) >
+      build.findIndex((step) => text(step.run ?? "").includes("--scanners secret")),
+    "scan before upload",
+  );
+  for (const id of ["container", "browser"]) {
+    assert.deepEqual(field(jobs, id, "needs"), ["classify", "build"]);
+    const steps = list(field(jobs, id, "steps")).map(record);
+    assert.ok(
+      !steps.some((step) => text(step.uses ?? "").startsWith("docker/build-push-action@")),
+      id,
+    );
+    const download = steps.find((step) =>
+      text(step.uses ?? "").startsWith("actions/download-artifact@"),
+    );
+    assert.equal(field(download, "with", "name"), "backoffice-image", id);
+    const load = steps.find((step) => text(step.run ?? "").includes("docker load"));
+    assert.match(text(field(load, "run")), /sha256sum --check/);
+    assert.equal(
+      field(load, "env", "IMAGE_SHA256"),
+      `$${"{{"} needs.build.outputs.image-sha256 }}`,
+    );
+    assert.equal(field(load, "env", "IMAGE_ID"), `$${"{{"} needs.build.outputs.image-id }}`);
+    assert.match(text(field(load, "run")), /docker image inspect portfolio-backoffice:rc --format/);
+  }
 });

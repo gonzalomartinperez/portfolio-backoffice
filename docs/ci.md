@@ -14,8 +14,9 @@ release tag in a comment.
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, unit/contract/architecture tests, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
 | database | this repository | code, contract, workflow | `tests/integration/auth.test.ts` on a Testcontainers PostgreSQL 18 (digest pinned) |
-| container | this repository | code, contract, workflow | Build the image, Trivy HIGH/CRITICAL gate, migrated readiness, bounded runtime and SIGTERM |
-| browser | this repository | code, contract, workflow | Build the image and run the Playwright suite against it with the PostgreSQL service |
+| build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
+| container | this repository | code, contract, workflow | Load that tarball; Trivy HIGH/CRITICAL gate, migrated readiness, bounded runtime and SIGTERM |
+| browser | this repository | code, contract, workflow | Load that tarball and run the Playwright suite against it with the PostgreSQL service |
 | ci-gate | shared `ci-gate` action | always | Fails unless every selected job succeeded; a skipped job passes only when classify did not select it |
 
 Pushes to `develop` and `main`, merge groups, manual dispatch and calls from `release.yml`
@@ -60,8 +61,14 @@ accessibility case in both operational fixture modes. Public CI uploads only syn
 screenshots, for seven days; images, logs, environment files, sessions, invitation links,
 traces and database dumps are never uploaded.
 
-Until PBO-M1-5 the container and browser jobs each build the image on their own runner
-(cached with BuildKit `type=gha`; only the container job writes the cache).
+The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
+tarball, records its SHA-256, rejects private or credential-like files in the exported
+filesystem and runs a Trivy secret scan (application files; third-party `node_modules` are
+covered by dependency review and osv-scanner), then uploads it as the one-day
+`backoffice-image` artifact. The container and browser jobs download that artifact, verify
+the SHA-256 and `docker load` it, so every runtime check tests the same bytes. The image holds
+only public MIT source and synthetic values. BuildKit reads the `type=gha` cache on every
+run; only pushes to `develop` write it.
 
 ## Scheduled jobs
 

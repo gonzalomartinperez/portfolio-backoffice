@@ -11,12 +11,17 @@ on:
   merge_group:
   workflow_dispatch:
   workflow_call:
+    outputs:
+      image-sha256:
+        description: SHA-256 of the image tarball artifact built in this run (empty when not built).
+        value: ${{ jobs.build.outputs.image-sha256 }}
+      image-id:
+        description: Image configuration digest (docker image ID) of that tarball.
+        value: ${{ jobs.build.outputs.image-id }}
 permissions: {}
 env:
   PLAYWRIGHT_SKIP_BROWSER_GC: '1'
   DOCKER_BUILD_RECORD_UPLOAD: 'false'
-  CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}
-  CI_WORKFLOW_SHA: ${{ github.workflow_sha }}
   AI_PROVIDER: fixture
   EMBEDDINGS_PROVIDER: fixture
   ALLOW_PAID_AI: 'false'
@@ -112,9 +117,84 @@ jobs:
         env:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
         run: node --test tests/integration/auth.test.ts
+  build:
+    name: Build image once
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'build')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      image-sha256: ${{ steps.digest.outputs.sha256 }}
+      image-id: ${{ steps.files.outputs.image-id }}
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the runtime image as a tarball (only develop pushes write the cache)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/docker/app/Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: portfolio-backoffice:rc
+          outputs: type=docker,dest=${{ runner.temp }}/backoffice-image.tar
+          cache-from: type=gha,scope=backoffice-node24-amd64
+          cache-to: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && 'type=gha,mode=max,scope=backoffice-node24-amd64' || '' }}
+      - name: Record the image tarball SHA-256
+        id: digest
+        run: |
+          sum=$(sha256sum "$RUNNER_TEMP/backoffice-image.tar" | cut -d' ' -f1)
+          echo "sha256=$sum" >> "$GITHUB_OUTPUT"
+          echo "Image tarball sha256: $sum" >> "$GITHUB_STEP_SUMMARY"
+      - name: Reject private files in the image filesystem before upload
+        id: files
+        run: |
+          docker load --input "$RUNNER_TEMP/backoffice-image.tar"
+          image_id=$(docker image inspect portfolio-backoffice:rc --format '{{.Id}}')
+          echo "image-id=$image_id" >> "$GITHUB_OUTPUT"
+          echo "Image ID: $image_id" >> "$GITHUB_STEP_SUMMARY"
+          container=$(docker create portfolio-backoffice:rc)
+          docker export "$container" | tar -tf - > "$RUNNER_TEMP/image-files.txt"
+          docker rm "$container"
+          if grep -E '(^|/)(\.env(\..*)?|\.artifacts|\.git|id_rsa|id_ed25519)(/|$)|\.(pem|key|p12)$|fixture-session' "$RUNNER_TEMP/image-files.txt"; then
+            echo "Private or credential-like files found in the image filesystem."
+            exit 1
+          fi
+      - name: Verify pinned image scanner
+        run: |
+          mkdir -p /tmp/image-scanner
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz \
+            --output /tmp/image-scanner/trivy.tar.gz
+          echo 'c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f  /tmp/image-scanner/trivy.tar.gz' | sha256sum --check
+          tar -xzf /tmp/image-scanner/trivy.tar.gz -C /tmp/image-scanner trivy
+      - name: Scan the image filesystem for secrets before upload
+        run: |
+          /tmp/image-scanner/trivy --config '' image --image-src docker --ignorefile '' \
+            --scanners secret --skip-dirs /app/node_modules --exit-code 1 --format table \
+            portfolio-backoffice:rc
+      - name: Share the image with the runtime jobs (one day)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backoffice-image
+          path: ${{ runner.temp }}/backoffice-image.tar
+          retention-days: 1
+          if-no-files-found: error
+          # A re-run of this job replaces the artifact of its own run; downstream jobs verify the
+          # SHA-256 from this job's output, so a stale artifact can never be loaded.
+          overwrite: true
+
   container:
     name: Container verification
-    needs: [classify, static]
+    needs: [classify, build]
     if: contains(fromJSON(needs.classify.outputs.jobs), 'container')
     permissions:
       contents: read
@@ -155,24 +235,24 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Expose this job's PostgreSQL service network
         env:
           SERVICE_NETWORK: ${{ job.services.postgres.network }}
         run: echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
-      - name: Bind build start to this candidate
-        run: node scripts/ci-build-provenance.ts start
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - name: Download the image built once in this run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          context: .
-          file: infra/docker/app/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice:rc
-          cache-from: type=gha,scope=backoffice-node24-amd64
-          cache-to: type=gha,mode=max,scope=backoffice-node24-amd64
-      - name: Verify and record private source-bound image provenance
-        run: node scripts/ci-build-provenance.ts record
+          name: backoffice-image
+          path: ${{ runner.temp }}/image
+      - name: Load the exact image bytes the build job produced
+        env:
+          IMAGE_SHA256: ${{ needs.build.outputs.image-sha256 }}
+          IMAGE_ID: ${{ needs.build.outputs.image-id }}
+        run: |
+          echo "$IMAGE_SHA256  $RUNNER_TEMP/image/backoffice-image.tar" | sha256sum --check
+          docker load --input "$RUNNER_TEMP/image/backoffice-image.tar"
+          rm -f "$RUNNER_TEMP/image/backoffice-image.tar"
+          test "$(docker image inspect portfolio-backoffice:rc --format '{{.Id}}')" = "$IMAGE_ID"
       - name: Verify pinned image scanner
         run: |
           mkdir -p /tmp/image-scanner
@@ -232,7 +312,7 @@ jobs:
           rm -f /tmp/backoffice-fixture.env
   browser:
     name: Browser tests
-    needs: [classify, static]
+    needs: [classify, build]
     if: contains(fromJSON(needs.classify.outputs.jobs), 'browser')
     permissions:
       contents: read
@@ -275,7 +355,6 @@ jobs:
           package-manager-cache: false
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Expose this job's PostgreSQL service network
         env:
           SERVICE_NETWORK: ${{ job.services.postgres.network }}
@@ -283,18 +362,20 @@ jobs:
         run: |
           echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
           echo "BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@127.0.0.1:$SERVICE_PORT/backoffice_test" >> "$GITHUB_ENV"
-      - name: Bind build start to this candidate
-        run: node scripts/ci-build-provenance.ts start
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      - name: Download the image built once in this run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          context: .
-          file: infra/docker/app/Dockerfile
-          platforms: linux/amd64
-          load: true
-          tags: portfolio-backoffice:rc
-          cache-from: type=gha,scope=backoffice-node24-amd64
-      - name: Verify and record private source-bound image provenance
-        run: node scripts/ci-build-provenance.ts record
+          name: backoffice-image
+          path: ${{ runner.temp }}/image
+      - name: Load the exact image bytes the build job produced
+        env:
+          IMAGE_SHA256: ${{ needs.build.outputs.image-sha256 }}
+          IMAGE_ID: ${{ needs.build.outputs.image-id }}
+        run: |
+          echo "$IMAGE_SHA256  $RUNNER_TEMP/image/backoffice-image.tar" | sha256sum --check
+          docker load --input "$RUNNER_TEMP/image/backoffice-image.tar"
+          rm -f "$RUNNER_TEMP/image/backoffice-image.tar"
+          test "$(docker image inspect portfolio-backoffice:rc --format '{{.Id}}')" = "$IMAGE_ID"
       - name: Write synthetic container configuration
         run: |
           node --input-type=module <<'NODE'
@@ -349,6 +430,7 @@ jobs:
           path: test-results/**/*.png
           retention-days: 7
           if-no-files-found: ignore
+          overwrite: true
       - name: Remove only this job's container
         if: always()
         run: |
@@ -357,7 +439,7 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, docs, security, static, database, container, browser]
+    needs: [classify, docs, security, static, database, build, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
