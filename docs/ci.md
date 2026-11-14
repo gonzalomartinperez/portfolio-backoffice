@@ -334,9 +334,10 @@ mutated code or its unit tests (the schedule reads the default branch, `main`, u
 manual dispatch and on pull requests that change the workflow. It mutates the whole scope with
 concurrency 4 (budget 90 minutes) and runs
 `npm run mutation:gate -- --full --ratchet quality/ratchets/mutation.json`, which adds the
-committed floors to the fixed thresholds. The baseline, measured on 2026-11-14 over 1,591
-mutants (78.6 minutes on a 3-core workstation): overall 74.23 % (floor 72, two points under
-for run-to-run variance, and below the 75 "low" mark, so raising it is M3+ test work) and permission module 94.68 % (floor 85). No-coverage
+committed floors to the fixed thresholds. The baseline, measured on the runner on 2026-11-14
+over 1,591 mutants in about 3 minutes (CI run 43646475028): overall 74.73 % (floor 72, two
+points under for run-to-run variance, and below the 75 "low" mark, so raising it is M3+ test
+work) and permission module 98.94 % (floor 85). No-coverage
 mutants count against the score; compile errors, runtime errors, ignored and pending mutants do
 not. JSON and HTML reports stay under ignored `reports/mutation/`; the workflow keeps the JSON
 report for 14 days.
