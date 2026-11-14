@@ -1,48 +1,19 @@
-import { execFileSync } from "node:child_process";
-import { verifyProjectDatabase } from "../../scripts/check-project-fixture.ts";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
-import test from "node:test";
+import test, { after } from "node:test";
 import {
 	inviteViewer,
 	revokeViewerAccess,
 } from "../../src/features/auth/application/manage-access.ts";
-const databaseUrl = process.env.BACKOFFICE_DATABASE_URL;
-if (!databaseUrl)
-	throw new Error(
-		"BACKOFFICE_DATABASE_URL must identify an isolated test database",
-	);
-let database: URL;
-try {
-	database = new URL(databaseUrl);
-} catch {
-	throw new Error("Invalid isolated authentication test database URL");
-}
-const fixtureAuthority = {
-	containerId: process.env.PROJECT_FIXTURE_CONTAINER,
-	fixtureId: process.env.PROJECT_FIXTURE_ID,
-};
-const projectFixture = Boolean(
-	fixtureAuthority.containerId || fixtureAuthority.fixtureId,
-);
-const migrationDatabaseUrl =
-	process.env.BACKOFFICE_MIGRATION_DATABASE_URL ?? databaseUrl;
-if (projectFixture) {
-	verifyProjectDatabase(databaseUrl, fixtureAuthority, "portfolio_iam_runtime");
-	verifyProjectDatabase(
-		migrationDatabaseUrl,
-		fixtureAuthority,
-		"portfolio_iam_migrator",
-	);
-} else if (
-	!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) ||
-	!/(test|fixture)/.test(database.pathname) ||
-	migrationDatabaseUrl !== databaseUrl
-) {
-	throw new Error(
-		"Authentication integration requires its isolated fixture database",
-	);
-}
+import { startIamFixture } from "./postgres-fixture.ts";
+
+// The suite owns a throwaway, digest-pinned PostgreSQL container (Testcontainers). It never
+// reads a database URL from the environment, so it cannot reach a shared or production database.
+const fixture = await startIamFixture();
+after(() => fixture.stop());
+const databaseUrl = fixture.runtimeUrl;
+const migrationDatabaseUrl = fixture.migratorUrl;
 const [{ betterAuth }, { genericOAuth }, { createAuthRuntime }] =
 	await Promise.all([
 		import("better-auth"),
@@ -67,10 +38,7 @@ async function prepareDatabase(): Promise<void> {
 		try {
 			execFileSync(
 				process.execPath,
-				[
-					"scripts/auth-migrate.ts",
-					...(projectFixture ? ["--project-grants"] : []),
-				],
+				["scripts/auth-migrate.ts", "--project-grants"],
 				{
 					stdio: "pipe",
 					timeout: 60000,
@@ -573,9 +541,7 @@ const code = (error: unknown, expected: string) =>
 	error !== null &&
 	"code" in error &&
 	error.code === expected;
-test("project IAM runtime cannot inherit owners or run DDL and its actual pool is bounded", {
-	skip: !projectFixture,
-}, async () => {
+test("project IAM runtime cannot inherit owners or run DDL and its actual pool is bounded", async () => {
 	const { pool } = createAuthRuntime(configuration);
 	try {
 		const attributes = await pool.query<{

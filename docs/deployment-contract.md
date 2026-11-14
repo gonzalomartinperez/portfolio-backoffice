@@ -192,24 +192,22 @@ Initialize only a NEW volume's ownership before nonroot startup; no automatic re
 repair or reuse of PostgreSQL17 or Debian-owned data directories. Existing data needs separately verified
 logical migration/restore, libc/locale/collation review and independent IAM secret recovery.
 
-`node scripts/verify-postgres.ts exact-app-test-image exact-db-test-image` creates only fresh
-private task fixtures, applies the same-image migrations twice, checks PostgreSQL18.6 and
-fsync, restores a consistent synthetic logical dump and verifies persistent restart. It
-never accepts caller DATABASE_URL or a production volume. Tested fixture ceiling is0.5CPU,
-256MiB,32MiB shm,20connections; these are not measured VPS reservations or traffic guarantees.
-Coolify owns real resource/volume lifecycle; vps-ops coordinates isolated allocation and
-recovery. Production runtime roles must not use the fixture's superuser privileges.
+Production database provisioning (roles, volumes, recovery drills, resource limits) is owned by
+the API's canonical recipe and private vps-ops. Production runtime roles must not use a
+fixture's superuser privileges.
 
-Each runtime CI job builds the same pinned canonical source and uses its actual
-image for its managed PostgreSQL fixture. Database CI inventories that full image with checksum-verified
-Trivy0.75.0 and checks the report against its actual image ID. Every CRITICAL and fixable
-HIGH blocks acceptance. Unfixed HIGH is explicitly counted for production assessment,
-never silently waived. Full inventory and diagnostics remain ephemeral; only aggregate
-policy counts are logged, with no raw report upload. Missing or mismatched reports fail
-closed. This does not relax the application image's all-HIGH/CRITICAL gate, and passing
-either gate is not production approval or a guarantee of scanner DB freshness.
+CI no longer clones or builds the API repository (master plan PBO-M1-4). Integration tests
+start a throwaway, digest-pinned `postgres:18.x-trixie` container with Testcontainers
+(`scripts/postgres-image.ts`), provision restricted IAM roles that mirror the
+production shape, apply this repository's migrations and `runtime-grants.sql`, and assert the
+runtime role cannot inherit owners, run DDL or exceed its pool. The container and browser jobs
+use the same digest as a job-scoped service container on a private network with no published
+port. These fixtures are ephemeral test infrastructure, not a production artifact: they hold
+only public synthetic values, so scanner findings in the test image (for example the unfixed
+Debian libxml2 issue below) do not gate them. The application image keeps its all-HIGH/CRITICAL
+gate.
 
-The original Debian image remains rejected for CVE-2026-6653; its
+The original Debian image remains rejected as a production IAM artifact for CVE-2026-6653; its
 [hosted failure and bounded diagnosis](verification/iam-postgres-security-2026-10-18.md)
 are preserved. The replacement's [source and acceptance handoff](verification/shared-postgres-adoption-2026-10-18.md)
 separates API verification from this repository's exact-image/66-browser acceptance.

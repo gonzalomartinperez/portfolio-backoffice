@@ -74,8 +74,9 @@ Frozen installs remain mandatory. Setup-node caches npm downloads by lockfile/ru
 static includes the isolated contract-generator lockfile. Node follows `.nvmrc`; runtime
 images pin their own version and digest. BuildKit uses the Node24/amd64 scope and validated
 content-addressed layers. Only the container job writes the application BuildKit cache;
-database and browser jobs restore it without racing writers. Only the database job
-writes the separate canonical PostgreSQL cache. Browser binaries are not cached; the job installs all reviewed
+the browser job restores it without racing writers. PostgreSQL is a digest-pinned image
+pulled by Testcontainers (database job) or a job-scoped service container (container and
+browser jobs); nothing is built from a sibling repository. Browser binaries are not cached; the job installs all reviewed
 engines and OS dependencies. Shared local Playwright caches must never be cleaned; set
 `PLAYWRIGHT_SKIP_BROWSER_GC=1` or use an owned browser cache.
 
@@ -106,23 +107,22 @@ The managed browser lifecycle owns ports3107/3108/8117 and private signed test s
 those files. Available/unavailable runs have separate report directories and immutable source
 modes, avoiding cross-engine mutation races. Paid models are never called.
 
-Ordinary public CI uploads only existing safe synthetic UI screenshots and the bounded
-project-database recovery receipt, for seven days. Images, logs, environment files, session
+Ordinary public CI uploads only existing safe synthetic UI screenshots, for seven days. Images, logs, environment files, session
 files, invitation links, traces and database backups are not uploaded. Each runner cleans
 up only its own application/fixture resources, even after failure. Trivy0.75.0 retains its
 reviewed checksum. The application-image gate still rejects all HIGH/CRITICAL findings,
 including unfixed ones.
 
-The database job inventories the canonical artifact through local alias
-`portfolio-backoffice-postgres:rc` with all package types/severities and `--list-all-pkgs`.
-It reuses the exact checksum-verified scanner installer and binds the report to the actual
-local image ID. Missing, malformed or mismatched inventories fail closed. Every CRITICAL
-and fixable HIGH blocks database acceptance; unfixed HIGH remains explicitly counted in
-the aggregate log summary and requires production assessment, never a blanket waiver.
-No ignore file or severity filter is applied to inventory collection. Full JSON/package
-inventory and scanner diagnostics stay on the ephemeral runner and are never uploaded.
-Only bounded aggregate counts/policy status and synthetic source/image identity enter
-logs; no raw public artifact is added. Scanner DB freshness is not certified by those counts.
+The database job runs `tests/integration/auth.test.ts`, which starts its own throwaway
+PostgreSQL 18 container with Testcontainers (`scripts/postgres-image.ts`, digest
+pinned), provisions restricted IAM roles, applies the repository migrations and grants, and
+verifies invitation, revocation, OAuth and runtime-role boundaries. The test never reads a
+database URL from the environment. The test image is ephemeral fixture infrastructure and is
+not scanned as a production artifact; production PostgreSQL is provisioned by vps-ops. The container
+and browser jobs connect to their service container as the fixture superuser; restricted
+runtime-role coverage lives in the database job. In CI the Testcontainers Ryuk reaper is
+disabled (the test stops its own container and runners are ephemeral), so no unpinned helper
+image is pulled.
 Negative tests protect the actual commands, image/report binding and artifact privacy.
 This adds no job or dependency and preserves IAM/recovery tests. Local checks do not
 establish a clean image: the hosted scan can still block on current findings.

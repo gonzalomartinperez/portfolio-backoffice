@@ -24,7 +24,7 @@ are unavailable, not zero. Fixture values must be explicitly labeled.
 Use runtime validation for external data; generated types alone do not establish trust.
 Read installed Next documentation before framework changes. Run `npm run typecheck`,
 `npm run lint` and `npm test`; follow README browser verification for visible behavior
-and `npm run test:auth` for admission/session changes against an isolated test database.
+and `npm run test:auth` for admission/session changes (it starts its own Testcontainers PostgreSQL).
 Report commands actually executed, changed behavior and remaining integration gaps.
 
 Missing prerequisites stop dependent checks. An absent committed operational contract
