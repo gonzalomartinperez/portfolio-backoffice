@@ -101,6 +101,20 @@ summary (OD-75). `scorecard.yml` runs OpenSSF Scorecard weekly. Scheduled workfl
 the default branch, so they start when these files reach `main` (M7) unless the owner makes
 `develop` the default branch. CodeQL uses GitHub's default setup (a repository setting).
 
+## Nightly flake detector
+
+`nightly.yml` runs every browser test five times without retries (`--repeat-each=5
+--retries=0`) on chromium, firefox and webkit, because `retries: 1` on CI hides flakes.
+`scripts/flaky-report.ts` classifies each test as stable, flaky or failing and uploads
+`flaky-report.json` (30 days). A flaky test gets an issue and is quarantined the same day in
+`tests/quarantine.json` (title, issue URL, `quarantinedOn`, `fixBy`). PR runs skip quarantined
+titles; the nightly sets `PLAYWRIGHT_INCLUDE_QUARANTINE=1`, still runs them and reports them
+apart without failing. The run fails on any other flaky or failing test, on a crash, and when
+no test executed. An expired `fixBy` fails the unit suite. Fix or delete
+within 7 days; the cap is min(2 % of tests, 5) entries. Like other scheduled workflows it
+reads the default branch, so it also runs on every push to `develop` until `main` carries it,
+and on pull requests that change the detector itself.
+
 ## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
