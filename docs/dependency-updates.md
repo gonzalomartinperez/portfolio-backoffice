@@ -18,6 +18,14 @@ for new licences outside the allow-list, install scripts, bundle impact, Next.js
 releases and Better Auth advisories (master plan `dependencies.md` section 4). A red PR is
 repaired on the same branch; the owner merges it.
 
+`deps-weekly-guard.yml` (shared workflow, Monday 10:30 ART and on Dependabot PR events)
+keeps at most one open dependency PR (it closes an older one with a pointer to the newer),
+labels a PR whose `ci-gate` is red `needs-fix` so the agent harness repairs it on the same
+branch, and records its state silently in the tracking issue (OD-75). The group shape (one
+`weekly` group, group-level limit, labels and commit message, semver cooldowns only for npm)
+is the one proven in the engineering-standards Dependabot sandbox (ADR 0002) and is checked by
+`tests/unit/dependabot.test.ts` and the standards drift check.
+
 Dependabot reads its configuration from the default branch (`main`), so a change merged to
 `develop` takes effect when it reaches `main` at the M7 promotion, unless the owner makes
 `develop` the default branch.

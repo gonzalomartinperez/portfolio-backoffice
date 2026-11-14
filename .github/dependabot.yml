@@ -1,7 +1,10 @@
+# Weekly single dependency PR (ecosystem standard section 5, OD-20, OD-21) — release flow.
+# Shape of engineering-standards templates/dependabot/release.yml (v1.0.0), proven in the
+# dependabot-sandbox (engineering-standards docs/decisions/0002). Group-level limit, labels and
+# commit-message; semver cooldown keys only for npm. Checked by standards-drift (dependabot-policy).
 version: 2
-
 multi-ecosystem-groups:
-  weekly-all:
+  weekly:
     schedule:
       interval: weekly
       day: monday
@@ -9,13 +12,15 @@ multi-ecosystem-groups:
       timezone: America/Argentina/Buenos_Aires
     target-branch: develop
     open-pull-requests-limit: 1
-
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies"]
 updates:
   - package-ecosystem: npm
     directory: /
-    multi-ecosystem-group: weekly-all
+    multi-ecosystem-group: weekly
     patterns: ["*"]
-    labels: [dependencies]
+    # TypeScript 7 and the Node line follow the LTS policy (E10), not Dependabot.
     ignore:
       - dependency-name: "@types/node"
         update-types: [version-update:semver-major]
@@ -27,9 +32,8 @@ updates:
       semver-patch-days: 3
   - package-ecosystem: npm
     directory: /tooling/api-contract
-    multi-ecosystem-group: weekly-all
+    multi-ecosystem-group: weekly
     patterns: ["*"]
-    labels: [dependencies]
     # openapi-typescript 7.13 requires the classic TypeScript 5 compiler API.
     ignore:
       - dependency-name: typescript
@@ -40,16 +44,14 @@ updates:
       semver-patch-days: 3
   - package-ecosystem: github-actions
     directory: /
-    multi-ecosystem-group: weekly-all
+    multi-ecosystem-group: weekly
     patterns: ["*"]
-    labels: [dependencies]
     cooldown:
       default-days: 7
   - package-ecosystem: docker
     directory: /infra/docker/app
-    multi-ecosystem-group: weekly-all
+    multi-ecosystem-group: weekly
     patterns: ["*"]
-    labels: [dependencies]
     ignore:
       - dependency-name: node
         update-types: [version-update:semver-major]
