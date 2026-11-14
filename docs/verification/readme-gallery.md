@@ -35,9 +35,9 @@ explicit migrations, signed synthetic owner/viewer sessions and a local operatio
 service. It never contacts the real OAuth providers. A normal anonymous browser still
 sees sign-in; fixture session provisioning does not disable authentication.
 
-The maintained `tests/browser/backoffice.spec.ts` loads the private signed session file
-into a disposable Playwright browser context, then exercises protected pages. Run
-`npm run test:browser -- backoffice.spec.ts --project=chromium --headed` to observe those
+The maintained journey specs in `tests/browser/` load the private signed session file
+through the `setup` project into per-role Playwright storage state, then exercise protected
+pages. Run `npm run test:browser -- --project=chromium-viewer --headed` to observe those
 flows in a local graphical environment. Omit `--headed` in CI/headless WSL. The managed
 server owns ports 3107/3108/8117 and cannot run alongside a manual preview on those ports.
 Install browsers and prepare the isolated fixture database using README first.

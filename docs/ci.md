@@ -64,7 +64,35 @@ or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept se
 checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
 screenshots, for seven days; images, logs, environment files, sessions, invitation links,
-traces and database dumps are never uploaded.
+traces, Playwright blob reports and database dumps are never uploaded.
+
+### Browser journeys, projects and reports
+
+Browser tests live in journey files under `tests/browser/` (`access-control`, `owner-overview`,
+`preferences`, `workbench`, `mobile-overview`, `product-analytics`, `operational-failure`,
+`privacy`); shared helpers are in `tests/browser/support/`. Each test carries one role tag
+(`@anonymous`, `@owner`, `@viewer`) and narrow-viewport journeys also carry `@mobile`.
+
+- `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
+  owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
+  uploaded). Role projects depend on it; its `cleanup` teardown deletes that state at the end
+  of the run.
+- `chromium-`, `firefox-` and `webkit-` with `anonymous` (no storage state), `owner` and
+  `viewer`: each test runs once per browser, in the project whose role matches its tag.
+- `iphone-15` (WebKit) and `pixel-7` (Chromium) run the `@mobile` journeys as the viewer. Pull
+  requests run the desktop projects plus `iphone-15`; the nightly runs every project, so
+  `pixel-7` is nightly only. A narrow run is for example
+  `npm run test:browser -- --project=iphone-15`.
+- The unavailable-state fixture is selected with `--grep "operational failure"`, the available
+  one with `--grep-invert "operational failure"`; the `setup` project still runs under both.
+- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off.
+  The blob reports stay on the runner, ready for `npx playwright merge-reports` when the job
+  is sharded; they are not uploaded, because failure attachments (`error-context.md` page
+  snapshots) can contain a fixture invitation link.
+- `failOnFlakyTests` is on for runs targeting `main`, which includes the release pull request
+  (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
+  `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
+  retry is reported as flaky without failing the run.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
