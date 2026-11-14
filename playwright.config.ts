@@ -19,6 +19,7 @@ const grepInvert =
 const failOnFlakyTests =
   process.env.GITHUB_BASE_REF === "main" ||
   process.env.GITHUB_REF === "refs/heads/main" ||
+  process.env.GITHUB_REF?.startsWith("refs/heads/gh-readonly-queue/main/") === true ||
   process.env.PLAYWRIGHT_FAIL_ON_FLAKY === "1";
 
 // Role is a dimension only where a test needs it: every journey test carries exactly one of
@@ -57,7 +58,9 @@ export default defineConfig({
   },
   projects: [
     // Writes per-role storage state from .artifacts/fixture-sessions.json (test-server.ts).
-    { name: "setup", testMatch: /support\/auth\.setup\.ts$/ },
+    // Its teardown deletes that storage state once every dependent project has finished.
+    { name: "setup", testMatch: /support\/auth\.setup\.ts$/, teardown: "cleanup" },
+    { name: "cleanup", testMatch: /support\/auth\.teardown\.ts$/ },
     ...desktopBrowsers.flatMap(({ name, device }) =>
       roles.map((role) => ({
         name: `${name}-${role}`,

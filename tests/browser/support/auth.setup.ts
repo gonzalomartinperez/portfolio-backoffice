@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { test as setup } from "@playwright/test";
 import { type Role, readSessionCookie, storageStatePath } from "./auth.ts";
@@ -12,5 +12,8 @@ for (const role of ["owner", "viewer"] as const satisfies readonly Role[]) {
     const file = storageStatePath(role);
     mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
     writeFileSync(file, JSON.stringify(state), { mode: 0o600 });
+    // The modes above apply only on creation; tighten pre-existing paths too.
+    chmodSync(dirname(file), 0o700);
+    chmodSync(file, 0o600);
   });
 }

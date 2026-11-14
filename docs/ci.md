@@ -74,7 +74,8 @@ Browser tests live in journey files under `tests/browser/` (`access-control`, `o
 
 - `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
   owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
-  uploaded). Role projects depend on it.
+  uploaded). Role projects depend on it; its `cleanup` teardown deletes that state at the end
+  of the run.
 - `chromium-`, `firefox-` and `webkit-` with `anonymous` (no storage state), `owner` and
   `viewer`: each test runs once per browser, in the project whose role matches its tag.
 - `iphone-15` (WebKit) and `pixel-7` (Chromium) run the `@mobile` journeys as the viewer. Pull
@@ -88,9 +89,10 @@ Browser tests live in journey files under `tests/browser/` (`access-control`, `o
   artifact (7 days, one zip per fixture mode). To merge them into one HTML report:
   download the artifact, copy both zips into one folder and run
   `npx playwright merge-reports --reporter html <folder>`.
-- `failOnFlakyTests` is on for runs targeting `main` or a release (`GITHUB_BASE_REF` or
-  `GITHUB_REF` is main) and when `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test
-  that passes only on its one retry is reported as flaky without failing the run.
+- `failOnFlakyTests` is on for runs targeting `main`, which includes the release pull request
+  (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
+  `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
+  retry is reported as flaky without failing the run.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
