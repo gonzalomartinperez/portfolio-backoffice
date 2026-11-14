@@ -82,7 +82,7 @@ docker build --platform linux/amd64 -t portfolio-assistant-backoffice:rc .
 
 Provide only synthetic runtime configuration to an isolated PostgreSQL instance.
 Run `node scripts/auth-migrate.ts` in the image using the profile in
-[Quality](../../.github/workflows/quality.yml), then start the same image with that
+[ci](../../.github/workflows/ci.yml) container job, then start the same image with that
 profile and a free loopback port. Use an owned name matching
 `portfolio-backoffice-<task>`; never inspect full environment or reset shared data.
 

@@ -1,72 +1,41 @@
-# Manual dependency maintenance
+# Dependency maintenance
 
-The owner-selected profile is **manual merging**, including low-risk Dependabot
-proposals. Native auto-merge is off; no workflow approves, rebases, pushes, arms
-or merges a PR. Existing risk classification and synthetic controller regressions
-are retained as assessment tools, not evidence of live automatic merging.
-The CLI rejects write-activation flags; the trusted workflow has only contents/read
-and pull-requests/read permissions. Production publication/deployment is unrelated.
+The owner merges dependency updates manually (OD-20, OD-21). Native auto-merge is off; no
+workflow approves, pushes, arms or merges a dependency PR.
 
-## Proposals and review
+## One weekly PR
 
-Version-update proposals form one weekly grouped PR (`weekly-all`, Monday 09:00
-America/Argentina/Buenos_Aires, target `develop`) covering npm, GitHub Actions and Docker,
-limited to one open PR through the group. The seven-day routine cooldown (14 days for
-npm majors, 3 for patches) does not delay security updates. The contract-generator
-workspace is independent; its compiler-major ignore preserves the documented TypeScript5
-programmatic API compatibility while the application uses TypeScript7. Do not hide
-security alerts to enforce that compatibility exception.
+Version updates form one grouped PR per week (Monday 09:00
+America/Argentina/Buenos_Aires, target `develop`) covering npm (root and the isolated
+contract generator), GitHub Actions and Docker, with at most one open dependency PR. The
+seven-day cooldown (14 days for npm majors, 3 for patches) applies to version updates only.
+The contract-generator workspace keeps a compiler-major ignore: it needs the TypeScript 5
+programmatic API while the application uses TypeScript 7. Never hide a security alert to
+enforce that exception.
 
-Security updates follow GitHub's default-branch behavior and may target `main`.
-They remain visible and require prompt manual review; `target-branch: develop` is
-not a guarantee about security proposals. A default-branch security fix follows the
-normal protected workflow, never administrative bypass or an automatic main merge.
-Dependabot configuration and target workflows become effective from the default branch;
-a develop-only change is not live activation evidence.
+The dependency PR runs the `deps-weekly` CI profile, which runs every job. It is reviewed
+for new licences outside the allow-list, install scripts, bundle impact, Next.js security
+releases and Better Auth advisories (master plan `dependencies.md` section 4). A red PR is
+repaired on the same branch; the owner merges it.
 
-## Risk assessment, not approval
+Dependabot reads its configuration from the default branch (`main`), so a change merged to
+`develop` takes effect when it reaches `main` at the M7 promotion, unless the owner makes
+`develop` the default branch.
 
-The classifier accepts only authenticated Dependabot identity, expected source repo,
-base and complete file/commit scope. It compares manifests and lock entries semantically;
-titles and labels do not authorize anything. `@types/node`24 patches, `@types/react`19
-patch/minor and `@types/react-dom`19 patches are the narrow low-risk assessment cohort.
-Every grouped or transitive update must qualify. All updates still need human review.
-Majors, prereleases, unstable0.x, unknown metadata, runtime/compiler/framework, IAM,
-cryptography, persistence, Actions, Docker/OS, mixed-risk groups, lock-only ambiguity,
-script changes, unexpected files and human-added commits require closer investigation.
-`dependencies:manual` is a veto, never approval.
+## Security findings
 
-The separate policy workflow reads trusted default-branch scripts, never a PR checkout,
-PR dependencies or artifacts. It does not repeat after every Quality run. A skipped
-human-PR diagnostic is not a required check. Required Quality `checks` still covers the
-complete application with strict branch freshness and administrator enforcement.
-Missing/failed/pending checks, conflicts or blocking reviews are not mergeable.
-Do not replace mandatory reviews with a bot approval, PAT or merge-anyway operation.
+Security-update PRs are disabled in repository settings (OD-22, an owner setting) and alerts
+stay on. The daily vulnerability job (`vuln-daily.yml`) records findings silently in one
+tracking issue and only the Monday summary notifies (OD-75). Critical fixes ride the weekly
+PR unless they are in CISA KEV or reachable, in which case a normal task PR bumps the single
+dependency.
 
-After a reviewed promotion, dispatch a read-only assessment with
-`gh workflow run dependency-policy.yml -f pr_number=<existing-pr>`.
-Local API fixtures test spoofing, all group members, scripts/file changes, revision
-changes, missing/failed checks and branch advancement. They do not prove live GitHub
-bot behavior. A real bot PR, when available, must be checked against its current SHA.
-Readiness inspection can report missing GITHUB_TOKEN protection visibility; it is not
-permission to weaken branch rules or enable automation.
+## Recovering
 
-Native rebasing refreshes eligible young PRs when relevant base/dependency changes occur;
-CI runs again for new revisions. Old (about30days), conflicted or human-modified PRs may
-need manual intervention. There is no custom rebase bot, force-push loop or comment spam.
-Pause proposals using Dependabot configuration through a normal PR; to defer one PR,
-leave it open with a clear explanation. Never suppress a security alert to reduce churn.
-Recover a problematic merged update by a reviewed revert/fix PR with the same checks.
-Application rollback does not reverse migrations or authorize a deployment rollback.
-
-## Controls observed and verification
-
-Both permanent branches keep their existing protections. Repository auto-merge remains
-false and legacy activation flags must be false/unset. Inventory open bot PRs and revoke
-any already-armed native request before claiming the manual profile is reconciled.
-No label can substitute for these controls. Actual settings/Actions evidence is recorded
-in the delivery report; local fixtures alone are not a live workflow result.
+Pause proposals through a normal PR to the Dependabot configuration. Recover a problematic
+merged update with a reviewed revert or fix PR that passes the same checks. Application
+rollback does not reverse migrations or authorize a deployment rollback.
 
 References: [Dependabot options](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference),
-[native rebasing limitations](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates),
+[managing dependency PRs](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates),
 [secure workflow guidance](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions).

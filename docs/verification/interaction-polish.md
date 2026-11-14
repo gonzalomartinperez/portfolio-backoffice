@@ -67,7 +67,6 @@ The fix uses aria-disabled with the existing single-flight guard; a delayed clip
 checks focus after both success and denial, and rejects duplicate writes. Security/architecture
 review found no further actionable issues. Final results follow after testing that correction.
 
-
 ## Corrected local image verification
 
 The local interaction image before the touch-feedback correction (Next 16.3.5, linux/amd64) built successfully from the frozen
@@ -109,7 +108,6 @@ avatar. Explicit passive pointer press/release tracking replaces that selector; 
 window release, blur, media changes and unmount clear the attribute. The automated identity
 case now verifies press, release, cancellation and reduced-motion suppression.
 
-
 CI run 36331246177 on the combined Next 16.3.6 branch completed in 295s: static 26s,
 image 113s, browser 169s, live fixture 120s and aggregator 4s. The browser job had two
 WebKit retries, so that green aggregate was not accepted as final evidence. Its axe failure
@@ -117,7 +115,6 @@ showed 1.01:1 contrast during a theme transition: new text color against the sti
 suggestion background. Text/surface interpolation was removed rather than delaying scans;
 a frame-sampled 4.5:1 regression now covers both theme directions. Final CI must verify this
 correction and the touch feedback together (60 browser cases).
-
 
 Corrected UI run [36331922611](https://github.com/gonzalomartinperez/portfolio-assistant-web/actions/runs/36331922611)
 passed **60/60 browser cases with no retries**, 29 static/unit/contract checks and four
@@ -138,7 +135,6 @@ Like-for-like CI images using Next 16.3.6 contain 17 client JS chunks: baseline 
 1,122,602 / 344,565 (+3,472 raw / +981 gzip, 0.29%). Measurement reads the saved image's
 static chunk layers and compresses each with gzip level 6 in the same local process.
 This includes no live performance or React commit-duration claim.
-
 
 Final conversational-pin local verification passed **5/5 live browser flows (22.8s)**,
 including same-conversation context/history persistence, plus the updated proxy smoke:

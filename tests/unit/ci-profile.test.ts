@@ -1,268 +1,212 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { load } from "js-yaml";
-import { validateCiProfile, validateWorkflowTrust } from "../../scripts/check-ci-profile.ts";
-import { buildFingerprint, validateBuildIdentity } from "../../scripts/ci-build-provenance.ts";
-import { field, list, record } from "../../scripts/json.ts";
+import { field, list, record, text } from "../../scripts/json.ts";
+import { postgresImage } from "../../scripts/postgres-image.ts";
 
-const profile = () => record(load(readFileSync(".github/workflows/quality.yml", "utf8")));
-test("committed paired workflow has exact names, DAG, events and real job adapters", () => {
-  validateCiProfile(profile());
-  validateWorkflowTrust(profile());
-});
-test("container scanner rejects a substituted installer or environment overrides", () => {
-  const tampered = profile();
-  const steps = list(field(tampered, "jobs", "container", "steps")).map(record);
-  const installer = record(steps.find((step) => step.name === "Verify pinned image scanner"));
-  installer.run = String(installer.run).replace("c6e65abddb348e25f", "0000000000000000");
-  record(field(tampered, "jobs", "container")).steps = steps;
-  assert.throws(() => validateCiProfile(tampered));
-  const override = profile();
-  record(override.env).TRIVY_IGNORE_UNFIXED = "true";
-  assert.throws(() => validateCiProfile(override));
-});
-test("runtime jobs reject a floating, published or missing PostgreSQL service and sibling builds", () => {
-  for (const job of ["container", "browser"]) {
-    const changes: Array<(job: Record<string, unknown>) => void> = [
-      (j) => {
-        delete j.services;
-      },
-      (j) => {
-        record(field(j, "services", "postgres")).image = "postgres:18-trixie";
-      },
-      (j) => {
-        record(field(j, "services", "postgres")).ports = ["5432:5432"];
-      },
-      (j) => {
-        record(j.services).redis = { image: "redis" };
-      },
-      (j) => {
-        delete record(field(j, "services", "postgres")).options;
-      },
-      (j) => {
-        record(field(j, "services", "postgres")).options = "--no-healthcheck";
-      },
-      (j) => {
-        record(field(j, "services", "postgres", "env")).POSTGRES_DB = "postgres";
-      },
-      (j) => {
-        record(j.env).CI_POSTGRES_HOST = "localhost";
-      },
-      (j) => {
-        j.steps = list(j.steps).filter(
-          (step) => field(step, "name") !== "Expose this job's PostgreSQL service network",
-        );
-      },
-      (j) => {
-        const steps = list(j.steps).map(record);
-        const expose = record(
-          steps.find((step) => step.name === "Expose this job's PostgreSQL service network"),
-        );
-        expose.if = "false";
-        j.steps = steps;
-      },
-      (j) => {
-        const steps = list(j.steps).map(record);
-        steps.push({ run: "node scripts/ci-postgres.ts start" });
-        j.steps = steps;
-      },
-    ];
-    for (const change of changes) {
-      const workflow = profile();
-      change(record(field(workflow, "jobs", job)));
-      assert.throws(() => validateCiProfile(workflow), job);
+const profileMap = () => record(JSON.parse(readFileSync(".github/ci-profile.json", "utf8")));
+const workflow = () => record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
+const ownJobs = ["static", "database", "container", "browser"];
+const sharedJobs = ["docs", "security"];
+
+// Same glob semantics as the shared classify workflow (engineering-standards classify.yml).
+function globToRegex(pattern: string): RegExp {
+  let out = "";
+  for (let i = 0; i < pattern.length; ) {
+    if (pattern.startsWith("**/", i)) {
+      out += "(?:.*/)?";
+      i += 3;
+    } else if (pattern.startsWith("**", i)) {
+      out += ".*";
+      i += 2;
+    } else if (pattern[i] === "*") {
+      out += "[^/]*";
+      i += 1;
+    } else if (pattern[i] === "?") {
+      out += "[^/]";
+      i += 1;
+    } else {
+      out += (pattern[i] ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      i += 1;
     }
   }
-  const published = profile();
-  record(field(published, "jobs", "container", "services", "postgres")).ports = ["5432"];
-  assert.throws(() => validateCiProfile(published));
-  const database = profile();
-  record(field(database, "jobs", "database")).services = {
-    postgres: { image: "postgres:18.7-trixie" },
-  };
-  assert.throws(() => validateCiProfile(database));
-});
-test("paired profile rejects cosmetic parity, bypasses and missing prerequisite edges", () => {
-  const changes: Array<(workflow: Record<string, unknown>) => void> = [
-    (w) => {
-      record(w.jobs).dummy = { name: "Dummy" };
-    },
-    (w) => {
-      delete record(w.jobs).database;
-    },
-    (w) => {
-      record(field(w, "jobs", "checks")).name = "checks";
-    },
-    (w) => {
-      record(field(w, "jobs", "container")).needs = "database";
-    },
-    (w) => {
-      record(field(w, "jobs", "browser")).needs = [];
-    },
-    (w) => {
-      record(field(w, "jobs", "checks")).if = "success()";
-    },
-    (w) => {
-      record(field(w, "jobs", "checks")).needs = [];
-    },
-    (w) => {
-      record(field(w, "on", "push")).branches = ["develop"];
-    },
-    (w) => {
-      record(field(w, "on", "pull_request")).paths = ["src/**"];
-    },
-    (w) => {
-      w.permissions = { contents: "write" };
-    },
-    (w) => {
-      record(field(w, "jobs", "browser")).permissions = { packages: "write" };
-    },
-    (w) => {
-      record(field(w, "jobs", "database"))["continue-on-error"] = true;
-    },
-    (w) => {
-      record(field(w, "jobs", "container")).steps = [{ run: "true" }];
-    },
-    (w) => {
-      record(field(w, "jobs", "browser")).env = {
-        PRIVATE_KEY: "$" + "{{ secrets.PRIVATE_KEY }}",
-      };
-    },
-    (w) => {
-      record(field(w, "jobs", "secrets")).steps = [{ uses: "actions/checkout@main" }];
-    },
-    (w) => {
-      record(w.env).ALLOW_PAID_AI = "true";
-    },
-  ];
-  for (const change of changes) {
-    const w = profile();
-    change(w);
-    assert.throws(() => validateCiProfile(w));
-  }
-});
-test("privileged dependency assessment cannot check out an untrusted head", () => {
-  const workflow = {
-    on: { pull_request_target: {} },
-    jobs: {
-      policy: {
-        steps: [
-          {
-            uses: `actions/checkout@${"a".repeat(40)}`,
-            with: { ref: "$" + "{{ github.event.pull_request.head.sha }}" },
-          },
-        ],
-      },
-    },
-  };
-  assert.throws(() => validateWorkflowTrust(workflow));
-  assert.throws(() =>
-    validateWorkflowTrust({
-      on: { pull_request_target: {} },
-      permissions: { contents: "write" },
-      jobs: { policy: { steps: [] } },
-    }),
-  );
-  assert.throws(() =>
-    validateWorkflowTrust({
-      on: { pull_request_target: {} },
-      jobs: { policy: { steps: [{ run: "npm ci" }] } },
-    }),
-  );
-});
-test("private rebuild provenance rejects source/run/image/config substitutions", () => {
-  const wanted = {
-    source: "a".repeat(40),
-    run: "123",
-    attempt: "1",
-    job: "browser",
-    fingerprint: buildFingerprint([["Dockerfile", "reviewed"]]),
-    image: `sha256:${"b".repeat(64)}`,
-  };
-  assert.doesNotThrow(() => validateBuildIdentity(wanted, wanted));
-  for (const key of Object.keys(wanted))
-    assert.throws(() => validateBuildIdentity({ ...wanted, [key]: "substitution" }, wanted));
-  assert.notEqual(wanted.fingerprint, buildFingerprint([["Dockerfile", "changed"]]));
-  const workflow = profile();
-  for (const job of ["container", "browser"]) {
-    const steps = list(field(workflow, "jobs", job, "steps"));
-    assert.ok(
-      steps.some((step) => field(step, "run") === "node scripts/ci-build-provenance.ts record"),
-    );
-  }
+  return new RegExp(`^${out}$`);
+}
+
+function profilesFor(path: string): string[] {
+  const profiles = record(profileMap().profiles);
+  return Object.entries(profiles)
+    .filter(([, spec]) =>
+      list(field(spec, "paths") ?? []).some((glob) => globToRegex(text(glob)).test(path)),
+    )
+    .map(([name]) => name);
+}
+
+function jobsFor(selected: string[]): string[] {
+  const map = profileMap();
+  const jobs = list(map.base).map(text);
+  for (const name of selected)
+    for (const job of list(field(map, "profiles", name, "adds") ?? []))
+      if (job !== "all-profiles") jobs.push(text(job));
+  return [...new Set(jobs)];
+}
+
+test("every tracked file belongs to a CI profile (fail closed otherwise)", () => {
+  const tracked = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
+    .split("\0")
+    .filter(Boolean);
+  assert.ok(tracked.length > 100);
+  const orphans = tracked.filter((path) => profilesFor(path).length === 0);
+  assert.deepEqual(orphans, [], "add these paths to .github/ci-profile.json");
 });
 
-test("only the exact hard-disabled publication diagnostic is recognized", async () => {
-  const { intentionalPublicationOff, validateActionlintDiagnostics } = await import(
-    "../../scripts/check-workflows.ts"
-  );
-  const source = readFileSync(".github/workflows/release.yml", "utf8");
-  const line =
-    source.split("\n").findIndex((value) => value.trim() === "if: $" + "{{ false }}") + 1;
-  const diagnostic = {
-    filepath: ".github/workflows/release.yml",
-    kind: "if-cond",
-    line,
-    message: 'constant expression "false" in condition. remove the if: section',
-  };
-  assert.equal(intentionalPublicationOff(diagnostic, source), true);
-  assert.equal(
-    intentionalPublicationOff({ ...diagnostic, filepath: ".github/workflows/quality.yml" }, source),
-    false,
-  );
-  assert.equal(intentionalPublicationOff({ ...diagnostic, line: line + 1 }, source), false);
-  assert.equal(intentionalPublicationOff({ ...diagnostic, kind: "expression" }, source), false);
-  assert.equal(
-    intentionalPublicationOff(diagnostic, source.replace("if: $" + "{{ false }}", "if: success()")),
-    false,
-  );
-  assert.equal(validateActionlintDiagnostics([diagnostic], source), 1);
-  assert.throws(() =>
-    validateActionlintDiagnostics([diagnostic, { ...diagnostic, kind: "expression" }], source),
-  );
-  assert.throws(() => validateActionlintDiagnostics([diagnostic, diagnostic], source));
-  assert.throws(() =>
-    validateActionlintDiagnostics(
-      [diagnostic],
-      source.replace("if: $" + "{{ false }}", "if: true"),
-    ),
-  );
-});
-
-test("static Playwright discovery preserves all 66 reviewed cases and three real engines", async () => {
-  const { execFileSync } = await import("node:child_process");
-  const inventory = record(
-    JSON.parse(
-      execFileSync(
-        process.execPath,
-        ["node_modules/@playwright/test/cli.js", "test", "--list", "--reporter=json"],
-        {
-          encoding: "utf8",
-          timeout: 30_000,
-          env: { ...process.env, FORCE_COLOR: "0" },
-        },
-      ),
-    ),
-  );
-  const projects = list(field(inventory, "config", "projects"));
-  const configured = (await import("../../playwright.config.ts")).default;
-  assert.deepEqual(
-    configured.projects?.map((project) => field(project, "use", "defaultBrowserType")).sort(),
-    ["chromium", "firefox", "webkit"],
-  );
-  assert.deepEqual(projects.map((project) => field(project, "name")).sort(), [
-    "chromium",
-    "firefox",
-    "webkit",
+test("profiles select the expected jobs", () => {
+  assert.deepEqual(jobsFor(profilesFor("README.md")), ["docs", "security", "static"]);
+  assert.deepEqual(jobsFor(profilesFor("src/app/page.tsx")), [
+    "docs",
+    "security",
+    "static",
+    "database",
+    "container",
+    "browser",
   ]);
-  const discovered: unknown[] = [];
-  const collect = (suite: unknown) => {
-    for (const spec of list(field(suite, "specs") ?? []))
-      discovered.push(...list(field(spec, "tests")));
-    for (const child of list(field(suite, "suites") ?? [])) collect(child);
-  };
-  for (const suite of list(inventory.suites)) collect(suite);
-  for (const project of ["chromium", "firefox", "webkit"])
-    assert.ok(discovered.filter((entry) => field(entry, "projectName") === project).length >= 22);
+  for (const path of [".github/workflows/ci.yml", "contracts/openapi.json", "migrations/x.sql"])
+    assert.ok(jobsFor(profilesFor(path)).includes("browser"), path);
+  assert.deepEqual(profilesFor(".agents/skills/x/evals/evals.json"), ["harness"]);
+  for (const name of ["deps-weekly", "release", "hotfix"])
+    assert.deepEqual(list(field(profileMap(), "profiles", name, "adds")), ["all-profiles"]);
+  assert.equal(profileMap().required, "ci-gate");
+});
+
+test("job names in the profile map and ci.yml agree and ci-gate needs every job", () => {
+  const jobs = record(workflow().jobs);
+  const map = profileMap();
+  const named = new Set(jobsFor(Object.keys(record(map.profiles))));
+  assert.deepEqual([...named].sort(), [...ownJobs, ...sharedJobs].sort());
+  assert.deepEqual(
+    Object.keys(jobs).sort(),
+    ["classify", "ci-gate", ...ownJobs, ...sharedJobs].sort(),
+  );
+  for (const id of [...ownJobs, ...sharedJobs]) {
+    assert.equal(
+      field(jobs, id, "if"),
+      `contains(fromJSON(needs.classify.outputs.jobs), '${id}')`,
+      id,
+    );
+    assert.ok([field(jobs, id, "needs")].flat().includes("classify"), id);
+  }
+  const gate = record(jobs["ci-gate"]);
+  assert.equal(gate.if, "always()");
+  assert.deepEqual(
+    list(gate.needs).map(text).sort(),
+    Object.keys(jobs)
+      .filter((id) => id !== "ci-gate")
+      .sort(),
+  );
+  assert.deepEqual(gate.permissions, {});
+  const steps = list(gate.steps);
+  const action = steps.find((step) =>
+    text(field(step, "uses") ?? "").includes("/actions/ci-gate@"),
+  );
+  assert.equal(field(action, "with", "needs"), `$${"{{"} toJSON(needs) }}`);
+  assert.equal(field(action, "with", "expected"), `$${"{{"} needs.classify.outputs.jobs }}`);
+});
+
+test("workflows are least-privilege, SHA-pinned and never run untrusted code with privileges", () => {
+  for (const file of readdirSync(".github/workflows").filter((name) => /\.ya?ml$/.test(name))) {
+    const source = readFileSync(`.github/workflows/${file}`, "utf8");
+    const parsed = record(load(source));
+    assert.doesNotMatch(source, /pull_request_target|workflow_run/, file);
+    assert.deepEqual(parsed.permissions, {}, `${file}: top-level permissions must be {}`);
+    for (const [id, job] of Object.entries(record(parsed.jobs))) {
+      assert.notEqual(
+        field(job, "permissions"),
+        undefined,
+        `${file}:${id} needs explicit permissions`,
+      );
+      const uses = field(job, "uses");
+      if (typeof uses === "string" && !uses.startsWith("./"))
+        assert.match(
+          source,
+          new RegExp(`uses: ${uses.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} # v\\d`),
+          `${file}:${id} must pin a reusable workflow by SHA with a version comment`,
+        );
+      for (const step of list(field(job, "steps") ?? [])) {
+        const action = field(step, "uses");
+        if (typeof action === "string")
+          assert.match(action, /^[\w./-]+@[a-f0-9]{40}$/, `${file}:${id} ${action}`);
+        if (text(action ?? "").startsWith("actions/checkout@")) {
+          assert.equal(field(step, "with", "persist-credentials"), false, `${file}:${id}`);
+          assert.equal(field(step, "with", "repository"), undefined, `${file}:${id}`);
+        }
+        assert.doesNotMatch(JSON.stringify(step), /secrets\./, `${file}:${id}`);
+        assert.equal(field(step, "continue-on-error"), undefined, `${file}:${id}`);
+      }
+    }
+  }
+  for (const [key, value] of [
+    ["AI_PROVIDER", "fixture"],
+    ["EMBEDDINGS_PROVIDER", "fixture"],
+    ["ALLOW_PAID_AI", "false"],
+  ])
+    assert.equal(field(workflow(), "env", text(key)), value);
+});
+
+test("runtime jobs use the digest-pinned PostgreSQL service and no sibling build", () => {
+  for (const id of ["container", "browser"]) {
+    const job = record(field(workflow(), "jobs", id));
+    const services = record(job.services);
+    const postgres = record(services.postgres);
+    assert.deepEqual(Object.keys(services), ["postgres"]);
+    assert.equal(postgres.image, postgresImage);
+    assert.deepEqual(postgres.env, {
+      POSTGRES_USER: "backoffice_fixture",
+      POSTGRES_PASSWORD: "public-fixture-only",
+      POSTGRES_DB: "backoffice_test",
+    });
+    assert.match(
+      text(postgres.options),
+      /--health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"/,
+    );
+    assert.deepEqual(postgres.ports, id === "browser" ? ["5432"] : undefined);
+    assert.equal(field(job, "env", "CI_POSTGRES_HOST"), "postgres");
+    const steps = list(job.steps).map(record);
+    const expose = steps.findIndex(
+      (step) => step.name === "Expose this job's PostgreSQL service network",
+    );
+    const migrate = steps.findIndex(
+      (step) => step.name === "Migrate the isolated authentication database",
+    );
+    assert.ok(expose >= 0 && migrate > expose, id);
+    assert.equal(
+      field(steps[expose], "env", "SERVICE_NETWORK"),
+      `$${"{{"} job.services.postgres.network }}`,
+    );
+    const runs = steps.map((step) => String(step.run ?? "")).join("\n");
+    assert.doesNotMatch(runs, /api-compatibility|ci-postgres/);
+    assert.match(runs, /--network "\$CI_POSTGRES_NETWORK"/);
+  }
+  assert.equal(field(workflow(), "jobs", "database", "services"), undefined);
+});
+
+test("the container job keeps the checksum-pinned scanner and the HIGH/CRITICAL gate", () => {
+  const steps = list(field(workflow(), "jobs", "container", "steps"));
+  const installer = text(
+    field(
+      steps.find((step) => field(step, "name") === "Verify pinned image scanner"),
+      "run",
+    ),
+  );
+  assert.match(installer, /trivy_0\.75\.0_Linux-64bit\.tar\.gz/);
+  assert.match(
+    installer,
+    /c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f {2}\/tmp\/image-scanner\/trivy\.tar\.gz' \| sha256sum --check/,
+  );
+  const runs = steps.map((step) => text(field(step, "run") ?? "")).join("\n");
+  assert.match(runs, /--severity HIGH,CRITICAL/);
+  assert.match(runs, /node scripts\/verify-container\.ts measure/);
+  for (const env of [field(workflow(), "env"), field(workflow(), "jobs", "container", "env")])
+    assert.ok(!Object.keys(record(env ?? {})).some((key) => key.startsWith("TRIVY_")));
 });

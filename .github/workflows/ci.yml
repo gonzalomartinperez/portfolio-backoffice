@@ -1,19 +1,17 @@
-name: Quality
-'on':
+# CI entry point (ecosystem standard 6.0-6.2; PBO-M1-3). `classify` maps the changed files, branch
+# and labels to profiles through .github/ci-profile.json; every job runs only when its profile
+# selects it, and `ci-gate` is the single fail-closed required check. Shared jobs come from
+# gonzalomartinperez/engineering-standards pinned by commit SHA (release tag in the comment).
+name: ci
+on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
-    branches:
-      - develop
-      - main
-  merge_group: null
-  workflow_dispatch: null
-  workflow_call: null
+    types: [opened, synchronize, reopened, labeled, unlabeled, edited, ready_for_review]
   push:
-    branches:
-      - develop
-      - main
-permissions:
-  contents: read
+    branches: [develop, main]
+  merge_group:
+  workflow_dispatch:
+  workflow_call:
+permissions: {}
 env:
   PLAYWRIGHT_SKIP_BROWSER_GC: '1'
   DOCKER_BUILD_RECORD_UPLOAD: 'false'
@@ -26,55 +24,51 @@ defaults:
   run:
     shell: bash
 concurrency:
-  group: quality-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # PRs: one run per ref, newer pushes cancel older runs. Other events: one group per commit.
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  workflows:
-    name: Workflow validation
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Validate paired profile, events and security policy
-        run: node scripts/check-ci-profile.ts
-      - name: Run checksum-verified official actionlint
-        run: node scripts/check-workflows.ts
-  secrets:
-    name: Secret scan
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install locked scanner dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Scan candidate and reachable history with redacted output
-        run: npm run security:check
+  classify:
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/classify.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    permissions:
+      contents: read
+      pull-requests: read
+  docs:
+    needs: classify
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'docs')
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/docs.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    permissions:
+      contents: read
+    with:
+      # The README follows the ecosystem template from the M6 copy refresh (OD-09).
+      readme-check: false
+  security:
+    needs: classify
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'security')
+    uses: gonzalomartinperez/engineering-standards/.github/workflows/security.yml@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      dependency-review: true
   static:
+    name: Static checks
+    needs: [classify]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'static')
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -89,26 +83,25 @@ jobs:
         run: npm audit --audit-level=moderate && npm audit --prefix tooling/api-contract --audit-level=moderate
       - name: Run the repository check (same command as the pre-commit hook and AGENTS.md)
         run: npm run check
-      - name: Verify dependency protection access or mandatory disabled state
-        run: node scripts/dependency-automation.ts
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DEPENDENCY_INSPECT: 'true'
-          DEPENDABOT_AUTOMERGE: ${{ vars.DEPENDABOT_AUTOMERGE }}
-          DEPENDABOT_POLICY_READY: ${{ vars.DEPENDABOT_POLICY_READY }}
       - name: Reject generated contract drift
         run: npm run contract:generate && git diff --exit-code contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/product-analytics-v2.types.d.ts contracts/feedback.types.d.ts
-    name: Static checks
   database:
     name: Database tests
-    needs: static
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'database')
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -121,7 +114,10 @@ jobs:
         run: node --test tests/integration/auth.test.ts
   container:
     name: Container verification
-    needs: static
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'container')
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -145,24 +141,28 @@ jobs:
           --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
           --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
+          # No package cache in jobs that build the runtime image (cache-poisoning hardening).
+          package-manager-cache: false
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Expose this job's PostgreSQL service network
         env:
           SERVICE_NETWORK: ${{ job.services.postgres.network }}
         run: echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
       - name: Bind build start to this candidate
         run: node scripts/ci-build-provenance.ts start
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: infra/docker/app/Dockerfile
@@ -232,7 +232,10 @@ jobs:
           rm -f /tmp/backoffice-fixture.env
   browser:
     name: Browser tests
-    needs: static
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'browser')
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -258,17 +261,21 @@ jobs:
           --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
           --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
+          # No package cache in jobs that build the runtime image (cache-poisoning hardening).
+          package-manager-cache: false
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Expose this job's PostgreSQL service network
         env:
           SERVICE_NETWORK: ${{ job.services.postgres.network }}
@@ -278,7 +285,7 @@ jobs:
           echo "BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@127.0.0.1:$SERVICE_PORT/backoffice_test" >> "$GITHUB_ENV"
       - name: Bind build start to this candidate
         run: node scripts/ci-build-provenance.ts start
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: infra/docker/app/Dockerfile
@@ -347,27 +354,22 @@ jobs:
         run: |
           docker rm -f assistant-browser
           rm -f /tmp/backoffice-fixture.env
-  checks:
+  ci-gate:
+    # Transitional display name: branch protection still requires the "Required checks" context.
+    # The owner-supervised ruleset step (PBO-M1-11) switches the required check to `ci-gate` and
+    # drops this name in the same change.
+    name: Required checks
     if: always()
-    needs:
-      - workflows
-      - secrets
-      - static
-      - database
-      - container
-      - browser
+    needs: [classify, docs, security, static, database, container, browser]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    permissions: {}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+          egress-policy: audit
+      - uses: gonzalomartinperez/engineering-standards/actions/ci-gate@1f33be46bcb95f42f550f74608bc679cae5575ad # v1.0.0
         with:
-          node-version-file: .nvmrc
-          package-manager-cache: false
-      - name: Require every validation job
-        env:
-          CI_RESULTS: ${{ toJSON(needs) }}
-        run: node scripts/check-ci-results.ts
-    name: Required checks
+          needs: ${{ toJSON(needs) }}
+          expected: ${{ needs.classify.outputs.jobs }}

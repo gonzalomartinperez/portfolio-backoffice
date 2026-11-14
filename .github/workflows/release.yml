@@ -1,3 +1,5 @@
+# Release verification (PBO-M1-8 completes it with release-please, build, attest and a gated
+# publish). Registry publication stays disabled until MV (DR-13, PBO-D10).
 name: Prepare immutable release
 on:
   workflow_dispatch:
@@ -7,30 +9,14 @@ on:
         required: true
         type: boolean
         default: false
-permissions:
-  contents: read
-defaults:
-  run:
-    shell: bash
+permissions: {}
 concurrency:
   group: backoffice-release
   cancel-in-progress: false
 jobs:
   verify:
     if: github.ref == 'refs/heads/develop' && inputs.publication_authorized
-    uses: ./.github/workflows/quality.yml
-  publish:
-    # Ordinary quality runs keep image bytes on their ephemeral runner. Re-enable only after
-    # the private registry/artifact handoff is implemented and separately owner-approved.
-    if: ${{ false }}
-    needs: verify
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    environment: container-release
+    uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
-    steps:
-      - name: Refuse an unconfigured artifact publication path
-        run: |
-          echo "Private artifact publication is not configured; no image was published."
-          exit 1
+      pull-requests: read

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { load } from "js-yaml";
-import { field, list, record, text } from "../../scripts/json.ts";
+import { field, list, record } from "../../scripts/json.ts";
 
 const app = "infra/docker/app/Dockerfile";
 function rules(file: string) {
@@ -98,13 +98,13 @@ test("each context fails closed for private, unrelated and secret-shaped inputs"
 });
 
 test("CI and dependency discovery select owned recipes and never build a sibling repository", () => {
-  const workflow = record(load(readFileSync(".github/workflows/quality.yml", "utf8")));
+  const workflow = record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
   const steps = list(field(workflow, "jobs", "browser", "steps"));
   const build = steps.find((step) => field(step, "with", "file") === app);
   assert.equal(field(build, "with", "context"), ".");
   assert.equal(field(build, "with", "file"), app);
   for (const job of Object.keys(record(workflow.jobs))) {
-    for (const step of list(field(workflow, "jobs", job, "steps"))) {
+    for (const step of list(field(workflow, "jobs", job, "steps") ?? [])) {
       assert.equal(field(step, "with", "repository"), undefined, job);
       assert.doesNotMatch(JSON.stringify(step), /portfolio-assistant-api|api-compatibility/, job);
     }
@@ -115,7 +115,7 @@ test("CI and dependency discovery select owned recipes and never build a sibling
     .map((entry) => field(entry, "directory"));
   assert.deepEqual(directories, ["/infra/docker/app"]);
   const release = record(load(readFileSync(".github/workflows/release.yml", "utf8")));
-  assert.match(text(field(release, "jobs", "publish", "if")), /^\$\{\{\s*false\s*\}\}$/);
+  assert.equal(field(release, "jobs", "publish"), undefined);
 });
 
 test("current documented builds use explicit recipes and root context", () => {

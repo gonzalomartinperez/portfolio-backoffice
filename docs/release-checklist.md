@@ -11,7 +11,7 @@ belongs to its dated receipts and the portfolio owner, not to this runtime.
 | Calendar analytics | UTC periods, distinct filter scopes, receipt coverage and withheld-cell semantics. The native→API/PostgreSQL→authenticated UI fixture proof is separately attributed in the work checklist. |
 | Architecture | Pure feature models/ports, concrete adapters, private server composition, client entry and shared UI. AST negatives protect direct/transitive server paths and valid Server Action RPCs. |
 | Runtime | Exact trace closure for Node migrations, non-root read-only production image, health/readiness distinction, graceful shutdown and isolated PostgreSQL restore/restart tests. |
-| Quality | Frozen installation, Biome, strict TypeScript7/generated routes, unit/contract/architecture checks, real IAM/fake-provider integration, Chromium/Firefox/WebKit accessibility/interaction checks and redacted history scan. |
+| ci (`static`, `database`, `container`, `browser`) | Frozen installation, Biome, strict TypeScript7/generated routes, unit/contract/architecture checks, real IAM/fake-provider integration, Chromium/Firefox/WebKit accessibility/interaction checks and redacted history scan. |
 | Delivery | Normal current-head CI/review before develop/main PR merge. Publication and production require separate authority; vps-ops owns Coolify, routing, shared resources and recovery. |
 
 Review [the runtime contract](deployment-contract.md), [Docker ownership](ci.md),
