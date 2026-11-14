@@ -13,6 +13,7 @@
     "check:fast": "npm run format:check && npm run lint && npm run typecheck && vitest run --project unit tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
     "prepare": "git config core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true",
     "knip": "knip",
+    "scorecard": "node scripts/scorecard/run.ts",
     "quality:static": "node scripts/check-static-ratchets.ts && node scripts/check-tokens.ts",
     "contract:check": "node scripts/check-contract.ts",
     "contract:generate": "npm run generate --prefix tooling/api-contract",
