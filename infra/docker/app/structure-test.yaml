@@ -1,0 +1,61 @@
+# container-structure-test for the runtime image (master plan ci-cd.md section 7): non-root
+# user, explicit command, labels, no shell, no secrets files, migration runtime present.
+schemaVersion: 2.0.0
+metadataTest:
+  user: "65532:65532"
+  workdir: /app
+  exposedPorts: ["3000"]
+  entrypoint: []
+  cmd: ["node", "server.js"]
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: NEXT_TELEMETRY_DISABLED
+      value: "1"
+    - key: APP_REVISION
+      value: "^[0-9a-f]{40}$"
+      isRegex: true
+  labels:
+    - key: org.opencontainers.image.source
+      value: https://github.com/gonzalomartinperez/portfolio-backoffice
+    - key: org.opencontainers.image.licenses
+      value: MIT
+    - key: org.opencontainers.image.title
+      value: portfolio-backoffice
+    - key: org.opencontainers.image.revision
+      value: "^[0-9a-f]{40}$"
+      isRegex: true
+    - key: org.opencontainers.image.version
+      value: "^\\d+\\.\\d+\\.\\d+"
+      isRegex: true
+fileExistenceTests:
+  - name: no shell
+    path: /bin/sh
+    shouldExist: false
+  - name: no bash
+    path: /bin/bash
+    shouldExist: false
+  - name: standalone server
+    path: /app/server.js
+    shouldExist: true
+  - name: licence
+    path: /app/LICENSE
+    shouldExist: true
+  - name: migration command
+    path: /app/scripts/auth-migrate.ts
+    shouldExist: true
+  - name: IAM migration
+    path: /app/migrations/001-access.sql
+    shouldExist: true
+  - name: no dotenv
+    path: /app/.env
+    shouldExist: false
+  - name: no local dotenv
+    path: /app/.env.local
+    shouldExist: false
+  - name: no CI artifacts
+    path: /app/.artifacts
+    shouldExist: false
+  - name: no git metadata
+    path: /app/.git
+    shouldExist: false

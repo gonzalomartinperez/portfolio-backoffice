@@ -15,7 +15,8 @@ release tag in a comment.
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, unit/contract/architecture tests, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
 | database | this repository | code, contract, workflow | `tests/integration/auth.test.ts` on a Testcontainers PostgreSQL 18 (digest pinned) |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
-| container | this repository | code, contract, workflow | Load that tarball; Trivy HIGH/CRITICAL gate, migrated readiness, bounded runtime and SIGTERM |
+| scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
+| container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
 | browser | this repository | code, contract, workflow | Load that tarball and run the Playwright suite against it with the PostgreSQL service |
 | ci-gate | shared `ci-gate` action | always | Fails unless every selected job succeeded; a skipped job passes only when classify did not select it |
 
@@ -55,8 +56,11 @@ Test PostgreSQL images are ephemeral fixture infrastructure, not production arti
 production PostgreSQL is provisioned by vps-ops.
 
 The container job verifies read-only non-root operation, bounded memory, PIDs and logs,
-readiness, anonymous workload and idle SIGTERM, and Trivy 0.75.0 (checksum verified) rejects
-every HIGH or CRITICAL finding, fixed or not. The browser job runs every interaction and
+readiness, anonymous workload and idle SIGTERM. The scan job runs container-structure-test
+(`infra/docker/app/structure-test.yaml`: user 65532, explicit command, labels, no shell, no
+`.env` or `.artifacts`, migration runtime present), dockle (warnings fail), Grype (fixable HIGH
+or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept seven days), all
+checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
 screenshots, for seven days; images, logs, environment files, sessions, invitation links,
 traces and database dumps are never uploaded.
