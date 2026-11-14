@@ -14,6 +14,7 @@ release tag in a comment.
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, Vitest unit/contract/architecture tests with the coverage floors of `quality/ratchets/coverage.json`, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
 | database | this repository | code, contract, workflow | Unit and `integration` Vitest projects with coverage (`npm run test:coverage`, Testcontainers PostgreSQL 18, digest pinned); on pull requests the diff coverage gate (`scripts/diff-coverage.ts`): changed executable lines of TypeScript modules under `src/` outside `src/app/` need 90 % on auth and DAL code and 80 % elsewhere (`.tsx` joins with the component project) |
+| component | this repository | code, contract, workflow | The `component` Vitest project (Browser Mode, Playwright provider, headless Chromium and WebKit) against `tests/component/**/*.test.tsx`; browsers installed with `playwright install --with-deps --only-shell chromium webkit`; no PostgreSQL |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
@@ -63,7 +64,35 @@ or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept se
 checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
 screenshots, for seven days; images, logs, environment files, sessions, invitation links,
-traces and database dumps are never uploaded.
+traces, Playwright blob reports and database dumps are never uploaded.
+
+### Browser journeys, projects and reports
+
+Browser tests live in journey files under `tests/browser/` (`access-control`, `owner-overview`,
+`preferences`, `workbench`, `mobile-overview`, `product-analytics`, `operational-failure`,
+`privacy`); shared helpers are in `tests/browser/support/`. Each test carries one role tag
+(`@anonymous`, `@owner`, `@viewer`) and narrow-viewport journeys also carry `@mobile`.
+
+- `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
+  owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
+  uploaded). Role projects depend on it; its `cleanup` teardown deletes that state at the end
+  of the run.
+- `chromium-`, `firefox-` and `webkit-` with `anonymous` (no storage state), `owner` and
+  `viewer`: each test runs once per browser, in the project whose role matches its tag.
+- `iphone-15` (WebKit) and `pixel-7` (Chromium) run the `@mobile` journeys as the viewer. Pull
+  requests run the desktop projects plus `iphone-15`; the nightly runs every project, so
+  `pixel-7` is nightly only. A narrow run is for example
+  `npm run test:browser -- --project=iphone-15`.
+- The unavailable-state fixture is selected with `--grep "operational failure"`, the available
+  one with `--grep-invert "operational failure"`; the `setup` project still runs under both.
+- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off.
+  The blob reports stay on the runner, ready for `npx playwright merge-reports` when the job
+  is sharded; they are not uploaded, because failure attachments (`error-context.md` page
+  snapshots) can contain a fixture invitation link.
+- `failOnFlakyTests` is on for runs targeting `main`, which includes the release pull request
+  (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
+  `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
+  retry is reported as flaky without failing the run.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
@@ -137,6 +166,34 @@ in the same PR (`node scripts/check-static-ratchets.ts --write` rewrites `static
 refuses to raise a count). Property tests (`tests/unit/properties.test.ts`) run 100 cases per
 property; set `FC_NUM_RUNS=1000` for the nightly run.
 
+## Security tests
+
+The `unit` project carries the PBO-M2-6 security suite (no database, no network; the shared seam
+is `tests/security/auth-harness.ts`, a scripted Better Auth runtime):
+
+- `tests/unit/authz-matrix.test.ts` enumerates every page, route handler method and `"use server"`
+  export in `src/` (and fails if a Pages Router directory appears) and fails when
+  `tests/security/authz-matrix.ts` lacks one or lists one that no longer exists. Each guarded
+  surface must call its guard as its first await and have a behavioral probe. It runs the real
+  `requireAccess`, `requireOwner`, `inviteUser`, `revokeAccess` and `GET /api/operations` as
+  anonymous, unverified-email, revoked, viewer and owner. Actions are keyed by module path and
+  export name, and duplicate identities fail. Page bodies are not executed in unit tests:
+  branch-dependent guards (for example behind a query parameter) are covered only by the
+  first-await rule and the browser journeys.
+- `tests/unit/security-headers.test.ts` pins the proxy and per-handler headers at the unit level
+  (proxy and handler layers; it does not exercise the wire or the merged Next response). The
+  proxy matcher is checked with Next's `unstable_doesMiddlewareMatch` against every enumerated
+  page and route path.
+- `tests/unit/dto-leak.test.ts` allowlists client-island props and the data loaders return.
+- `tests/unit/log-redaction.test.ts` is the logging skeleton: literal-only `console` calls.
+- `tests/unit/better-auth-advisories.test.ts` pins the Better Auth floor and mitigating config.
+
+Origin and CSRF: the unit tests pin configuration only (`disableOriginCheck`/`disableCSRFCheck`
+false, trusted origins, and no `serverActions` option so Next's same-origin Server Action check
+stays). Hostile-Origin behavior is covered by `tests/integration/auth.test.ts` for one mutation,
+`POST /api/auth/sign-out` with a foreign Origin (403), plus an invalid OAuth `state` callback.
+Known gap: no test sends a hostile Origin to a Server Action, which relies on Next's built-in check.
+
 ## Nightly contract consumer check
 
 `nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
@@ -181,6 +238,14 @@ the `v*` tag ruleset is applied with the standards rulesets script (PBO-M1-11).
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.
 
+## Component tests
+
+`npm run test:component` runs the `component` project in real Chromium and WebKit (Vitest Browser
+Mode, `@vitest/browser-playwright`, `vitest-browser-react`). Locally, install the browsers once
+with `npx playwright install chromium webkit`. The same components render on the `/__kit` gallery,
+which the test server enables with `BACKOFFICE_KIT=enabled`; the runtime image and the deployment
+contract never set it, so the route answers 404 in production.
+
 ## Scorecard
 
 `npm run scorecard` aggregates committed `quality/ratchets/*.json` and optional coverage,
@@ -197,7 +262,6 @@ warn-mode ratchet older than 14 days or missing a valid `warnSince` date (future
 or malformed input, including an explicit path that does not exist, return 2; a successful evaluation returns 0. The nightly `scorecard`
 job measures unit coverage, downloads the flaky report when available and retains the
 scorecard artifact for 14 days, including when evaluation finds a regression.
-
 
 Scorecard artifact formats:
 
