@@ -39,8 +39,6 @@
         ".githooks/**",
         ".git-blame-ignore-revs",
         ".env.example",
-        "release-please-config.json",
-        ".release-please-manifest.json",
         "standards.lock",
         "LICENSE"
       ],
