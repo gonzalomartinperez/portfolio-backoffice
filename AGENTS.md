@@ -56,6 +56,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Skills: canonical `.agents/skills/<name>/SKILL.md` (with `evals/`); `.claude/skills/` holds
   relative symlinks for Claude Code. Catalog and maintenance: [docs/agent-skills.md](docs/agent-skills.md).
 - Full contract behind these boundaries: [docs/reference/backoffice-conventions.md](docs/reference/backoffice-conventions.md).
+- Owner-only repository settings and their commands: [docs/reference/repository-settings.md](docs/reference/repository-settings.md).
 - Style and TypeScript adaptations: [CONTRIBUTING.md](CONTRIBUTING.md). Auth:
   [docs/authentication.md](docs/authentication.md). Runtime contract:
   [docs/deployment-contract.md](docs/deployment-contract.md). CI: [docs/ci.md](docs/ci.md).
