@@ -507,6 +507,35 @@ jobs:
         run: |
           docker rm -f assistant-browser
           rm -f /tmp/backoffice-fixture.env
+  node-next:
+    # Two-week dual-version window before the Node 26 flip (E10, OD-77): informational, so it is
+    # deliberately not in ci-gate.needs. Its result is read in the M1 exit review.
+    name: Node 26 (informational)
+    needs: classify
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'static')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.13.1
+          package-manager-cache: false
+      - name: Install locked dependencies (engines allow Node 24 only until the flip)
+        run: npm ci --no-audit --no-fund --engine-strict=false
+      - name: Type-check, unit and contract tests on Node 26
+        run: npm run typecheck && npm test
+      - name: Production build on Node 26
+        run: npm run build
+
   ci-gate:
     name: ci-gate
     if: always()

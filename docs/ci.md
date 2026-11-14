@@ -86,6 +86,13 @@ before the build. Deviations, justified: the healthcheck probes readiness (`/api
 Coolify gates traffic on health, and the entrypoint stays empty so the vps-ops migration command
 `node scripts/auth-migrate.ts` and `node server.js` remain explicit.
 
+## Node 26 window
+
+`node-next` runs type-check, unit and contract tests and the production build on Node 26
+(26.13.1) whenever `static` runs. It is informational, not in `ci-gate.needs`: the backoffices
+move to Node 26 after two weeks of green dual-version CI (E10, OD-77), then `.nvmrc`, `engines`
+and the Dockerfile base arguments flip in one PR and this job is removed.
+
 ## Scheduled jobs
 
 `vuln-daily.yml` (shared, daily 07:00 ART) runs osv-scanner over every lockfile and a

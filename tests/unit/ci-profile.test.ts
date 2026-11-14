@@ -89,7 +89,7 @@ test("job names in the profile map and ci.yml agree and ci-gate needs every job"
   assert.deepEqual([...named].sort(), [...ownJobs, ...sharedJobs].sort());
   assert.deepEqual(
     Object.keys(jobs).sort(),
-    ["classify", "ci-gate", "required-checks", ...ownJobs, ...sharedJobs].sort(),
+    ["classify", "ci-gate", "required-checks", "node-next", ...ownJobs, ...sharedJobs].sort(),
   );
   for (const id of [...ownJobs, ...sharedJobs]) {
     assert.equal(
@@ -111,7 +111,7 @@ test("job names in the profile map and ci.yml agree and ci-gate needs every job"
   assert.deepEqual(
     list(gate.needs).map(text).sort(),
     Object.keys(jobs)
-      .filter((id) => id !== "ci-gate" && id !== "required-checks")
+      .filter((id) => !["ci-gate", "required-checks", "node-next"].includes(id))
       .sort(),
   );
   assert.deepEqual(gate.permissions, {});
@@ -270,4 +270,11 @@ test("the image is built once and the runtime jobs load that exact tarball", () 
     assert.equal(field(load, "env", "IMAGE_ID"), `$${"{{"} needs.build.outputs.image-id }}`);
     assert.match(text(field(load, "run")), /docker image inspect portfolio-backoffice:rc --format/);
   }
+});
+
+test("the Node 26 job is informational during the dual-version window (E10)", () => {
+  const job = record(field(workflow(), "jobs", "node-next"));
+  assert.equal(field(list(job.steps)[2], "with", "node-version"), "26.13.1");
+  assert.ok(!list(field(workflow(), "jobs", "ci-gate", "needs")).includes("node-next"));
+  assert.equal(job.if, "contains(fromJSON(needs.classify.outputs.jobs), 'static')");
 });
