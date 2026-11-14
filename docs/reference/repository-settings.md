@@ -17,7 +17,7 @@ Run each command from a shell authenticated as `gonzalomartinperez`.
 | `production` environment | does not exist | create with a required reviewer (step 5) |
 | release-please GitHub App | none | create when release automation starts (step 6) |
 | Default branch | `main` (scheduled workflows and Dependabot read it) | decide (step 7) |
-| dependency-review licence allow-list | ecosystem default (no LGPL) | decide (step 8) |
+| dependency-review licence allow-list | ecosystem default plus `LGPL-3.0-or-later` (OD-80) | done (step 8) |
 
 ## 1. Private vulnerability reporting (PBO-D16)
 
@@ -86,8 +86,7 @@ GitHub shows and uses for new PRs. Either choice is consistent with OD-10 and OD
 
 ## 8. Licence allow-list for dependency review
 
-The shared `security` workflow fails a PR that adds a dependency outside the ecosystem allow-list.
-`next` depends on `@img/sharp-*` binaries licensed `LGPL-3.0-or-later` (optional native image
-processing). A weekly dependency PR that bumps them will fail until the owner either accepts
-`LGPL-3.0-or-later` for these packages (a task PR passes `allow-licenses` to the `security` job) or
-excludes them.
+Decided (OD-80, 2026-11-14): the `security` job passes the ecosystem allow-list plus
+`LGPL-3.0-or-later`, so `next`'s unmodified, dynamically loaded `@img/sharp-*` libvips binaries
+(optional native image processing) pass dependency review. Copyleft that would affect this
+repository's own code stays denied. No owner step remains.
