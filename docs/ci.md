@@ -70,6 +70,18 @@ the SHA-256 and `docker load` it, so every runtime check tests the same bytes. T
 only public MIT source and synthetic values. BuildKit reads the `type=gha` cache on every
 run; only pushes to `develop` write it.
 
+## Image recipe
+
+`infra/docker/app/Dockerfile` follows the ecosystem's canonical Next.js row: `NODE_IMAGE` and
+`RUNTIME_IMAGE` build arguments pinned by digest (Node 24 until the E10 flip), `npm ci
+--ignore-scripts`, a distroless non-root runtime (UID 65532) and OCI labels (title,
+description, documentation, source, version, revision, created, licences). The build job
+passes `APP_VERSION` (package.json), `APP_REVISION` (commit SHA) and `BUILD_DATE` (commit
+time), all non-secret. hadolint 2.15.1 (checksum verified, `.hadolint.yaml`) lints the recipe
+before the build. Deviations, justified: the healthcheck probes readiness (`/api/ready`) because
+Coolify gates traffic on health, and the entrypoint stays empty so the vps-ops migration command
+`node scripts/auth-migrate.ts` and `node server.js` remain explicit.
+
 ## Scheduled jobs
 
 `vuln-daily.yml` (shared, daily 07:00 ART) runs osv-scanner over every lockfile and a

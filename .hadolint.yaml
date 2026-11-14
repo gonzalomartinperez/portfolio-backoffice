@@ -1,0 +1,10 @@
+# hadolint policy for infra/docker/app/Dockerfile (master plan ci-cd.md section 7). In-repo until
+# engineering-standards ships a shared .hadolint.yaml; then it becomes a drift-checked copy.
+failure-threshold: warning
+override:
+  error:
+    - DL3006 # pin image versions
+    - DL3007 # never :latest
+trustedRegistries:
+  - docker.io
+  - gcr.io
