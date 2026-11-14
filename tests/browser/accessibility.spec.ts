@@ -80,14 +80,15 @@ test("axe wcag22aa owner access revoke confirmation dialog", { tag: "@owner" }, 
 }) => {
   test.skip(!available, "Available-mode lifecycle only");
   await auditState(page, "/access", async (current) => {
-    // Opens the confirmation on an existing viewer member; it is never confirmed.
-    await expect(async () => {
-      await current
-        .getByRole("button", { name: /^(Revoke|Revocar)/ })
-        .first()
-        .click();
-      await expect(current.getByRole("dialog")).toBeVisible({ timeout: 2000 });
-    }).toPass({ timeout: 10_000 });
+    // Opens the confirmation on an existing viewer member; it is never confirmed. The server may
+    // already render lang="en", so wait for the client scripts to settle (hydration) and click
+    // once; a retried click could act on a half-open dialog.
+    await current.waitForLoadState("networkidle");
+    await current
+      .getByRole("button", { name: /^(Revoke|Revocar)/ })
+      .first()
+      .click();
+    await expect(current.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
   });
 });
 
