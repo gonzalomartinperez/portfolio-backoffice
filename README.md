@@ -218,28 +218,15 @@ registration are disabled.
 
 Use a disposable database on an unused loopback port. The values below are public test
 credentials, not production secrets.
-PostgreSQL/pgvector has one canonical recipe in the API repository. Build the reviewed
-committed source rather than a second IAM-only database recipe:
+Integration tests start their own digest-pinned PostgreSQL 18 container with Testcontainers
+(`npm run test:auth`, Docker required). For the browser preview, run the same pinned image:
 
 ```sh
-git clone --filter=blob:none --no-checkout https://github.com/gonzalomartinperez/portfolio-assistant-api.git .artifacts/api-compatibility
-(
-  cd .artifacts/api-compatibility
-  git checkout --detach 5d882dd417e9bdcf5b6ec1c864be31a9a27c57d3
-  docker build -f infra/docker/postgres/Dockerfile -t portfolio-assistant-postgres:project-ci .
-)
-
 docker run -d --rm --name portfolio-readme-fixture \
-  --user 70:70 --read-only --cap-drop ALL --security-opt no-new-privileges \
-  --memory 384m --cpus 0.5 --pids-limit 128 \
-  --tmpfs /tmp:rw,noexec,nosuid,size=16m \
-  --tmpfs /var/run/postgresql:uid=70,gid=70,mode=0775,size=16m \
-  --tmpfs /var/lib/postgresql/18/docker:uid=70,gid=70,mode=0700,size=256m \
-  -e PGDATA=/var/lib/postgresql/18/docker \
   -e POSTGRES_USER=backoffice_fixture -e POSTGRES_PASSWORD=public-fixture-only \
   -e POSTGRES_DB=backoffice_test \
   -p 127.0.0.1:15432:5432 \
-  portfolio-assistant-postgres:project-ci
+  postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
 
 docker exec portfolio-readme-fixture pg_isready -h 127.0.0.1 -U backoffice_fixture -d backoffice_test
 npm run build
@@ -252,9 +239,9 @@ provisions private signed owner/viewer sessions and starts the synthetic operati
 It requires ports **3107**, **3108** and **8117** to be free. Add `--headed` to the test
 command to watch the real flows in a local desktop environment; headless works in CI.
 No external OAuth provider or model API is contacted.
-The pinned database uses Alpine UID70 and fresh data only. Never mount/chown an old
-Debian PGDATA directory; existing data needs a separate logical-migration and collation
-review. See the [shared database handoff](docs/deployment-contract.md#shared-project-postgresql-artifact).
+The pinned image is the one in `scripts/postgres-image.ts`, also used by the CI
+service containers. Use fresh data only; production PostgreSQL is provisioned by vps-ops. See the
+[shared database handoff](docs/deployment-contract.md#shared-project-postgresql-artifact).
 
 `npm run preview:fixture` is an optional manual server preview. Protected pages still
 require a signed fixture session, so an ordinary browser initially sees sign-in. The
@@ -295,8 +282,8 @@ PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium firefox
 npm run test:browser -- backoffice.spec.ts
 ```
 
-`npm run test:auth` additionally exercises real PostgreSQL with a local OAuth provider;
-set its fixture environment as documented in [authentication verification](docs/authentication.md#verification).
+`npm run test:auth` additionally exercises real PostgreSQL with a local OAuth provider; it
+starts its own digest-pinned PostgreSQL container with Testcontainers (Docker required).
 It does not contact Google/GitHub. Private session artifacts are ignored and never uploaded.
 
 | CI job | Purpose |
@@ -304,9 +291,9 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 | `workflows` | Validate SHA-pinned actions, shell syntax, the seven-job graph and negative policy fixtures. |
 | `secrets` | Scan tracked files and reachable history without printing suspected values. |
 | `static` | Frozen installs/audits, Biome, strict types, unit/contract/boundary checks and documentation/security/skill validation. |
-| `database` | Verify the canonical PostgreSQL artifact, complete inventory, IAM/OAuth, scoped two-application roles and independent recovery. |
+| `database` | Testcontainers PostgreSQL 18 (digest-pinned): IAM migrations, restricted runtime role, invitations, revocation and OAuth boundaries. |
 | `container` | Verify the actual non-root distroless image, HIGH/CRITICAL scan, readiness, resource bounds and shutdown. |
-| `browser` | Independently build the same reviewed app/database sources; verify actual-image admission, three browser engines and accessibility. |
+| `browser` | Build the reviewed app source against the digest-pinned PostgreSQL service; verify actual-image admission, three browser engines and accessibility. |
 | `checks` | Fail closed unless every required validation job succeeds. |
 
 The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict
