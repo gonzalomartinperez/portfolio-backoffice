@@ -70,8 +70,9 @@ traces, Playwright blob reports and database dumps are never uploaded.
 
 Browser tests live in journey files under `tests/browser/` (`access-control`, `owner-overview`,
 `preferences`, `workbench`, `mobile-overview`, `product-analytics`, `operational-failure`,
-`privacy`); shared helpers are in `tests/browser/support/`. Each test carries one role tag
-(`@anonymous`, `@owner`, `@viewer`) and narrow-viewport journeys also carry `@mobile`.
+`privacy`, `accessibility`, `keyboard`, `reflow`); shared helpers are in
+`tests/browser/support/`. Each test carries one role tag (`@anonymous`, `@owner`, `@viewer`)
+and narrow-viewport journeys also carry `@mobile`.
 
 - `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
   owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
@@ -93,6 +94,21 @@ Browser tests live in journey files under `tests/browser/` (`access-control`, `o
   (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
   `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
   retry is reported as flaky without failing the run.
+
+#### Accessibility matrix
+
+`accessibility.spec.ts` runs axe (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`) once
+per route state, looping over theme (dark, light) x locale (en, es) in `test.step`s. States:
+`@anonymous` sign-in, sign-in denied error and `/privacy`; `/access/invitation` always
+redirects to `/sign-in`, so one test only asserts that redirect, with and without a token;
+`@viewer` `/`, `/analytics`, `/privacy`; `@owner` `/`, `/analytics`,
+`/access` and `/access` with the revoke confirmation open. The two viewer operational-failure
+states run only in the unavailable fixture (`--grep "operational failure"`). Each step asserts
+no serious or critical violation, then no violation at all (`expectNoWcagViolations`).
+`keyboard.spec.ts` covers the skip link, visible focus on primary controls and reduced motion;
+`reflow.spec.ts` checks no horizontal overflow (document, body and elements in `main`, except
+intentional scrollers) at 320 and 640 CSS px (400 % and 200 % zoom of
+1280 px) in en and es. Dialog Escape and focus restoration stay in `access-control.spec.ts`.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
