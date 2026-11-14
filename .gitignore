@@ -16,3 +16,4 @@ playwright-report/
 /coverage
 /flake-reports
 /blob-report
+/scorecard.json

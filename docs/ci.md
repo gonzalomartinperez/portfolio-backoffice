@@ -245,3 +245,40 @@ Mode, `@vitest/browser-playwright`, `vitest-browser-react`). Locally, install th
 with `npx playwright install chromium webkit`. The same components render on the `/__kit` gallery,
 which the test server enables with `BACKOFFICE_KIT=enabled`; the runtime image and the deployment
 contract never set it, so the route answers 404 in production.
+
+## Scorecard
+
+`npm run scorecard` aggregates committed `quality/ratchets/*.json` and optional coverage,
+mutation, flaky, bundle, Lighthouse and axe JSON artifacts. It reuses the local static and
+contrast checkers, including the same knip category and per-file complexity comparisons
+as `quality:static`. Locally, only a tool spawn error with code `EPERM` or `ENOENT`
+permits the labelled committed baseline; tool output never triggers fallback. When `CI`
+is set, measurement errors return 2 without fallback. Readings
+carry their source and threshold; absent inputs are named gaps, never zero. Evaluator
+scores for P1–P6 and R1–R7 come from `quality/ratchets/scorecard.json` when available.
+
+The command writes `scorecard.json` before returning 1 for a regression, including any
+warn-mode ratchet older than 14 days or missing a valid `warnSince` date (future dates are invalid). Invalid flags
+or malformed input, including an explicit path that does not exist, return 2; a successful evaluation returns 0. The nightly `scorecard`
+job measures unit coverage, downloads the flaky report when available and retains the
+scorecard artifact for 14 days, including when evaluation finds a regression.
+
+Scorecard artifact formats:
+
+- `--bundle`: `{ "routes": { "/": { "bytes": 1234 } } }`; every numeric metric is lower-is-better.
+- `--lighthouse`: `{ "routes": { "/": { "performance": 90, "tbt": 120 } } }`.
+  `tbt`, `cls`, `lcp`, `fcp`, `si`, `ttfb` and metric names ending in `Ms` or `Bytes`
+  are lower-is-better; other metrics are higher-is-better. Use consistent units in artifacts
+  and baselines.
+- `--a11y`: `{ "violations": 2 }` (the serious/critical count), or an axe-style array
+  such as `[{ "impact": "serious" }, { "impact": "minor" }]`. Arrays count only
+  `serious` and `critical` impacts.
+
+Bundle and Lighthouse ratchets use
+`{ "baseline": { "routes": { "/": { "bytes": 1234 } } } }`, with the same route and
+metric keys as the artifact. A baseline route or metric absent from a supplied artifact
+is a regression; omitting the artifact flag produces a gap. Any ratchet may carry
+`"mode": "warn"` with `"warnSince": "2026-11-14"` (UTC `YYYY-MM-DD`). Warn mode
+adds an age check that passes through day 14 and regresses thereafter, or for invalid,
+missing or future dates; metric regressions still fail. Output reading statuses are
+`pass` and `regression`, with unavailable evidence listed separately as gaps.
