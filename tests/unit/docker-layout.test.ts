@@ -115,7 +115,7 @@ test("CI and dependency discovery select owned recipes and never build a sibling
     .map((entry) => field(entry, "directory"));
   assert.deepEqual(directories, ["/infra/docker/app"]);
   const release = record(load(readFileSync(".github/workflows/release.yml", "utf8")));
-  assert.equal(field(release, "jobs", "publish"), undefined);
+  assert.equal(field(release, "jobs", "publish", "permissions", "packages"), undefined);
 });
 
 test("current documented builds use explicit recipes and root context", () => {

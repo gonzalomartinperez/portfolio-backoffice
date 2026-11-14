@@ -94,17 +94,35 @@ summary (OD-75). `scorecard.yml` runs OpenSSF Scorecard weekly. Scheduled workfl
 the default branch, so they start when these files reach `main` (M7) unless the owner makes
 `develop` the default branch. CodeQL uses GitHub's default setup (a repository setting).
 
-## Required check and publication
+## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
 alias job with that display name mirrors `ci-gate` (it passes only when `ci-gate` succeeded),
 so both contexts exist on every run. The owner-supervised ruleset step (PBO-M1-11) can then
 require `ci-gate` without a protection gap and delete the alias afterwards.
 
-`release.yml` is dispatch-only and calls `ci.yml` for the complete validation. It has no
-publication path; PBO-M1-8 adds build, attestation and a publish job gated on owner
-authorization. No deployment controller or registry publication exists here; private vps-ops
-selects releases and performs any separately authorized deployment.
+## Release
+
+`release.yml` (dispatch-only, from `develop` or `main`) runs three jobs. `verify` calls `ci.yml`,
+which runs everything and builds the image tarball once. `attest` downloads that tarball and its
+SBOM, checks the SHA-256 against `verify`'s output, and creates GitHub build-provenance and
+CycloneDX SBOM attestations for the tarball (Build L2; verify with
+`gh attestation verify backoffice-image.tar -R gonzalomartinperez/portfolio-backoffice`). The
+subject is the tarball digest, not a registry digest, until a registry push exists (honest limit,
+ci-cd.md section 6). `publish` runs only from `main` with `publication_authorized: true`, in the
+`production` environment, and only when `vars.REGISTRY_PUBLICATION_ENABLED` is `true` (otherwise
+it is skipped). It has no package permission and fails closed even when reached: registry publication and deployment stay off until MV (DR-13, PBO-D10), when
+the owner activates them in one reviewed PR. No deployment controller exists here; private
+vps-ops selects releases.
+
+release-please (manifest mode: `release-please-config.json`, `.release-please-manifest.json`,
+`CHANGELOG.md`) will keep one release PR on `develop` once the owner provides a GitHub App token
+(an owner scope). The ecosystem's sandbox validation of release-please on `develop` (E5) is still
+open. At activation, set `"release-as": "2.0.0"` on the `"."` package for the first release
+(PBO-D14) and remove it afterwards. The `production` environment does not exist yet: the owner
+creates it with themselves as required reviewer and a `main`-only branch policy before MV
+(GitHub would otherwise auto-create it unprotected). Immutable releases and the `v*` tag ruleset are repository settings, applied with the
+standards rulesets script (PBO-M1-11). The first release after the refactor is 2.0.0 (PBO-D14).
 
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.

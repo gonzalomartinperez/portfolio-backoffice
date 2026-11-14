@@ -1,11 +1,16 @@
-# Release verification (PBO-M1-8 completes it with release-please, build, attest and a gated
-# publish). Registry publication stays disabled until MV (DR-13, PBO-D10).
-name: Prepare immutable release
+# Release (master plan ci-cd.md section 9, PBO-M1-8, PBO-D10). verify -> attest -> gated publish.
+# `verify` runs the complete ci.yml (classify runs everything on workflow_dispatch) and builds the
+# image tarball once; `attest` binds build provenance and the CycloneDX SBOM to that exact
+# tarball (Build L2; the subject is the tarball digest until a registry push exists, an honest
+# limit recorded in the plan). `publish` needs the owner's explicit input, the `production`
+# environment and `vars.REGISTRY_PUBLICATION_ENABLED == 'true'`; registry publication stays
+# off until MV (DR-13), so the job has no package permission yet.
+name: release
 on:
   workflow_dispatch:
     inputs:
       publication_authorized:
-        description: "Image publication and GHCR package visibility have been explicitly approved"
+        description: "The owner has explicitly authorized registry publication of this release"
         required: true
         type: boolean
         default: false
@@ -15,8 +20,60 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.ref == 'refs/heads/develop' && inputs.publication_authorized
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
       pull-requests: read
+
+  attest:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - name: Download the verified image tarball
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: backoffice-image
+          path: ${{ runner.temp }}/release
+      - name: Download its SBOM
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: backoffice-sbom
+          path: ${{ runner.temp }}/release
+      - name: Verify the tarball is the one ci.yml built and tested
+        env:
+          IMAGE_SHA256: ${{ needs.verify.outputs.image-sha256 }}
+        run: echo "$IMAGE_SHA256  $RUNNER_TEMP/release/backoffice-image.tar" | sha256sum --check
+      - name: Attest build provenance for the tarball
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/release/backoffice-image.tar
+      - name: Attest the CycloneDX SBOM for the tarball
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: ${{ runner.temp }}/release/backoffice-image.tar
+          sbom-path: ${{ runner.temp }}/release/backoffice-sbom.cdx.json
+
+  publish:
+    needs: [verify, attest]
+    if: inputs.publication_authorized && github.ref == 'refs/heads/main' && vars.REGISTRY_PUBLICATION_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Fail closed until the MV activation PR adds the push (DR-13)
+        run: |
+          echo "Registry publication is not implemented yet (DR-13, PBO-D10); no image was pushed."
+          echo "Activation at MV adds packages: write and the push steps in one reviewed PR."
+          exit 1
