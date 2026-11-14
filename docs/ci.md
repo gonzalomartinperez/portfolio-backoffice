@@ -137,6 +137,29 @@ in the same PR (`node scripts/check-static-ratchets.ts --write` rewrites `static
 refuses to raise a count). Property tests (`tests/unit/properties.test.ts`) run 100 cases per
 property; set `FC_NUM_RUNS=1000` for the nightly run.
 
+## Security tests
+
+The `unit` project carries the PBO-M2-6 security suite (no database, no network; the shared seam
+is `tests/security/auth-harness.ts`, a scripted Better Auth runtime):
+
+- `tests/unit/authz-matrix.test.ts` enumerates every page, route handler method and `"use server"`
+  export in `src/` (and fails if a Pages Router directory appears) and fails when
+  `tests/security/authz-matrix.ts` lacks one or lists one that no longer exists. Each guarded
+  surface must call its guard as its first await and have a behavioral probe. It runs the real
+  `requireAccess`, `requireOwner`, `inviteUser`, `revokeAccess` and `GET /api/operations` as
+  anonymous, unverified-email, revoked, viewer and owner.
+- `tests/unit/security-headers.test.ts` pins the proxy and per-handler headers at the unit level
+  (proxy and handler layers; it does not exercise the wire or the merged Next response).
+- `tests/unit/dto-leak.test.ts` allowlists client-island props and the data loaders return.
+- `tests/unit/log-redaction.test.ts` is the logging skeleton: literal-only `console` calls.
+- `tests/unit/better-auth-advisories.test.ts` pins the Better Auth floor and mitigating config.
+
+Origin and CSRF: the unit tests pin configuration only (`disableOriginCheck`/`disableCSRFCheck`
+false, trusted origins, and no `serverActions` option so Next's same-origin Server Action check
+stays). Hostile-Origin behavior is covered by `tests/integration/auth.test.ts` for one mutation,
+`POST /api/auth/sign-out` with a foreign Origin (403), plus an invalid OAuth `state` callback.
+Known gap: no test sends a hostile Origin to a Server Action, which relies on Next's built-in check.
+
 ## Nightly contract consumer check
 
 `nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
