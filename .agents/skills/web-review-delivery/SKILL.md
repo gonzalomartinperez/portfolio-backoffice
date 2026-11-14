@@ -1,6 +1,10 @@
 ---
 name: web-review-delivery
-description: "Review or prepare application CI, immutable backoffice images and the Coolify runtime handoff. No production execution, publication or merge authority is implied."
+description: "Review or prepare backoffice application CI, immutable container images, dependency update policy and the runtime handoff document, without production authority. Use when the request touches GitHub Actions workflows, the Dockerfile, image scans, required checks, dependency bumps, secret scanning, README gallery or license checks, even if it is phrased as why CI is red, make the image smaller or prepare the release handoff. Do not use for public chat or portfolio site UI (portfolio repo), assistant API endpoints, retrieval or prompts (portfolio-assistant-api repo), actual deployment, Coolify or VPS operations (private vps-ops, owner-only), building backoffice features (web-change-backoffice), refreshing the API contract (web-refresh-contract) or browser and auth verification (web-verify-backoffice)."
+metadata:
+  owner: gonzalomartinperez
+  last-reviewed: "2026-11-14"
+  version: "1.1.0"
 ---
 
 Read the [operating contract](../../../AGENTS.md), [CI contract](../../../docs/ci.md),

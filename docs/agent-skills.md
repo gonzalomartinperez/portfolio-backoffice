@@ -19,10 +19,21 @@ remain authoritative. Skills load only the references needed for the current tas
 
 ## Discovery and maintenance
 
-Canonical sources are `.claude/skills/<name>/SKILL.md`. Relative directory symlinks in
-`.agents/skills/` point to those same folders. There are no independently editable copies
-or client-specific permission policies. Both clients use portable YAML `name` and
-`description` metadata and normal explicit/implicit discovery.
+Canonical sources are `.agents/skills/<name>/SKILL.md` (master plan PBO-M1-10, ecosystem
+standard 15.5). Relative directory symlinks in `.claude/skills/` point to those same folders;
+Codex, Gemini and Copilot read `.agents/skills` directly. There are no independently editable
+copies or client-specific permission policies. Frontmatter is portable: `name`,
+`description` ("Does X. Use when ... even if ... Do not use for ...", key trigger first, at
+most 1024 characters) and `metadata` (`owner`, `last-reviewed`, `version`).
+
+Each skill carries activation evals: `evals/triggers.json` (20 queries, 10 positive and 10
+near-miss negative, fixed 60/40 train/validation split) and `evals/evals.json` (output
+evals with checkable assertions). Protocol (master plan `skills.md` section 4): 3 runs per
+query on a clean context; a query passes when positives trigger at least half the time and
+negatives less than half; report precision and recall on the validation split only. A skill
+change is not merged if validation trigger accuracy drops by more than 10 points or the output
+delta turns negative. Running the evals needs model turns, so they are not part of CI;
+`npm run skills:check` validates their structure.
 
 In Codex invoke `$web-verify-backoffice`; in Claude Code invoke
 `/web-verify-backoffice`. Include the requested flow and whether fixes are authorized.
@@ -31,11 +42,12 @@ editing” should select this workflow while remaining read-only.
 
 To change a workflow, edit its canonical file and relevant maintained references. For a
 new recurring task, first check whether an existing workflow covers it. Add its relative
-Codex directory symlink, a precise non-overlapping description and representative scenarios.
+`.claude/skills` directory symlink, metadata, a precise non-overlapping description and
+its `evals/` files.
 Run `npm run skills:check`, `npm test`, `npm run docs:check` and
 `npm run security:check`. CI runs these in the existing static job, with no additional
-install/job. The validator checks YAML, portable metadata, names, catalog parity, relative
-symlink targets, local links, known commands, executable references, unfinished scaffolds
+install/job. The validator checks YAML, portable metadata and its `metadata` fields, the description
+form, eval structure, names, catalog parity, relative symlink targets, local links, known commands, executable references, unfinished scaffolds
 and machine-specific paths. The public-file scanner covers tracked canonical sources;
 structural checks cannot prove instruction quality or absence of secrets.
 

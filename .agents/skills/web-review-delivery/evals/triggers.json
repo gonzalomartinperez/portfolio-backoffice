@@ -1,0 +1,102 @@
+[
+	{
+		"query": "why is the required CI check red on my PR",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "review the Dockerfile for the backoffice image and make it non-root",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "prepare the runtime handoff doc for the image we just built",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "la imagen de contenedor falla el escaneo de vulnerabilidades, revisala",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "pin all GitHub Actions to commit SHAs",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "a dependency bot opened a PR bumping Better Auth, assess it",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "make sure the secret scanner covers git history in CI",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "check the README gallery images link to the original PNGs",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "add a chart for cost per day to the dashboard",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "refresh the API contract snapshot",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "publish the image and deploy it on Coolify now",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "change the assistant retrieval settings",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "run the browser suite in all three engines",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "fix the portfolio navbar on mobile",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "configure the VPS proxy and DNS for the backoffice",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "add a new invite rule for viewers",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "bump the contract to a new API commit",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "translate the dashboard labels into Spanish",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "review the release workflow permissions and cache scoping",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "prepare the deployment-contract notes for the immutable image",
+		"should_trigger": true,
+		"split": "validation"
+	}
+]

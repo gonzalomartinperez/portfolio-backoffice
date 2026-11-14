@@ -1,0 +1,102 @@
+[
+	{
+		"query": "verify the new access page works for viewers and owners",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "run the auth and browser suites and tell me what fails",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "screenshot the dashboard in EN and ES, dark and light",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "probá el backoffice en el celular y revisá que no se corte nada",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "check keyboard focus order and touch targets on the workbench",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "confirm an unauthenticated request cannot read operations data",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "does the layout hold at 200% text zoom in Firefox and WebKit",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "make sure sign-out really invalidates the session",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "add a usage chart to the backoffice",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "refresh the API contract to the new commit",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "deploy the image to the VPS",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "QA the public chat on the portfolio site",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "why is the image scan blocking CI",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "change the assistant retrieval prompt",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "implement a new revoke-invitation Server Action",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "write the endpoint that returns operations metrics in the API",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "update the Dockerfile to use a smaller runtime",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "add Spanish copy for the invite dialog",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "check dark and light screenshots in Spanish for the access page",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "run the browser tests for viewer and owner guards on an isolated database",
+		"should_trigger": true,
+		"split": "validation"
+	}
+]

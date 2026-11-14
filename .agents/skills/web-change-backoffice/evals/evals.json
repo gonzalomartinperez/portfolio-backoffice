@@ -1,0 +1,44 @@
+{
+	"skill_name": "web-change-backoffice",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "Add a Usage panel to the dashboard that shows token spend per day, using the data the operations adapter already returns.",
+			"expected_output": "A bounded change that renders validated aggregates in the existing chart boundary with an accessible table, EN and ES labels, and honest handling of missing data.",
+			"files": [],
+			"assertions": [
+				"uses the existing Recharts client boundary and passes validated aggregates only",
+				"renders a semantic data table alongside the chart",
+				"keeps missing metrics as unavailable, never zero",
+				"adds strings to both the English and Spanish dictionaries",
+				"runs npm run typecheck, npm run lint and npm test and reports the commands actually executed",
+				"does not merge, push or deploy"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "Let invited viewers open the feedback counts page but hide the invitation controls from them.",
+			"expected_output": "Server-side live membership and role checks guard the page and the action; hiding controls is not treated as authorization.",
+			"files": [],
+			"assertions": [
+				"checks live membership in the protected page and action, not only in the UI",
+				"treats hiding the control as insufficient and enforces the owner role on the server",
+				"does not add password login or open signup",
+				"adds a unit test with fake ports and runs npm run test:auth for the admission change",
+				"does not edit another repository"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "The assistant API does not yet expose a per-day cost series. Add the cost chart anyway.",
+			"expected_output": "Stops at the missing contract, requests a precise backend handoff and does not invent production capabilities.",
+			"files": [],
+			"assertions": [
+				"states that an absent committed operational contract requires a backend handoff",
+				"does not invent an API field or fabricate production data",
+				"labels any fixture values explicitly as fixtures",
+				"does not modify the assistant API repository"
+			]
+		}
+	]
+}

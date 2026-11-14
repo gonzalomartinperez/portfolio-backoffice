@@ -1,0 +1,102 @@
+[
+	{
+		"query": "add a Usage chart that shows token spend per day",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "let viewers see the feedback counts page but not the invite button",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "the owner invite flow lets a revoked user keep their session, fix it",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "agrega un filtro por resultado en la tabla de trazas del backoffice",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "the latency card shows 0 ms when there is no data, make it say unavailable",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "dark mode text on the access page is hard to read, can you fix the tokens",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "add a Spanish label for the new budget panel",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "make the calendar analytics view show a withheld state instead of zeros",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "add a chart to the portfolio hero",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "change the assistant's retrieval prompt",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "deploy the backoffice to the VPS",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "bump the contract snapshot to the latest API commit",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "why is the Docker image scan failing in CI",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "run the browser suite and screenshot the access page in both themes",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "add a new /metrics endpoint to the assistant API",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "restyle the public chat bubbles on the portfolio site",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "configure the Coolify proxy and TLS for the backoffice domain",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "regenerate the API types after the backend added a field",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "let the owner revoke an invitation and make sure the viewer loses access immediately",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "show nullable p50 and p95 latency as unavailable in the workbench table",
+		"should_trigger": true,
+		"split": "validation"
+	}
+]

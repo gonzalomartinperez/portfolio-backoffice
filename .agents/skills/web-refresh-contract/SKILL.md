@@ -1,6 +1,10 @@
 ---
 name: web-refresh-contract
-description: "Import a committed operational API handoff with provenance, runtime mapping and compatibility tests. Not API endpoint implementation or public chat migration."
+description: "Import a committed operational API handoff into the backoffice with provenance, runtime validation mapping and compatibility tests. Use when the request is to refresh, bump, re-pin or compare the API contract snapshot, regenerate types from a new API commit, or check contract drift, even if it is phrased as the backend added a field or the metrics response changed. Do not use for public chat or portfolio site UI (portfolio repo), implementing assistant API endpoints, retrieval or prompts (portfolio-assistant-api repo), deployment, Coolify or VPS operations (private vps-ops, owner-only), building backoffice features (web-change-backoffice), CI or image review (web-review-delivery) or UI and auth verification (web-verify-backoffice)."
+metadata:
+  owner: gonzalomartinperez
+  last-reviewed: "2026-11-14"
+  version: "1.1.0"
 ---
 
 Read the [operating contract](../../../AGENTS.md),
