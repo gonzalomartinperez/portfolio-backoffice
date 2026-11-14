@@ -2,7 +2,7 @@
   "$comment": "Static ratchet baselines (PBO-M2-10), measured on 2026-11-14. Counts may only fall (scripts/check-static-ratchets.ts). The knip findings are removed in PBO-M3-1, not by deleting code here. Complexity is Biome noExcessiveCognitiveComplexity with threshold 10 over src/ and scripts/ (quality/biome-complexity.json); line numbers are informational, the ratchet compares counts and scores per file.",
   "knip": {
     "config": "knip.json",
-    "total": 8,
+    "total": 7,
     "counts": {
       "binaries": 0,
       "catalog": 0,
@@ -11,7 +11,7 @@
       "devDependencies": 1,
       "duplicates": 0,
       "enumMembers": 0,
-      "exports": 3,
+      "exports": 2,
       "files": 0,
       "namespaceMembers": 0,
       "optionalPeerDependencies": 0,
