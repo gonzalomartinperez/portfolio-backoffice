@@ -1,6 +1,10 @@
 ---
 name: web-verify-backoffice
-description: "Verify backoffice authorization, operational states, keyboard behavior, responsive layouts and EN/ES themes with real PostgreSQL and synthetic operations. Not public conversation QA or deployment."
+description: "Verify the backoffice end to end: authorization guards, operational states, keyboard behavior, responsive layouts and EN/ES dark/light themes, using real PostgreSQL and synthetic operations. Use when the request is to test, QA, screenshot, audit accessibility or confirm a backoffice change works, run auth or browser suites, or check viewer versus owner access, even if it is phrased as does this look right in Spanish or try it on mobile. Do not use for public chat or portfolio site QA (portfolio repo), assistant API endpoints, retrieval or prompts (portfolio-assistant-api repo), deployment, Coolify or VPS operations (private vps-ops, owner-only), building features (web-change-backoffice), API contract imports (web-refresh-contract) or CI, image and README gallery capture review (web-review-delivery)."
+metadata:
+  owner: gonzalomartinperez
+  last-reviewed: "2026-11-14"
+  version: "1.1.0"
 ---
 
 Read the [operating contract](../../../AGENTS.md). Establish the affected flow and whether

@@ -23,8 +23,8 @@ export function validateSkills(directoryRoot: string) {
 	const root = realpathSync(directoryRoot);
 	const errors: string[] = [];
 	const names = new Set<string>();
-	const canonical = path.join(root, ".claude/skills");
-	const discovery = path.join(root, ".agents/skills");
+	const canonical = path.join(root, ".agents/skills");
+	const discovery = path.join(root, ".claude/skills");
 	const packages = record(
 		JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")),
 	);
@@ -46,11 +46,14 @@ export function validateSkills(directoryRoot: string) {
 			if (!match) throw new Error("Missing YAML frontmatter or skill body");
 			const meta = metadata(match[1] ?? "", true);
 			if (
-				Object.keys(meta).some((key) => !["name", "description"].includes(key))
+				Object.keys(meta).some(
+					(key) => !["name", "description", "metadata"].includes(key),
+				)
 			)
 				throw new Error(
-					"Only portable name/description metadata is supported here",
+					"Only portable name/description/metadata frontmatter is supported here",
 				);
+			validateMetadata(meta.metadata);
 			if (
 				typeof meta.name !== "string" ||
 				!/^web-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(meta.name) ||
@@ -64,9 +67,15 @@ export function validateSkills(directoryRoot: string) {
 			if (
 				typeof meta.description !== "string" ||
 				!meta.description.trim() ||
-				meta.description.length > 1024
+				meta.description.length > 1024 ||
+				!/\bUse when\b[\s\S]*\beven if\b[\s\S]*\bDo not use for\b/.test(
+					meta.description,
+				)
 			)
-				throw new Error("Invalid description");
+				throw new Error(
+					'Invalid description: state the job, then "Use when ... even if ... Do not use for ..."',
+				);
+			validateEvals(directory);
 			const link = path.join(discovery, folder);
 			if (
 				!lstatSync(link).isSymbolicLink() ||
@@ -74,7 +83,7 @@ export function validateSkills(directoryRoot: string) {
 				realpathSync(link) !== directory
 			)
 				throw new Error(
-					"Codex discovery must be a relative directory symlink to its canonical skill",
+					"Claude discovery must be a relative directory symlink to its canonical skill",
 				);
 			inspect(directory);
 		} catch (error) {
@@ -91,6 +100,93 @@ export function validateSkills(directoryRoot: string) {
 	)
 		errors.push("Claude entry must import the canonical AGENTS.md only");
 	return { names: [...names].sort(), errors };
+
+	function validateMetadata(value: unknown) {
+		let fields: Record<string, unknown>;
+		try {
+			fields = record(value);
+		} catch {
+			throw new Error("Missing metadata: owner, last-reviewed and version");
+		}
+		if (
+			Object.keys(fields).sort().join() !== "last-reviewed,owner,version" ||
+			typeof fields.owner !== "string" ||
+			!fields.owner.trim() ||
+			typeof fields["last-reviewed"] !== "string" ||
+			!/^\d{4}-\d{2}-\d{2}$/.test(fields["last-reviewed"]) ||
+			Number.isNaN(Date.parse(`${fields["last-reviewed"]}T00:00:00Z`)) ||
+			new Date(`${fields["last-reviewed"]}T00:00:00Z`)
+				.toISOString()
+				.slice(0, 10) !== fields["last-reviewed"] ||
+			typeof fields.version !== "string" ||
+			!/^\d+\.\d+\.\d+$/.test(fields.version)
+		)
+			throw new Error(
+				"Invalid metadata: owner, last-reviewed (YYYY-MM-DD) and version (x.y.z)",
+			);
+	}
+
+	function validateEvals(directory: string) {
+		const read = (name: string) => {
+			try {
+				return JSON.parse(
+					readFileSync(path.join(directory, "evals", name), "utf8"),
+				) as unknown;
+			} catch {
+				throw new Error(`Missing or invalid evals/${name}`);
+			}
+		};
+		const triggers = read("triggers.json");
+		const queries = Array.isArray(triggers) ? triggers.map(record) : [];
+		const count = (trigger: boolean, split: string) =>
+			queries.filter(
+				(query) =>
+					query.should_trigger === trigger &&
+					query.split === split &&
+					typeof query.query === "string" &&
+					query.query.trim(),
+			).length;
+		const texts = queries.map((query) =>
+			String(query.query).trim().toLowerCase(),
+		);
+		if (
+			queries.length !== 20 ||
+			new Set(texts).size !== texts.length ||
+			queries.some(
+				(query) =>
+					typeof query.should_trigger !== "boolean" ||
+					!["train", "validation"].includes(String(query.split)),
+			) ||
+			[true, false].some(
+				(trigger) =>
+					count(trigger, "train") !== 6 || count(trigger, "validation") !== 4,
+			)
+		)
+			throw new Error(
+				"evals/triggers.json needs 20 distinct queries: 10 positives and 10 near-miss negatives, 6 train and 4 validation each",
+			);
+		const outputs = record(read("evals.json"));
+		const cases = Array.isArray(outputs.evals) ? outputs.evals.map(record) : [];
+		if (
+			outputs.skill_name !== path.basename(directory) ||
+			cases.length < 2 ||
+			cases.some(
+				(entry) =>
+					typeof entry.prompt !== "string" ||
+					!entry.prompt.trim() ||
+					typeof entry.expected_output !== "string" ||
+					!Array.isArray(entry.assertions) ||
+					!entry.assertions.length ||
+					entry.assertions.some(
+						(assertion: unknown) =>
+							typeof assertion !== "string" || !assertion.trim(),
+					),
+			)
+		)
+			throw new Error(
+				"evals/evals.json needs the skill name and at least two prompts with expected output and string assertions",
+			);
+	}
 
 	function inspect(directory: string) {
 		const entries = readdirSync(directory);

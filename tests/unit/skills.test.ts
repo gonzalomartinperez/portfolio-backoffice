@@ -44,7 +44,7 @@ test("catalog rejects drift, escapes, malformed metadata and stale commands", ()
 		assert.deepEqual(validateSkills(root).errors, []);
 		const entry = path.join(
 			root,
-			".claude/skills/web-change-backoffice/SKILL.md",
+			".agents/skills/web-change-backoffice/SKILL.md",
 		);
 		const original = readFileSync(entry, "utf8");
 		for (const [change, expected] of [
@@ -71,6 +71,26 @@ test("catalog rejects drift, escapes, malformed metadata and stale commands", ()
 				/Only portable/,
 			],
 			[
+				original.replace(/\nmetadata:\n(?: {2}.*\n)+/, "\n"),
+				/Missing metadata/,
+			],
+			[
+				original.replace(/last-reviewed: .*/, 'last-reviewed: "soon"'),
+				/Invalid metadata/,
+			],
+			[original.replace(/Do not use for/, "Avoid"), /Invalid description/],
+			[original.replace(/Use when/, "Pick it"), /Invalid description/],
+			[original.replace(/even if/, "or"), /Invalid description/],
+			[
+				original.replace(/last-reviewed: .*/, 'last-reviewed: "2026-13-40"'),
+				/Invalid metadata/,
+			],
+			[original.replace(/version: .*/, 'version: "next"'), /Invalid metadata/],
+			[
+				original.replace(/version: .*/, 'version: "1.0.0"\n  extra: "x"'),
+				/Invalid metadata/,
+			],
+			[
 				original.replace(
 					"description:",
 					"broken: [private-sentinel\ndescription:",
@@ -85,7 +105,7 @@ test("catalog rejects drift, escapes, malformed metadata and stale commands", ()
 		writeFileSync(entry, original);
 		const clientFolder = path.join(
 			root,
-			".claude/skills/web-change-backoffice/agents",
+			".agents/skills/web-change-backoffice/agents",
 		);
 		mkdirSync(clientFolder);
 		const client = path.join(clientFolder, "openai.yaml");
@@ -112,18 +132,67 @@ test("catalog rejects drift, escapes, malformed metadata and stale commands", ()
 		assert.equal(redacted.includes("private-sentinel"), false);
 		rmSync(clientFolder, { recursive: true });
 		mkdirSync(
-			path.join(root, ".claude/skills/web-change-backoffice/references"),
+			path.join(root, ".agents/skills/web-change-backoffice/references"),
 		);
 		assert.match(validateSkills(root).errors.join("\n"), /Empty scaffold/);
-		rmSync(path.join(root, ".claude/skills/web-change-backoffice/references"), {
+		rmSync(path.join(root, ".agents/skills/web-change-backoffice/references"), {
 			recursive: true,
 		});
-		const link = path.join(root, ".agents/skills/web-change-backoffice");
+		const link = path.join(root, ".claude/skills/web-change-backoffice");
 		unlinkSync(link);
-		symlinkSync("../../.claude/skills/web-refresh-contract", link);
+		symlinkSync("../../.agents/skills/web-refresh-contract", link);
 		assert.match(
 			validateSkills(root).errors.join("\n"),
 			/relative directory symlink/,
+		);
+		unlinkSync(link);
+		symlinkSync("../../.agents/skills/web-change-backoffice", link);
+		const triggers = path.join(
+			root,
+			".agents/skills/web-change-backoffice/evals/triggers.json",
+		);
+		const queries = readFileSync(triggers, "utf8");
+		writeFileSync(
+			triggers,
+			JSON.stringify(
+				(JSON.parse(queries) as Array<{ should_trigger: boolean }>).filter(
+					(query) => query.should_trigger,
+				),
+			),
+		);
+		assert.match(validateSkills(root).errors.join("\n"), /near-miss negatives/);
+		const duplicated = JSON.parse(queries) as Array<{ query: string }>;
+		const [first] = duplicated;
+		if (first && duplicated[1]) duplicated[1].query = first.query;
+		writeFileSync(triggers, JSON.stringify(duplicated));
+		assert.match(validateSkills(root).errors.join("\n"), /20 distinct/);
+		unlinkSync(triggers);
+		assert.match(
+			validateSkills(root).errors.join("\n"),
+			/Missing or invalid evals\/triggers\.json/,
+		);
+		writeFileSync(triggers, queries);
+		const outputs = path.join(
+			root,
+			".agents/skills/web-change-backoffice/evals/evals.json",
+		);
+		const evals = JSON.parse(readFileSync(outputs, "utf8")) as {
+			skill_name: string;
+			evals: Array<{ assertions: unknown[] }>;
+		};
+		writeFileSync(outputs, JSON.stringify({ ...evals, skill_name: "other" }));
+		assert.match(validateSkills(root).errors.join("\n"), /evals\.json needs/);
+		const [firstCase] = evals.evals;
+		if (firstCase) firstCase.assertions = [""];
+		writeFileSync(outputs, JSON.stringify(evals));
+		assert.match(validateSkills(root).errors.join("\n"), /evals\.json needs/);
+		symlinkSync(
+			"../../.agents/skills/web-change-backoffice",
+			path.join(root, ".claude/skills/extra"),
+		);
+		assert.match(
+			validateSkills(root).errors.join("\n"),
+			/discovery catalogs differ/,
 		);
 	} finally {
 		rmSync(root, { recursive: true, force: true });

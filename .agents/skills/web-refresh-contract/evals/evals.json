@@ -1,0 +1,43 @@
+{
+	"skill_name": "web-refresh-contract",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "The API team merged a new commit that adds a latency field to the operations response. Refresh our contract snapshot.",
+			"expected_output": "Imports only committed artifacts from an immutable commit, regenerates types with the maintained command, records SHA and hashes, and updates runtime validation and tests.",
+			"files": [],
+			"assertions": [
+				"requires an immutable API commit and committed schema and examples",
+				"regenerates types with the maintained command and never hand-edits generated types",
+				"records the commit SHA and hashes",
+				"updates runtime validation in the HTTP adapter, not only types",
+				"runs npm run contract:check, npm run typecheck and npm test",
+				"reports synthetic versus real compatibility verification separately"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "Review only: compare our pinned contract with the proposed endpoint in the sibling API working tree.",
+			"expected_output": "A review-only request compares and reports without imports or external mutations, and a mutable working tree is not a consumed contract.",
+			"files": [],
+			"assertions": [
+				"states that review-only requests stay read-only",
+				"does not import artifacts or change files",
+				"states that a mutable sibling working tree is not a consumed contract",
+				"lists differences in paths, authentication, schema version and privacy fields"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "contract:check reports a hash mismatch. Just update the hashes so it passes.",
+			"expected_output": "Refuses to hide unexplained drift and investigates the cause first.",
+			"files": [],
+			"assertions": [
+				"does not refresh hashes merely to make the check pass",
+				"investigates the source of the drift before changing anything",
+				"does not edit the assistant API",
+				"reports the exact commands run and their results"
+			]
+		}
+	]
+}

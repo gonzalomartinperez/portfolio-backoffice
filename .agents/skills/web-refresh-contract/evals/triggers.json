@@ -1,0 +1,102 @@
+[
+	{
+		"query": "bump the API contract snapshot to the latest committed handoff",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "the backend added a field to the metrics response, pull it in",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "check whether our pinned contract has drifted from the API commit",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "regenera los tipos desde el nuevo commit del contrato de la API",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "compare the committed schema and examples against our runtime adapter",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "the API team says the operations response changed, update fixtures and hashes",
+		"should_trigger": true,
+		"split": "train"
+	},
+	{
+		"query": "re-pin the contract to this API SHA and record provenance",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "contract:check fails with a hash mismatch, figure out why",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "add a new endpoint to the assistant API for usage totals",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "change the retrieval prompt in the assistant",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "add a token spend chart to the dashboard",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "deploy the new image to the VPS",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "why is the image scan failing in CI",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "screenshot the dashboard in Spanish dark mode",
+		"should_trigger": false,
+		"split": "train"
+	},
+	{
+		"query": "migrate public chat SSE streaming into the portfolio",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "restyle the portfolio hero section",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "invite a viewer and check live revocation works",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "add a role check to the access settings action",
+		"should_trigger": false,
+		"split": "validation"
+	},
+	{
+		"query": "the committed API examples changed, update our fixtures and compatibility tests",
+		"should_trigger": true,
+		"split": "validation"
+	},
+	{
+		"query": "is our snapshot still in sync with the API repo at its latest commit",
+		"should_trigger": true,
+		"split": "validation"
+	}
+]

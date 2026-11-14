@@ -1,6 +1,10 @@
 ---
 name: web-change-backoffice
-description: "Implement or review authenticated assistant operations, invited access and bilingual backoffice UI within feature boundaries. Not public chat, API implementation or deployment."
+description: "Implement or review changes to the authenticated backoffice: operations dashboards and charts, workbench filters, invited-access and membership rules, product analytics views, feedback counts and the bilingual EN/ES themed UI, within feature boundaries. Use when the request adds, changes or reviews a backoffice page, chart, table, Server Action, viewer/owner permission or sign-in rule, even if it is phrased as a metrics view, a usage or cost panel, an invite flow or a dark-mode fix. Do not use for the public chat or portfolio site UI (portfolio repo), assistant API endpoints, retrieval or prompts (portfolio-assistant-api repo), deployment, Coolify or VPS operations (private vps-ops, owner-only), importing an API handoff (web-refresh-contract), CI or image review (web-review-delivery) or test and screenshot verification (web-verify-backoffice)."
+metadata:
+  owner: gonzalomartinperez
+  last-reviewed: "2026-11-14"
+  version: "1.1.0"
 ---
 
 Read the [operating contract](../../../AGENTS.md) and establish whether the request
