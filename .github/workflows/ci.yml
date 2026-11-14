@@ -558,10 +558,129 @@ jobs:
       - name: Production build on Node 26
         run: npm run build
 
+  budgets:
+    name: Lighthouse and bundle budgets
+    needs: [classify, build]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'budgets')
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BACKOFFICE_ORIGIN: http://localhost:3107
+      BETTER_AUTH_SECRET: public-fixture-only-at-least-32-characters
+      BACKOFFICE_OWNER_EMAIL: owner@example.test
+      GOOGLE_CLIENT_ID: public-fixture-client
+      GOOGLE_CLIENT_SECRET: public-fixture-secret
+      GITHUB_CLIENT_ID: public-fixture-client
+      GITHUB_CLIENT_SECRET: public-fixture-secret
+      CI_JOB_ID: budgets
+      CI_POSTGRES_HOST: postgres
+    services:
+      postgres:
+        image: postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+        env:
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+          POSTGRES_DB: backoffice_test
+        ports:
+          - '5432'
+        options: >-
+          --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          # No package cache in jobs that build the runtime image (cache-poisoning hardening).
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Expose this job's PostgreSQL service network
+        env:
+          SERVICE_NETWORK: ${{ job.services.postgres.network }}
+          SERVICE_PORT: ${{ job.services.postgres.ports['5432'] }}
+        run: |
+          echo "CI_POSTGRES_NETWORK=$SERVICE_NETWORK" >> "$GITHUB_ENV"
+          echo "BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@127.0.0.1:$SERVICE_PORT/backoffice_test" >> "$GITHUB_ENV"
+      - name: Download the image built once in this run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: backoffice-image
+          path: ${{ runner.temp }}/image
+      - name: Load the exact image bytes the build job produced
+        env:
+          IMAGE_SHA256: ${{ needs.build.outputs.image-sha256 }}
+          IMAGE_ID: ${{ needs.build.outputs.image-id }}
+        run: |
+          echo "$IMAGE_SHA256  $RUNNER_TEMP/image/backoffice-image.tar" | sha256sum --check
+          docker load --input "$RUNNER_TEMP/image/backoffice-image.tar"
+          rm -f "$RUNNER_TEMP/image/backoffice-image.tar"
+          test "$(docker image inspect portfolio-backoffice:rc --format '{{.Id}}')" = "$IMAGE_ID"
+      - name: Write synthetic container configuration
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const names = ['BACKOFFICE_ORIGIN', 'BETTER_AUTH_SECRET', 'BACKOFFICE_OWNER_EMAIL',
+            'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'];
+          const values = names.map(name => `${name}=${process.env[name]}`);
+          values.push('OPERATIONS_API_ORIGIN=http://host.docker.internal:8117');
+          values.push('OPERATIONS_READ_TOKEN=public-loopback-operations-fixture');
+          values.push('OPERATIONS_SOURCE_MODE=fixture');
+          values.push('PRODUCT_ANALYTICS_ENABLED=true');
+          values.push('FEEDBACK_OVERVIEW_ENABLED=true');
+          values.push(`BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@${process.env.CI_POSTGRES_HOST}:5432/backoffice_test`);
+          writeFileSync('/tmp/backoffice-fixture.env', values.join('\n') + '\n', { mode: 0o600 });
+          NODE
+      - name: Migrate the isolated authentication database
+        run: |
+          docker run --rm --network "$CI_POSTGRES_NETWORK" --add-host host.docker.internal:host-gateway \
+            --env-file /tmp/backoffice-fixture.env \
+            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
+            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            portfolio-backoffice:rc node scripts/auth-migrate.ts
+      - name: Prepare Chromium for Lighthouse
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Start the exact image with isolated fixture configuration
+        run: |
+          docker run -d --name assistant-budgets --network "$CI_POSTGRES_NETWORK" --add-host host.docker.internal:host-gateway \
+            --env-file /tmp/backoffice-fixture.env \
+            --read-only --tmpfs /tmp:uid=65532,gid=65532,mode=0700,size=32m \
+            --tmpfs /app/.next/cache:uid=65532,gid=65532,mode=0700,size=32m \
+            --memory=512m --memory-swap=512m --cpus=0.75 --pids-limit=128 \
+            --stop-timeout=20 --log-driver=local --log-opt max-size=10m --log-opt max-file=3 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
+      - name: Measure Lighthouse medians and script bytes against the ratchets
+        # Median of 5 mobile runs per route (testing.md section 1); only numbers are written.
+        run: node scripts/lighthouse-gate.ts --runs 5 --out reports/budgets/summary.json
+        env:
+          WEB_UPSTREAM: http://127.0.0.1:3108
+      - name: Retain the budget summary (numbers only)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: budget-summary
+          path: reports/budgets/summary.json
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Remove only this job's container
+        if: always()
+        run: |
+          docker rm -f assistant-budgets
+          rm -f /tmp/backoffice-fixture.env
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, docs, security, static, database, build, scan, container, browser]
+    needs: [classify, docs, security, static, database, build, scan, container, browser, budgets]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}

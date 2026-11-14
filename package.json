@@ -13,6 +13,7 @@
     "check:fast": "npm run format:check && npm run lint && npm run typecheck && vitest run --project unit tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
     "prepare": "git config core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true",
     "knip": "knip",
+    "budgets": "node scripts/lighthouse-gate.ts",
     "quality:static": "node scripts/check-static-ratchets.ts && node scripts/check-tokens.ts",
     "contract:check": "node scripts/check-contract.ts",
     "contract:generate": "npm run generate --prefix tooling/api-contract",
@@ -59,6 +60,7 @@
     "fast-check": "4.10.2",
     "js-yaml": "5.5.0",
     "knip": "6.45.1",
+    "lighthouse": "13.5.0",
     "testcontainers": "12.2.1",
     "typescript": "7.0.2",
     "vitest": "5.1.0"

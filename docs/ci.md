@@ -147,6 +147,33 @@ The paired-API PostgreSQL job remains a stub until the repository variable
 `ASSISTANT_API_POSTGRES_DIGEST` is published. A set digest must be valid and fails closed
 until the publishing task implements the paired run.
 
+## Lighthouse and bundle budgets
+
+The `budgets` job (code, contract and workflow profiles; required by `ci-gate`) loads the image
+built once in the run, starts the fixture stack and runs `scripts/lighthouse-gate.ts`:
+Lighthouse 13 with its default mobile settings (simulated throttling) in Playwright's Chromium,
+five runs per route, median per metric. `/` and `/analytics` run as the viewer, `/access` as the
+owner, `/sign-in` and `/privacy` anonymously (the private fixture session cookie is sent as a
+request header and never written out). A run that ends on another path (authentication
+failure) fails.
+
+- `quality/ratchets/lighthouse.json`: performance, accessibility and best-practices scores,
+  total blocking time, largest contentful paint and layout shift per route.
+- `quality/ratchets/bundle.json`: script transfer bytes per route from Lighthouse's network
+  records. Next 16 removed "First Load JS" from `next build` and recommends downloaded resource
+  sizes instead, so this replaces the planned manifest-based `check-bundle.ts`.
+
+Both are enforced from the first run on the ratchet baseline, the values measured on the CI
+runner (PBO-M2-9); they tighten at M3 and M5. Allowed noise before a median is a regression:
+performance 5 points, accessibility and best practices 0, total blocking time x1.5 + 50 ms,
+largest contentful paint x1.25 + 100 ms, layout shift +0.02, script bytes +1 % + 512 B. A
+ratchet route that was not measured fails. The job keeps only the numeric
+`budget-summary` artifact (14 days). To record better values from that artifact:
+`node scripts/lighthouse-gate.ts --from summary.json --write` (values only move in the
+favourable direction). Locally: `npm run build`, an isolated fixture database as in the README,
+then `npm run budgets -- --runs 1 --routes /,/sign-in`; local numbers are not comparable with
+the runner.
+
 ## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
