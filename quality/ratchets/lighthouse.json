@@ -1,0 +1,48 @@
+{
+  "$comment": "Lighthouse 13.5 mobile (simulated throttling) medians of 5 runs per route on the GitHub ubuntu-24.04 runner, recorded 2026-11-14 from CI run 43642010798 (PBO-M2-9, scripts/lighthouse-gate.ts). Enforced from day one with the noise margins in docs/ci.md; values only tighten (--write) and tighten further at M3 and M5. The 2026-11-09 audit numbers (/ mobile 60) came from a loaded workstation and are not comparable.",
+  "mode": "enforce",
+  "baseline": {
+    "routes": {
+      "/": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "tbt": 304,
+        "lcp": 2622,
+        "cls": 0
+      },
+      "/analytics": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "tbt": 295,
+        "lcp": 2608,
+        "cls": 0
+      },
+      "/access": {
+        "performance": 96,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "tbt": 121,
+        "lcp": 2611,
+        "cls": 0
+      },
+      "/sign-in": {
+        "performance": 98,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "tbt": 116,
+        "lcp": 2140,
+        "cls": 0
+      },
+      "/privacy": {
+        "performance": 96,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "tbt": 103,
+        "lcp": 2580,
+        "cls": 0
+      }
+    }
+  }
+}
