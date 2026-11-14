@@ -117,32 +117,46 @@ function limit(metric: keyof Metrics, baseline: number): number {
   return baseline * (noise.ratio ?? 1) + (noise.slack ?? 0);
 }
 
+function judge(key: keyof Metrics, value: number, base: number) {
+  const bound = limit(key, base);
+  const lower = lowerIsBetter.has(key);
+  return {
+    bound,
+    worse: lower ? value > bound : value < bound,
+    better: lower ? value < base : value > base,
+  };
+}
+
+function compareRoute(
+  route: string,
+  actual: Metrics,
+  expected: Partial<Metrics>,
+  keys: readonly (keyof Metrics)[],
+  out: { failures: string[]; improvements: string[] },
+) {
+  for (const key of keys) {
+    const base = expected[key];
+    if (base === undefined) continue;
+    const { bound, worse, better } = judge(key, actual[key], base);
+    if (worse)
+      out.failures.push(`${route} ${key}: ${actual[key]} vs ratchet ${base} (limit ${bound})`);
+    else if (better) out.improvements.push(`${route} ${key}: ${actual[key]} (ratchet ${base})`);
+  }
+}
+
 /** Compares measured medians with a ratchet baseline; a baseline route or metric not measured fails. */
 export function compare(
   measured: Record<string, Metrics>,
   baseline: Baseline,
   keys: readonly (keyof Metrics)[],
 ) {
-  const failures: string[] = [];
-  const improvements: string[] = [];
+  const out = { failures: [] as string[], improvements: [] as string[] };
   for (const [route, expected] of Object.entries(baseline)) {
     const actual = measured[route];
-    if (!actual) {
-      failures.push(`${route}: in the ratchet but not measured`);
-      continue;
-    }
-    for (const key of keys) {
-      const base = expected[key];
-      if (base === undefined) continue;
-      const value = actual[key];
-      const bound = limit(key, base);
-      const worse = lowerIsBetter.has(key) ? value > bound : value < bound;
-      const better = lowerIsBetter.has(key) ? value < base : value > base;
-      if (worse) failures.push(`${route} ${key}: ${value} vs ratchet ${base} (limit ${bound})`);
-      else if (better) improvements.push(`${route} ${key}: ${value} (ratchet ${base})`);
-    }
+    if (actual) compareRoute(route, actual, expected, keys, out);
+    else out.failures.push(`${route}: in the ratchet but not measured`);
   }
-  return { failures, improvements };
+  return out;
 }
 
 /** Ratchet update for --write: a value moves only in the favourable direction or is added. */
@@ -157,9 +171,8 @@ export function tighten(
     next[route] = entry;
     for (const key of keys) {
       const current = entry[key];
-      const value = values[key];
-      if (current === undefined || (lowerIsBetter.has(key) ? value < current : value > current))
-        entry[key] = value;
+      if (current === undefined || judge(key, values[key], current).better)
+        entry[key] = values[key];
     }
   }
   return next;
@@ -238,6 +251,28 @@ async function waitForServer(server: ChildProcess) {
   throw new Error("Fixture server did not become ready");
 }
 
+type Lighthouse = typeof import("lighthouse")["default"];
+
+async function measureRoute(lighthouse: Lighthouse, port: number, route: Route, cookie?: string) {
+  const result = await lighthouse(
+    `${ORIGIN}${route}`,
+    { port, output: "json", logLevel: "error" },
+    {
+      extends: "lighthouse:default",
+      settings: {
+        onlyCategories: ["performance", "accessibility", "best-practices"],
+        disableFullPageScreenshot: true,
+        skipAudits: ["screenshot-thumbnails", "final-screenshot"],
+        ...(cookie ? { extraHeaders: { Cookie: cookie } } : {}),
+      },
+    },
+  );
+  if (!result) throw new Error(`Lighthouse returned no result for ${route}`);
+  const landed = new URL(result.lhr.finalDisplayedUrl).pathname;
+  if (landed !== route) throw new Error(`${route} ended on ${landed} (authentication?)`);
+  return summarize(result.lhr);
+}
+
 async function measure(routes: Route[], runs: number) {
   const { default: lighthouse } = await import("lighthouse");
   const { chromium } = await import("@playwright/test");
@@ -246,37 +281,14 @@ async function measure(routes: Route[], runs: number) {
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
     await waitForServer(server);
-    browser = await chromium.launch({
-      channel: "chromium",
-      args: [`--remote-debugging-port=${port}`],
-    });
+    const args = [`--remote-debugging-port=${port}`];
+    browser = await chromium.launch({ channel: "chromium", args });
     const cookies = sessionCookies();
     const measured: Record<string, Metrics> = {};
     for (const route of routes) {
-      const cookie = cookies[ROUTES[route]];
       const samples: Metrics[] = [];
-      for (let run = 0; run < runs; run++) {
-        const result = await lighthouse(
-          `${ORIGIN}${route}`,
-          { port, output: "json", logLevel: "error" },
-          {
-            extends: "lighthouse:default",
-            settings: {
-              onlyCategories: ["performance", "accessibility", "best-practices"],
-              disableFullPageScreenshot: true,
-              skipAudits: ["screenshot-thumbnails", "final-screenshot"],
-              ...(cookie ? { extraHeaders: { Cookie: cookie } } : {}),
-            },
-          },
-        );
-        if (!result) throw new Error(`Lighthouse returned no result for ${route}`);
-        const lhr = result.lhr;
-        if (new URL(lhr.finalDisplayedUrl).pathname !== route)
-          throw new Error(
-            `${route} ended on ${new URL(lhr.finalDisplayedUrl).pathname} (authentication?)`,
-          );
-        samples.push(summarize(lhr));
-      }
+      for (let run = 0; run < runs; run++)
+        samples.push(await measureRoute(lighthouse, port, route, cookies[ROUTES[route]]));
       measured[route] = medianMetrics(samples);
       console.log(`${route}: ${JSON.stringify(measured[route])}`);
     }
@@ -285,6 +297,15 @@ async function measure(routes: Route[], runs: number) {
     await browser?.close().catch(() => undefined);
     if (server.pid !== undefined && server.exitCode === null) server.kill("SIGTERM");
   }
+}
+
+const usage =
+  "Usage: lighthouse-gate.ts [--routes /,/sign-in] [--runs 5] [--out PATH] [--from SUMMARY] [--write]";
+
+function parseRoutes(value: string): Route[] {
+  const routes = value.split(",");
+  for (const route of routes) if (!(route in ROUTES)) throw new Error(`Unknown route ${route}`);
+  return routes as Route[];
 }
 
 function parse(argv: string[]) {
@@ -296,71 +317,82 @@ function parse(argv: string[]) {
     write: false,
     from: "",
   };
-  for (let i = 0; i < argv.length; i++) {
-    const flag = argv[i];
-    const value = argv[i + 1];
-    if (flag === "--write") options.write = true;
-    else if (flag === "--routes" && value) {
-      const routes = value.split(",");
-      for (const route of routes) if (!(route in ROUTES)) throw new Error(`Unknown route ${route}`);
-      options.routes = routes as Route[];
+  const setters: Record<string, (value: string) => void> = {
+    "--routes": (value) => {
+      options.routes = parseRoutes(value);
       options.subset = true;
-      i++;
-    } else if (flag === "--runs" && value && /^[1-9]\d*$/.test(value)) {
+    },
+    "--runs": (value) => {
+      if (!/^[1-9]\d*$/.test(value)) throw new Error(usage);
       options.runs = Number(value);
-      i++;
-    } else if (flag === "--out" && value) {
+    },
+    "--out": (value) => {
       options.out = value;
-      i++;
-    } else if (flag === "--from" && value) {
+    },
+    "--from": (value) => {
       options.from = value;
-      i++;
-    } else
-      throw new Error(
-        "Usage: lighthouse-gate.ts [--routes /,/sign-in] [--runs 5] [--out PATH] [--from SUMMARY] [--write]",
-      );
+    },
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const flag = argv[i] ?? "";
+    if (flag === "--write") {
+      options.write = true;
+      continue;
+    }
+    const set = setters[flag];
+    const value = argv[i + 1];
+    if (!set || value === undefined) throw new Error(usage);
+    set(value);
+    i++;
   }
   return options;
 }
 
+type Options = ReturnType<typeof parse>;
+
+async function readMeasured(options: Options) {
+  // --from re-checks (or records with --write) a summary measured elsewhere, e.g. the CI artifact.
+  if (options.from) return readSummary(options.from);
+  const measured = await measure(options.routes, options.runs);
+  mkdirSync(dirname(resolve(options.out)), { recursive: true });
+  const summary = { runs: options.runs, routes: measured };
+  writeFileSync(options.out, `${JSON.stringify(summary, null, 2)}\n`);
+  return measured;
+}
+
+/** Checks one ratchet file; returns whether it failed. */
+function checkRatchet(
+  options: Options,
+  measured: Record<string, Metrics>,
+  path: string,
+  keys: readonly (keyof Metrics)[],
+) {
+  const { file, routes } = readBaseline(path);
+  // Enforcement needs a recorded baseline; only --write (recording) may start from none.
+  if (Object.keys(routes).length === 0 && !options.write) {
+    console.error(`regression ${path}: no baseline recorded (record one with --write)`);
+    return true;
+  }
+  // A full run compares every ratchet route; only an explicit --routes subset narrows it.
+  const scoped = options.subset
+    ? Object.fromEntries(Object.entries(routes).filter(([route]) => route in measured))
+    : routes;
+  const { failures, improvements } = compare(measured, scoped, keys);
+  for (const line of improvements) console.log(`improved ${path}: ${line}`);
+  for (const line of failures) console.error(`regression ${path}: ${line}`);
+  if (options.write && failures.length === 0) {
+    const baseline = { ...record(file.baseline ?? {}), routes: tighten(routes, measured, keys) };
+    writeFileSync(path, `${JSON.stringify({ ...file, baseline }, null, 2)}\n`);
+  }
+  return failures.length > 0;
+}
+
 async function main() {
   const options = parse(process.argv.slice(2));
-  // --from re-checks (or records with --write) a summary measured elsewhere, e.g. the CI artifact.
-  const measured = options.from
-    ? readSummary(options.from)
-    : await measure(options.routes, options.runs);
-  if (!options.from) {
-    mkdirSync(dirname(resolve(options.out)), { recursive: true });
-    writeFileSync(
-      options.out,
-      `${JSON.stringify({ runs: options.runs, routes: measured }, null, 2)}\n`,
-    );
-  }
+  const measured = await readMeasured(options);
   let failed = false;
-  for (const { path, keys } of Object.values(ratchetFiles)) {
-    const { file, routes } = readBaseline(path);
-    // Enforcement needs a recorded baseline; only --write (recording) may start from none.
-    if (Object.keys(routes).length === 0 && !options.write) {
-      console.error(`regression ${path}: no baseline recorded (record one with --write)`);
-      failed = true;
-      continue;
-    }
-    // A full run compares every ratchet route; only an explicit --routes subset narrows it.
-    const scoped = options.subset
-      ? Object.fromEntries(Object.entries(routes).filter(([route]) => route in measured))
-      : routes;
-    const { failures, improvements } = compare(measured, scoped, keys);
-    for (const line of improvements) console.log(`improved ${path}: ${line}`);
-    for (const line of failures) console.error(`regression ${path}: ${line}`);
-    failed ||= failures.length > 0;
-    if (options.write && failures.length === 0) {
-      const next = {
-        ...file,
-        baseline: { ...record(file.baseline ?? {}), routes: tighten(routes, measured, keys) },
-      };
-      writeFileSync(path, `${JSON.stringify(next, null, 2)}\n`);
-    }
-  }
+  for (const { path, keys } of Object.values(ratchetFiles))
+    failed = checkRatchet(options, measured, path, keys) || failed;
   process.exitCode = failed ? 1 : 0;
 }
 
