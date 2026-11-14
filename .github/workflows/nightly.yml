@@ -1,0 +1,119 @@
+# Nightly flake detector (PBO-M2-8): runs every browser test five times without retries on all
+# configured projects (--repeat-each=5 --retries=0), classifies each test and uploads the flaky
+# report. Scheduled runs read the default branch (main), so they start at M7 unless develop
+# becomes the default; until then it also runs on every push to develop (ci-cd.md section 1:
+# push to develop is the nightly baseline).
+name: nightly
+on:
+  schedule:
+    - cron: '0 6 * * *' # 03:00 ART
+  push:
+    branches: [develop]
+  # A pull request that changes the detector itself proves it before merge.
+  pull_request:
+    paths:
+      - .github/workflows/nightly.yml
+      - scripts/flaky-report.ts
+      - tests/quarantine.json
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: nightly-${{ github.ref }}
+  # A push to develop never cancels the previous baseline run; pull requests cancel stale runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+defaults:
+  run:
+    shell: bash
+env:
+  PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+  AI_PROVIDER: fixture
+  EMBEDDINGS_PROVIDER: fixture
+  ALLOW_PAID_AI: 'false'
+jobs:
+  flake-detector:
+    name: Flake detector (repeat-each 5)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      BACKOFFICE_ORIGIN: http://localhost:3107
+      BETTER_AUTH_SECRET: public-fixture-only-at-least-32-characters
+      BACKOFFICE_OWNER_EMAIL: owner@example.test
+      GOOGLE_CLIENT_ID: public-fixture-client
+      GOOGLE_CLIENT_SECRET: public-fixture-secret
+      GITHUB_CLIENT_ID: public-fixture-client
+      GITHUB_CLIENT_SECRET: public-fixture-secret
+      PLAYWRIGHT_INCLUDE_QUARANTINE: '1'
+    services:
+      postgres:
+        image: postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+        env:
+          POSTGRES_USER: backoffice_fixture
+          POSTGRES_PASSWORD: public-fixture-only
+          POSTGRES_DB: backoffice_test
+        ports:
+          - '5432'
+        options: >-
+          --health-cmd "pg_isready -U backoffice_fixture -d backoffice_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Expose the PostgreSQL service port
+        env:
+          SERVICE_PORT: ${{ job.services.postgres.ports['5432'] }}
+        run: |
+          echo "BACKOFFICE_DATABASE_URL=postgres://backoffice_fixture:public-fixture-only@127.0.0.1:$SERVICE_PORT/backoffice_test" >> "$GITHUB_ENV"
+      - name: Prepare all reviewed browser engines
+        run: npx --no-install playwright install --with-deps --only-shell chromium firefox webkit
+      - name: Build the application
+        run: npm run build
+      - name: Repeat available-state browser tests
+        id: available
+        # The CLI grep options combine with the config's quarantine grepInvert, which
+        # PLAYWRIGHT_INCLUDE_QUARANTINE=1 disables, so quarantined tests still run here.
+        # Exit 1 (test failures) is left to the classification step, which decides the job result
+        # (quarantined tests do not fail it); any other exit status (a crash) fails here.
+        run: |
+          status=0
+          npx --no-install playwright test --repeat-each=5 --retries=0 --grep-invert "operational failure" --reporter=json || status=$?
+          echo "Playwright exit status $status"
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+        env:
+          # Outside test-results/, which Playwright empties at the start of every run.
+          PLAYWRIGHT_JSON_OUTPUT_NAME: flake-reports/available.json
+      - name: Repeat operational-failure browser tests
+        id: unavailable
+        if: always()
+        run: |
+          status=0
+          npx --no-install playwright test --repeat-each=5 --retries=0 --grep "operational failure" --reporter=json || status=$?
+          echo "Playwright exit status $status"
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+        env:
+          OPERATIONS_FIXTURE_MODE: unavailable
+          PLAYWRIGHT_JSON_OUTPUT_NAME: flake-reports/unavailable.json
+      - name: Classify flaky tests
+        if: always()
+        run: node scripts/flaky-report.ts flake-reports/flaky-report.json flake-reports/available.json flake-reports/unavailable.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain the flaky report (never traces or session files)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flaky-report
+          path: flake-reports/flaky-report.json
+          retention-days: 30
+          if-no-files-found: warn
+          overwrite: true

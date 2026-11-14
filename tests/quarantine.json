@@ -1,0 +1,5 @@
+{
+  "$comment": "Flaky browser tests are quarantined the same day, skipped by PR runs, still run nightly and fixed or deleted within 7 days (testing.md section 6); entry shape: { title, issue (https://github.com/gonzalomartinperez/portfolio-backoffice/issues/<n>), quarantinedOn (YYYY-MM-DD), fixBy (YYYY-MM-DD) }.",
+  "cap": 5,
+  "tests": []
+}
