@@ -15,3 +15,4 @@ playwright-report/
 !.env.example
 /coverage
 /flake-reports
+/blob-report

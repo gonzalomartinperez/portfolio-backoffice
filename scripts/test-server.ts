@@ -25,6 +25,8 @@ const env = {
   OPERATIONS_SOURCE_MODE: "fixture",
   PRODUCT_ANALYTICS_ENABLED: "true",
   FEEDBACK_OVERVIEW_ENABLED: "true",
+  // Serves the /__kit component gallery; the runtime image and deployment contract never set it.
+  BACKOFFICE_KIT: "enabled",
 };
 const database = new URL(env.BACKOFFICE_DATABASE_URL);
 if (
