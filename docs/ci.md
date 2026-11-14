@@ -13,7 +13,8 @@ release tag in a comment.
 | docs | shared `docs.yml` | every run (`base`) | markdownlint (`.markdownlint-cli2.jsonc`) and lychee offline link and fragment check |
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
 | static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, Vitest unit/contract/architecture tests with the coverage floors of `quality/ratchets/coverage.json`, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
-| database | this repository | code, contract, workflow | Vitest `integration` project (`npm run test:auth`) on a Testcontainers PostgreSQL 18 (digest pinned) |
+| database | this repository | code, contract, workflow | Unit and `integration` Vitest projects with coverage (`npm run test:coverage`, Testcontainers PostgreSQL 18, digest pinned); on pull requests the diff coverage gate (`scripts/diff-coverage.ts`): changed executable lines of TypeScript modules under `src/` outside `src/app/` need 90 % on auth and DAL code and 80 % elsewhere (`.tsx` joins with the component project) |
+| component | this repository | code, contract, workflow | The `component` Vitest project (Browser Mode, Playwright provider, headless Chromium and WebKit) against `tests/component/**/*.test.tsx`; browsers installed with `playwright install --with-deps --only-shell chromium webkit`; no PostgreSQL |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |
@@ -64,7 +65,35 @@ or CRITICAL fail, the ecosystem default, DR-12) and Syft (CycloneDX SBOM kept se
 checksum-verified binaries. The browser job runs every interaction and
 accessibility case in both operational fixture modes. Public CI uploads only synthetic UI
 screenshots, for seven days; images, logs, environment files, sessions, invitation links,
-traces and database dumps are never uploaded.
+traces, Playwright blob reports and database dumps are never uploaded.
+
+### Browser journeys, projects and reports
+
+Browser tests live in journey files under `tests/browser/` (`access-control`, `owner-overview`,
+`preferences`, `workbench`, `mobile-overview`, `product-analytics`, `operational-failure`,
+`privacy`); shared helpers are in `tests/browser/support/`. Each test carries one role tag
+(`@anonymous`, `@owner`, `@viewer`) and narrow-viewport journeys also carry `@mobile`.
+
+- `setup` (`support/auth.setup.ts`) turns the private `.artifacts/fixture-sessions.json` into
+  owner-only per-role storage state under `.artifacts/storage-state/` (git-ignored, never
+  uploaded). Role projects depend on it; its `cleanup` teardown deletes that state at the end
+  of the run.
+- `chromium-`, `firefox-` and `webkit-` with `anonymous` (no storage state), `owner` and
+  `viewer`: each test runs once per browser, in the project whose role matches its tag.
+- `iphone-15` (WebKit) and `pixel-7` (Chromium) run the `@mobile` journeys as the viewer. Pull
+  requests run the desktop projects plus `iphone-15`; the nightly runs every project, so
+  `pixel-7` is nightly only. A narrow run is for example
+  `npm run test:browser -- --project=iphone-15`.
+- The unavailable-state fixture is selected with `--grep "operational failure"`, the available
+  one with `--grep-invert "operational failure"`; the `setup` project still runs under both.
+- On CI the reporters are `list` and `blob` (locally `list` and `html`), and traces are off.
+  The blob reports stay on the runner, ready for `npx playwright merge-reports` when the job
+  is sharded; they are not uploaded, because failure attachments (`error-context.md` page
+  snapshots) can contain a fixture invitation link.
+- `failOnFlakyTests` is on for runs targeting `main`, which includes the release pull request
+  (`GITHUB_BASE_REF` or `GITHUB_REF` is main, or a `main` merge-queue ref), and when
+  `PLAYWRIGHT_FAIL_ON_FLAKY=1`; on other pull requests a test that passes only on its one
+  retry is reported as flaky without failing the run.
 
 The image is built once per run (PBO-M1-5, PBO-D9). The `build` job writes it as a Docker
 tarball, records its SHA-256, rejects private or credential-like files in the exported
@@ -102,6 +131,52 @@ summary (OD-75). `scorecard.yml` runs OpenSSF Scorecard weekly. Scheduled workfl
 the default branch, so they start when these files reach `main` (M7) unless the owner makes
 `develop` the default branch. CodeQL uses GitHub's default setup (a repository setting).
 
+## Nightly flake detector
+
+`nightly.yml` runs every browser test five times without retries (`--repeat-each=5
+--retries=0`) on chromium, firefox and webkit, because `retries: 1` on CI hides flakes.
+`scripts/flaky-report.ts` classifies each test as stable, flaky or failing and uploads
+`flaky-report.json` (30 days). A flaky test gets an issue and is quarantined the same day in
+`tests/quarantine.json` (title, issue URL, `quarantinedOn`, `fixBy`). PR runs skip quarantined
+titles; the nightly sets `PLAYWRIGHT_INCLUDE_QUARANTINE=1`, still runs them and reports them
+apart without failing. The run fails on any other flaky or failing test, on a crash, and when
+no test executed. An expired `fixBy` fails the unit suite. Fix or delete
+within 7 days; the cap is min(2 % of tests, 5) entries. Like other scheduled workflows it
+reads the default branch, so it also runs on every push to `develop` until `main` carries it,
+and on pull requests that change the detector itself.
+
+## Static quality ratchets
+
+`npm run quality:static` runs after `npm run check` in the `static` job and measures three things
+that may only improve. Baselines are committed; a count that rises, or a new location, fails.
+
+- **knip** (`knip.json`, `npm run knip`): unused files, exports, types and dependencies. The
+  counts per category are in `quality/ratchets/static.json`. Removing what knip reports is
+  PBO-M3-1; this task only records the baseline.
+- **Cognitive complexity**: Biome `noExcessiveCognitiveComplexity` at threshold 10 over `src/` and
+  `scripts/`, run separately through `quality/biome-complexity.json` so it is not a failing lint
+  rule. `static.json` lists the offending functions; the check compares the count, the new files
+  and the per-file scores (line numbers are informational).
+- **Design tokens** (`scripts/check-tokens.ts`): WCAG 2.2 contrast of the text and non-text
+  pairs in `src/app/style.css` for both themes. Baseline ratios are in
+  `quality/ratchets/tokens.json`; a pair already below the WCAG minimum is recorded with
+  `"belowWcag": true` until the M5 redesign.
+
+Ratchets only tighten: when a check prints a hint that a number fell, lower it in the JSON file
+in the same PR (`node scripts/check-static-ratchets.ts --write` rewrites `static.json` and
+refuses to raise a count). Property tests (`tests/unit/properties.test.ts`) run 100 cases per
+property; set `FC_NUM_RUNS=1000` for the nightly run.
+
+## Nightly contract consumer check
+
+`nightly.yml` compares four pinned schema SHA-256 hashes with the API's `develop` contracts
+and replays available published examples through the backoffice runtime validators.
+Schema drift means a snapshot refresh is due through the `web-refresh-contract` skill;
+a rejected example fails the run. The JSON consumer report is retained for 14 days.
+The paired-API PostgreSQL job remains a stub until the repository variable
+`ASSISTANT_API_POSTGRES_DIGEST` is published. A set digest must be valid and fails closed
+until the publishing task implements the paired run.
+
 ## Required check
 
 Branch protection still requires the context **Required checks**. A tiny `required-checks`
@@ -136,6 +211,14 @@ the `v*` tag ruleset is applied with the standards rulesets script (PBO-M1-11).
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.
 
+## Component tests
+
+`npm run test:component` runs the `component` project in real Chromium and WebKit (Vitest Browser
+Mode, `@vitest/browser-playwright`, `vitest-browser-react`). Locally, install the browsers once
+with `npx playwright install chromium webkit`. The same components render on the `/__kit` gallery,
+which the test server enables with `BACKOFFICE_KIT=enabled`; the runtime image and the deployment
+contract never set it, so the route answers 404 in production.
+
 ## Mutation testing
 
 `npm run mutation` runs StrykerJS over framework-free domain/application logic, adapter
@@ -149,15 +232,18 @@ high 85%, low 75% and break 70%; `npm run mutation:gate` additionally requires t
 auth domain/application permission module to reach 85%. An absent permission subset in an
 incremental report has no mutants to assess (100%, matching Stryker's empty-score convention).
 
-The full baseline and floors belong in `quality/ratchets/mutation.json`. The initial
-measurement is pending: the implementation sandbox rejected Stryker's logging server with
-`listen EPERM` before mutant generation, so no measured baseline has been recorded. Full runs use
-`node scripts/mutation-gate.ts reports/mutation/mutation.json --full --ratchet quality/ratchets/mutation.json`
-to enforce the overall ratchet as well. No-coverage mutants count against the score; compile
-errors, runtime errors, ignored and pending mutants do not. JSON and HTML reports stay under
-ignored `reports/mutation/`.
+The full run is `.github/workflows/mutation.yml`: weekly, on pushes to `develop` that change
+mutated code or its unit tests (the schedule reads the default branch, `main`, until M7), on
+manual dispatch and on pull requests that change the workflow. It mutates the whole scope with
+concurrency 4 (budget 90 minutes) and runs
+`npm run mutation:gate -- --full --ratchet quality/ratchets/mutation.json`, which adds the
+committed floors to the fixed thresholds. The baseline, measured on 2026-11-14 over 1,591
+mutants (78.6 minutes on a 3-core workstation): overall 74.23 % (floor 74, below the 75 "low"
+mark, so raising it is M3+ test work) and permission module 94.68 % (floor 85). No-coverage
+mutants count against the score; compile errors, runtime errors, ignored and pending mutants do
+not. JSON and HTML reports stay under ignored `reports/mutation/`; the workflow keeps the JSON
+report for 14 days.
 
 TypeScript 7 has no JavaScript compiler API: no Stryker checker is enabled and `tsconfigFile`
 intentionally names a nonexistent file to skip Stryker's incompatible preprocessor. Type-invalid
 mutants are not filtered before execution. See [ADR 008](adrs/008-vitest-test-runner.md).
-The weekly full run will be added to the nightly workflow in a follow-up.

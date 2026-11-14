@@ -229,7 +229,7 @@ docker run -d --rm --name portfolio-readme-fixture \
 docker exec portfolio-readme-fixture pg_isready -h 127.0.0.1 -U backoffice_fixture -d backoffice_test
 npm run build
 PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium
-npm run test:browser -- backoffice.spec.ts --project=chromium
+npm run test:browser -- --project=chromium-viewer
 ```
 
 Wait until PostgreSQL reports readiness. Playwright’s managed lifecycle runs migration,
@@ -277,7 +277,7 @@ database described above:
 ```sh
 npm run build
 PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium firefox webkit
-npm run test:browser -- backoffice.spec.ts
+npm run test:browser
 ```
 
 `npm run test:auth` additionally exercises real PostgreSQL with a local OAuth provider; it

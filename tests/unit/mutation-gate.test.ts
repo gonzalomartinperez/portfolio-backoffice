@@ -44,18 +44,28 @@ test("permission gate combines auth domain and application independently of over
 });
 
 test("ratchet applies only on full runs and never replaces fixed thresholds", () => {
-  const options = { ratchet: { floors: { overall: 90 } } };
+  const options = { ratchet: { floors: { overall: 90, permission: 0 } } };
   assert.equal(mutationGate(report, options).failures.length, 1);
   assert.equal(mutationGate(report, { ...options, full: true }).failures.length, 2);
   assert.equal(
-    mutationGate(report, { full: true, ratchet: { floors: { overall: 87.5 } } }).failures.length,
+    mutationGate(report, { full: true, ratchet: { floors: { overall: 87.5, permission: 0 } } })
+      .failures.length,
     1,
   );
   assert.throws(() => mutationGate(report, { full: true, ratchet: {} }), /floor/);
+  assert.throws(
+    () => mutationGate(report, { full: true, ratchet: { floors: { overall: 0 } } }),
+    /permission ratchet floor/,
+  );
+  assert.deepEqual(
+    mutationGate(report, { full: true, ratchet: { floors: { overall: 0, permission: 80 } } })
+      .failures,
+    ["Permission score is below 85%", "permission score is below ratchet 80%"],
+  );
   assert.equal(
     mutationGate(
       { files: { x: file("Survived") } },
-      { full: true, ratchet: { floors: { overall: 0 } } },
+      { full: true, ratchet: { floors: { overall: 0, permission: 0 } } },
     ).failures.length,
     1,
   );

@@ -29,6 +29,7 @@
         "package-lock.json",
         "tsconfig.json",
         "biome.json",
+        "knip.json",
         "next.config.ts",
         "next-env.d.ts",
         "playwright.config.ts",
@@ -46,19 +47,19 @@
         "stryker.config.json",
         "vitest.mutation.config.ts"
       ],
-      "adds": ["static", "database", "build", "scan", "container", "browser", "mutation"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },
     "contract": {
       "paths": ["contracts/**"],
-      "adds": ["static", "database", "build", "scan", "container", "browser", "mutation"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "mutation"],
       "budgetP50Minutes": 8,
       "budgetP95Minutes": 12
     },
     "workflow": {
       "paths": [".github/**"],
-      "adds": ["static", "database", "build", "scan", "container", "browser", "mutation"],
+      "adds": ["static", "database", "component", "build", "scan", "container", "browser", "mutation"],
       "budgetP50Minutes": 6,
       "budgetP95Minutes": 12
     },

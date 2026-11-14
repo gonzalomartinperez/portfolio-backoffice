@@ -52,10 +52,12 @@ export function mutationGate(report: unknown, options: { full?: boolean; ratchet
   if (scores.overall.score < 70) failures.push("Overall score is below 70%");
   if (scores.permission.score < 85) failures.push("Permission score is below 85%");
   if (options.full && options.ratchet !== undefined) {
-    const floor = field(options.ratchet, "floors", "overall");
-    if (typeof floor !== "number" || !Number.isFinite(floor) || floor < 0 || floor > 100)
-      throw new Error("Invalid overall ratchet floor");
-    if (scores.overall.score < floor) failures.push(`Overall score is below ratchet ${floor}%`);
+    for (const key of ["overall", "permission"] as const) {
+      const floor = field(options.ratchet, "floors", key);
+      if (typeof floor !== "number" || !Number.isFinite(floor) || floor < 0 || floor > 100)
+        throw new Error(`Invalid ${key} ratchet floor`);
+      if (scores[key].score < floor) failures.push(`${key} score is below ratchet ${floor}%`);
+    }
   }
   return { ...scores, failures };
 }

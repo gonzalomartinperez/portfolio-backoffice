@@ -1,0 +1,165 @@
+{
+  "$comment": "Static ratchet baselines (PBO-M2-10), measured on 2026-11-14. Counts may only fall (scripts/check-static-ratchets.ts). The knip findings are removed in PBO-M3-1, not by deleting code here. Complexity is Biome noExcessiveCognitiveComplexity with threshold 10 over src/ and scripts/ (quality/biome-complexity.json); line numbers are informational, the ratchet compares counts and scores per file.",
+  "knip": {
+    "config": "knip.json",
+    "total": 8,
+    "counts": {
+      "binaries": 0,
+      "catalog": 0,
+      "catalogReferences": 0,
+      "dependencies": 0,
+      "devDependencies": 1,
+      "duplicates": 0,
+      "enumMembers": 0,
+      "exports": 3,
+      "files": 0,
+      "namespaceMembers": 0,
+      "optionalPeerDependencies": 0,
+      "subpaths": 0,
+      "types": 4,
+      "unlisted": 0,
+      "unresolved": 0
+    }
+  },
+  "complexity": {
+    "threshold": 10,
+    "count": 27,
+    "locations": [
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 28,
+        "complexity": 13
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 61,
+        "complexity": 33
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 102,
+        "complexity": 42
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 191,
+        "complexity": 21
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 233,
+        "complexity": 11
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 251,
+        "complexity": 38
+      },
+      {
+        "file": "scripts/check-boundaries.ts",
+        "line": 328,
+        "complexity": 16
+      },
+      {
+        "file": "scripts/check-project-fixture.ts",
+        "line": 24,
+        "complexity": 14
+      },
+      {
+        "file": "scripts/check-skills.ts",
+        "line": 22,
+        "complexity": 28
+      },
+      {
+        "file": "scripts/check-skills.ts",
+        "line": 165,
+        "complexity": 84
+      },
+      {
+        "file": "scripts/diff-coverage.ts",
+        "line": 28,
+        "complexity": 12
+      },
+      {
+        "file": "scripts/diff-coverage.ts",
+        "line": 48,
+        "complexity": 19
+      },
+      {
+        "file": "scripts/diff-coverage.ts",
+        "line": 69,
+        "complexity": 19
+      },
+      {
+        "file": "scripts/flaky-report.ts",
+        "line": 41,
+        "complexity": 29
+      },
+      {
+        "file": "scripts/flaky-report.ts",
+        "line": 69,
+        "complexity": 21
+      },
+      {
+        "file": "scripts/operations-fixture.ts",
+        "line": 20,
+        "complexity": 31
+      },
+      {
+        "file": "scripts/prepare-runtime.ts",
+        "line": 44,
+        "complexity": 12
+      },
+      {
+        "file": "src/app/analytics/page.tsx",
+        "line": 12,
+        "complexity": 21
+      },
+      {
+        "file": "src/features/analytics/adapters/validate-report.ts",
+        "line": 30,
+        "complexity": 21
+      },
+      {
+        "file": "src/features/analytics/presentation/report.tsx",
+        "line": 9,
+        "complexity": 12
+      },
+      {
+        "file": "src/features/analytics/presentation/selection.ts",
+        "line": 12,
+        "complexity": 15
+      },
+      {
+        "file": "src/features/auth/adapters/store.ts",
+        "line": 20,
+        "complexity": 18
+      },
+      {
+        "file": "src/features/auth/adapters/store.ts",
+        "line": 105,
+        "complexity": 11
+      },
+      {
+        "file": "src/features/operations/adapters/feedback-http.ts",
+        "line": 16,
+        "complexity": 12
+      },
+      {
+        "file": "src/features/operations/adapters/http.ts",
+        "line": 17,
+        "complexity": 22
+      },
+      {
+        "file": "src/features/operations/presentation/dashboard.tsx",
+        "line": 17,
+        "complexity": 36
+      },
+      {
+        "file": "src/features/operations/presentation/feedback.tsx",
+        "line": 28,
+        "complexity": 12
+      }
+    ]
+  }
+}

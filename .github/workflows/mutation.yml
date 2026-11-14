@@ -1,0 +1,64 @@
+# Full scoped mutation run (PBO-M2-7): StrykerJS over the whole stryker.config.json scope, gated by
+# the fixed thresholds and the floors in quality/ratchets/mutation.json. Pull requests run the
+# incremental `mutation` job in ci.yml instead. The weekly schedule reads the default branch (main),
+# so until M7 the full run also follows pushes to develop that change mutated code or its tests.
+name: mutation
+on:
+  schedule:
+    - cron: '30 7 * * 1' # Monday 04:30 ART
+  push:
+    branches: [develop]
+    paths:
+      - src/**
+      - tests/unit/**
+      - stryker.config.json
+      - vitest.mutation.config.ts
+      - scripts/mutation-gate.ts
+      - quality/ratchets/mutation.json
+      - package-lock.json
+  # A pull request that changes this workflow proves it before merge.
+  pull_request:
+    paths:
+      - .github/workflows/mutation.yml
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  full:
+    name: Full mutation run (90 min budget)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Mutate the full scope
+        run: npx --no-install stryker run --concurrency 4
+      - name: Enforce thresholds and ratchet floors
+        run: npm run mutation:gate -- --full --ratchet quality/ratchets/mutation.json
+      - name: Retain the mutation report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-report
+          path: reports/mutation/mutation.json
+          retention-days: 14
+          if-no-files-found: warn

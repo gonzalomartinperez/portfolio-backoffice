@@ -8,7 +8,16 @@ import { postgresImage } from "../../scripts/postgres-image.ts";
 
 const profileMap = () => record(JSON.parse(readFileSync(".github/ci-profile.json", "utf8")));
 const workflow = () => record(load(readFileSync(".github/workflows/ci.yml", "utf8")));
-const ownJobs = ["static", "database", "build", "scan", "container", "browser", "mutation"];
+const ownJobs = [
+  "static",
+  "database",
+  "component",
+  "build",
+  "scan",
+  "container",
+  "browser",
+  "mutation",
+];
 const sharedJobs = ["docs", "security"];
 
 // Same glob semantics as the shared classify workflow (engineering-standards classify.yml).
@@ -69,6 +78,7 @@ test("profiles select the expected jobs", () => {
     "security",
     "static",
     "database",
+    "component",
     "build",
     "scan",
     "container",

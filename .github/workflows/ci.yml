@@ -92,12 +92,57 @@ jobs:
         run: npm audit --audit-level=moderate && npm audit --prefix tooling/api-contract --audit-level=moderate
       - name: Run the repository check (same command as the pre-commit hook and AGENTS.md)
         run: npm run check
+      - name: Static quality ratchets (knip, complexity, tokens)
+        run: npm run quality:static
       - name: Reject generated contract drift
         run: npm run contract:generate && git diff --exit-code contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/product-analytics-v2.types.d.ts contracts/feedback.types.d.ts
   database:
-    name: Database tests
+    name: Database tests and diff coverage
     needs: [classify, static]
     if: contains(fromJSON(needs.classify.outputs.jobs), 'database')
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The diff coverage gate compares HEAD with the pull request base branch.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Unit and real PostgreSQL integration tests with coverage
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'true'
+        run: npm run test:coverage
+      - name: Diff coverage of changed source lines (90 % auth and DAL, 80 % elsewhere)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/diff-coverage.ts --lcov coverage/lcov.info --base "origin/$BASE_REF"
+      - name: Keep the coverage summary for the scorecard (seven days)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-summary
+          path: coverage/coverage-summary.json
+          retention-days: 7
+          if-no-files-found: warn
+          overwrite: true
+  component:
+    name: Component tests
+    needs: [classify, static]
+    if: contains(fromJSON(needs.classify.outputs.jobs), 'component')
     permissions:
       contents: read
     runs-on: ubuntu-24.04
@@ -117,10 +162,10 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Verify real PostgreSQL authorization and OAuth boundaries
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: 'true'
-        run: npm run test:auth
+      - name: Install Chromium and WebKit with their system libraries
+        run: npx --no-install playwright install --with-deps --only-shell chromium webkit
+      - name: Component tests in real browsers
+        run: npm run test:component
   mutation:
     name: Mutation (changed files)
     needs: [classify, static]
@@ -535,16 +580,20 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges \
             -p 127.0.0.1:3108:3000 portfolio-backoffice:rc
       - name: Verify real-database authorization, operations and accessibility
-        run: npm run test:browser -- backoffice.spec.ts --grep-invert "operational failure" --output test-results/available
+        # Desktop chromium, firefox and webkit in every role plus the iPhone 15 WebKit profile for
+        # the @mobile journeys (Pixel 7 runs in the nightly); the `setup` project is a dependency.
+        run: npm run test:browser -- --project="chromium-*" --project="firefox-*" --project="webkit-*" --project=iphone-15 --grep-invert "operational failure" --output test-results/available
         env:
           WEB_UPSTREAM: http://127.0.0.1:3108
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/available
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/available
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: available.zip
       - name: Verify operational failure without shared mutable fixtures
-        run: npm run test:browser -- backoffice.spec.ts --grep "operational failure" --output test-results/unavailable
+        run: npm run test:browser -- --project="chromium-*" --project="firefox-*" --project="webkit-*" --project=iphone-15 --grep "operational failure" --output test-results/unavailable
         env:
           WEB_UPSTREAM: http://127.0.0.1:3108
           OPERATIONS_FIXTURE_MODE: unavailable
-          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/unavailable
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/unavailable
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: unavailable.zip
       - name: Retain synthetic UI screenshots (never session files or traces)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -591,7 +640,20 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [classify, docs, security, static, database, build, scan, container, browser, mutation]
+    needs:
+      [
+        classify,
+        docs,
+        security,
+        static,
+        database,
+        component,
+        build,
+        scan,
+        container,
+        browser,
+        mutation,
+      ]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}
