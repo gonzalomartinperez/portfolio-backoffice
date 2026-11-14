@@ -7,6 +7,7 @@ export type Outcome =
   | "unauthorized"
   | "redirect-sign-in"
   | "redirect-home"
+  | "not-found"
   | "allowed";
 export type Guard = "none" | "getAccess" | "requireAccess" | "requireOwner";
 
@@ -43,6 +44,8 @@ export const authzMatrix: readonly MatrixRow[] = [
   { surface: "page /access", ...ownerOnly("requireOwner") },
   { surface: "page /privacy", ...open("public") },
   { surface: "page /sign-in", ...open("public") },
+  // Component gallery: notFound() unless `kitEnabled()` (dev or fixture only).
+  { surface: "page /__kit", ...open("not-found") },
   {
     surface: "route GET /api/operations",
     guard: "getAccess",
@@ -55,6 +58,6 @@ export const authzMatrix: readonly MatrixRow[] = [
   { surface: "route GET /access/invitation", ...open("public") },
   { surface: "route GET /api/auth/[...all]", ...open("provider-flow") },
   { surface: "route POST /api/auth/[...all]", ...open("provider-flow") },
-  { surface: "action inviteUser", ...ownerOnly("requireOwner") },
-  { surface: "action revokeAccess", ...ownerOnly("requireOwner") },
+  { surface: "action src/server/auth/actions.ts#inviteUser", ...ownerOnly("requireOwner") },
+  { surface: "action src/server/auth/actions.ts#revokeAccess", ...ownerOnly("requireOwner") },
 ];

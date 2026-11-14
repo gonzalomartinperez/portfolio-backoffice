@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { beforeEach, test, vi } from "vitest";
 import nextConfig from "../../next.config.ts";
 import { proxy, config as proxyConfig } from "../../src/proxy.ts";
 import { operationalPayload } from "../fixtures/operations.ts";
 import { authEnv, authState, ORIGIN, resetAuthState } from "../security/auth-harness.ts";
+import { enumerateSurface } from "../security/source-tree.ts";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({
@@ -49,13 +51,19 @@ test("unit (proxy layer, not the wire): proxy sets the same explicit security he
   assert.equal(nextConfig.headers, undefined);
 });
 
-test("unit (proxy layer): the proxy matcher covers every route class and skips only static assets", () => {
-  const [pattern] = proxyConfig.matcher;
-  const matches = (path: string) => new RegExp(`^${pattern}$`).test(path);
-  for (const path of ["/", "/access", "/sign-in", "/api/operations", "/api/auth/get-session"])
-    assert.equal(matches(path), true, path);
-  for (const path of ["/api/health", "/api/ready", "/access/invitation"])
-    assert.equal(matches(path), true, path);
+// Routes the proxy may legitimately skip, with the reason. Everything else must be matched.
+const proxyExclusions: Record<string, string> = {};
+const sample = (path: string) =>
+  path.replace(/\[\[?\.\.\.\w+\]?\]/g, "x/y").replace(/\[\w+\]/g, "x");
+
+test("unit (proxy layer): the proxy matcher covers every enumerated page and route", () => {
+  const matches = (url: string) => unstable_doesMiddlewareMatch({ config: proxyConfig, url });
+  const paths = new Set(
+    [...enumerateSurface().keys()]
+      .filter((key) => key.startsWith("page ") || key.startsWith("route "))
+      .map((key) => sample(key.split(" ").at(-1) ?? "")),
+  );
+  for (const path of paths) assert.equal(matches(path), !(path in proxyExclusions), path);
   for (const path of ["/_next/static/app.js", "/_next/image", "/favicon.ico"])
     assert.equal(matches(path), false, path);
 });

@@ -176,9 +176,14 @@ is `tests/security/auth-harness.ts`, a scripted Better Auth runtime):
   `tests/security/authz-matrix.ts` lacks one or lists one that no longer exists. Each guarded
   surface must call its guard as its first await and have a behavioral probe. It runs the real
   `requireAccess`, `requireOwner`, `inviteUser`, `revokeAccess` and `GET /api/operations` as
-  anonymous, unverified-email, revoked, viewer and owner.
+  anonymous, unverified-email, revoked, viewer and owner. Actions are keyed by module path and
+  export name, and duplicate identities fail. Page bodies are not executed in unit tests:
+  branch-dependent guards (for example behind a query parameter) are covered only by the
+  first-await rule and the browser journeys.
 - `tests/unit/security-headers.test.ts` pins the proxy and per-handler headers at the unit level
-  (proxy and handler layers; it does not exercise the wire or the merged Next response).
+  (proxy and handler layers; it does not exercise the wire or the merged Next response). The
+  proxy matcher is checked with Next's `unstable_doesMiddlewareMatch` against every enumerated
+  page and route path.
 - `tests/unit/dto-leak.test.ts` allowlists client-island props and the data loaders return.
 - `tests/unit/log-redaction.test.ts` is the logging skeleton: literal-only `console` calls.
 - `tests/unit/better-auth-advisories.test.ts` pins the Better Auth floor and mitigating config.

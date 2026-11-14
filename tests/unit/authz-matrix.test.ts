@@ -1,5 +1,8 @@
+// Page bodies are never executed here: a page's guard is checked statically (declared guard
+// called as the first await of the default export) and the guard functions are run directly.
+// A branch-dependent guard (for example one behind a query parameter) is therefore covered only
+// by that first-await rule and the browser journeys, not by these unit tests.
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
 import { beforeEach, test, vi } from "vitest";
 import nextConfig from "../../next.config.ts";
 import { operationalPayload } from "../fixtures/operations.ts";
@@ -11,7 +14,7 @@ import {
   resetAuthState,
 } from "../security/auth-harness.ts";
 import { authzMatrix, type Guard, type Outcome } from "../security/authz-matrix.ts";
-import { exportedFunctions, hasDirective, read, sourceFiles } from "../security/source-tree.ts";
+import { enumerateSurface, read } from "../security/source-tree.ts";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -24,40 +27,8 @@ vi.mock("../../src/server/auth/runtime.ts", async () => {
   return { createAuthRuntime: () => harness.fakeAuthRuntime() };
 });
 
-const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
-
-// Enumerates the real surface: pages, route handlers (per HTTP method) and "use server" exports.
-function enumerate() {
-  // The Pages Router would add routes this enumeration cannot see.
-  for (const dir of ["src/pages", "pages"]) assert.equal(existsSync(dir), false, `${dir} exists`);
-  const surface = new Map<string, string>();
-  for (const file of sourceFiles()) {
-    const source = read(file);
-    const segments = file.replace(/^src\/app\/?/, "").split("/");
-    const name = segments.pop() ?? "";
-    const path = `/${segments.filter((part) => !/^\(.*\)$/.test(part)).join("/")}`;
-    if (file.startsWith("src/app/") && /^page\.(tsx?|jsx?)$/.test(name))
-      surface.set(`page ${path}`, file);
-    if (file.startsWith("src/app/") && /^route\.(tsx?|jsx?)$/.test(name)) {
-      assert.doesNotMatch(source, /export\s*\{|export\s+\*/, `${file}: re-exports hide methods`);
-      const found = [...source.matchAll(/^export\s+(?:async\s+)?(?:function|const)\s+(\w+)/gm)]
-        .map((match) => match[1] ?? "")
-        .filter((exported) => METHODS.includes(exported));
-      assert.ok(found.length > 0, `${file}: no HTTP method handler`);
-      for (const method of found) surface.set(`route ${method} ${path}`, file);
-    }
-    if (hasDirective(source, "use server")) {
-      assert.doesNotMatch(source, /export\s*\{|export\s+\*|export\s+default/, `${file}: opaque`);
-      for (const action of exportedFunctions(source)) surface.set(`action ${action}`, file);
-    } else if (/["']use server["']/.test(source)) {
-      assert.fail(`${file}: inline "use server" is not enumerable; use a top-level directive`);
-    }
-  }
-  return surface;
-}
-
 test("the matrix lists exactly the pages, route handlers and Server Actions in src/", () => {
-  const actual = [...enumerate().keys()].sort();
+  const actual = [...enumerateSurface().keys()].sort();
   const listed = authzMatrix.map((row) => row.surface).sort();
   assert.deepEqual(
     actual.filter((key) => !listed.includes(key)),
@@ -73,7 +44,7 @@ test("the matrix lists exactly the pages, route handlers and Server Actions in s
 });
 
 test("each surface calls its declared guard first (and public surfaces call none)", () => {
-  const files = enumerate();
+  const files = enumerateSurface();
   const guards: Guard[] = ["getAccess", "requireAccess", "requireOwner"];
   for (const row of authzMatrix) {
     const source = read(files.get(row.surface) ?? "");
@@ -88,10 +59,12 @@ test("each surface calls its declared guard first (and public surfaces call none
     // Pragmatic order check: the first await of the handler body must be the guard. Awaiting the
     // request params or the locale cookie first is allowed; neither reads protected data.
     const [kind, name] = row.surface.split(" ");
-    const marker = kind === "page" ? "export default" : `function ${name}(`;
-    const start = source.indexOf(marker);
-    assert.notEqual(start, -1, `${row.surface}: handler not found`);
-    const body = source.slice(start + marker.length).split("\nexport ")[0] ?? "";
+    const id = name?.split("#")[1] ?? name;
+    const marker =
+      kind === "page" ? /export default/ : new RegExp(`\\b(?:function|const)\\s+${id}\\b`);
+    const found = marker.exec(source);
+    assert.ok(found, `${row.surface}: handler not found`);
+    const body = source.slice(found.index + found[0].length).split("\nexport ")[0] ?? "";
     const firstAwait = [...body.matchAll(/\bawait\s+(\w+)/g)]
       .map((match) => match[1])
       .find((name) => name !== "searchParams" && name !== "getAuthLocale");
@@ -135,8 +108,9 @@ test("page guards and Server Actions follow the matrix for every principal, incl
   form.set("role", "owner"); // mass assignment attempt
   form.set("actorId", "someone-else");
   const actionCalls: Record<string, () => Promise<unknown>> = {
-    "action inviteUser": () => actions.inviteUser({ link: null, error: null }, form),
-    "action revokeAccess": () => actions.revokeAccess(form),
+    "action src/server/auth/actions.ts#inviteUser": () =>
+      actions.inviteUser({ link: null, error: null }, form),
+    "action src/server/auth/actions.ts#revokeAccess": () => actions.revokeAccess(form),
   };
   // Pages are covered through the guard they must call first (checked above); routes by their
   // own test below. A new guarded surface fails here until its behavior is covered.
@@ -172,8 +146,8 @@ test("page guards and Server Actions follow the matrix for every principal, incl
   }
   // Role and actor fields in the form never reach the store: the actor is the live session user.
   resetAuthState("owner");
-  await actionCalls["action inviteUser"]?.();
-  await actionCalls["action revokeAccess"]?.();
+  await actionCalls["action src/server/auth/actions.ts#inviteUser"]?.();
+  await actionCalls["action src/server/auth/actions.ts#revokeAccess"]?.();
   assert.deepEqual(authState.invites, [["user-1", "new.viewer@example.test"]]);
   assert.deepEqual(authState.revokes, [["user-1", "member-1", "member"]]);
 });
@@ -201,6 +175,12 @@ test("GET /api/operations answers 401 without membership and never caches", asyn
     const outcome: Outcome = response.status === 401 ? "unauthorized" : "allowed";
     if (principal !== "unavailable") assert.equal(outcome, expected(principal, row), principal);
   }
+});
+
+test("the component kit page is closed outside development and fixtures", async () => {
+  const { kitEnabled } = await import("../../src/server/kit.ts");
+  assert.equal(kitEnabled({ NODE_ENV: "production" }), false);
+  assert.match(read("src/app/%5F_kit/page.tsx"), /if \(!kitEnabled\(\)\) notFound\(\);/);
 });
 
 test("Server Actions keep Next's same-origin check: no allowedOrigins escape hatch", () => {

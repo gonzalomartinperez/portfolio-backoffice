@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, test, vi } from "vitest";
+import { defaultReportSelection } from "../../src/features/analytics/domain/report.ts";
 import { feedbackPayload } from "../fixtures/feedback.ts";
 import { operationalPayload } from "../fixtures/operations.ts";
 import { productPayload } from "../fixtures/product-analytics.ts";
+import { productReportPayload } from "../fixtures/product-report.ts";
 import { hasDirective, read, sourceFiles } from "../security/source-tree.ts";
 
 vi.mock("server-only", () => ({}));
@@ -87,6 +89,12 @@ const allowedKeys = new Set([
   ...["inputTokens", "outputTokens", "settledUsd", "reservedUsd", "budgetUsd", "pricingRevision"],
   ...["traces", "id", "startedAt", "outcome", "durationMs", "stages", "name"],
   ...["counts", "day", "eventName", "section", "locale", "target", "count", "up", "down"],
+  // Calendar report model and the `/analytics` view wrapper.
+  ...["report", "result", "selection", "period", "offset", "region", "viewport", "eventLocale"],
+  ...["window", "start", "end", "partial", "generatedAt", "firstObservedAt", "lastObservedAt"],
+  ...["countryCollection", "totals", "views", "clicks", "exposures", "days", "countries"],
+  ...["country", "sections", "regions", "cells", "x", "y", "actions", "event"],
+  ...["selectedRegionExposures", "suppressedClicks"],
 ]);
 const keysOf = (value: unknown): string[] =>
   Array.isArray(value)
@@ -101,9 +109,11 @@ function upstream(extra: Record<string, unknown> = {}) {
     const path = String(target);
     const body = path.includes("/feedback")
       ? feedbackPayload
-      : path.includes("product-analytics")
-        ? productPayload
-        : operationalPayload;
+      : path.includes("/v2/product-analytics")
+        ? productReportPayload()
+        : path.includes("product-analytics")
+          ? productPayload
+          : operationalPayload;
     return Response.json({ ...body, ...extra });
   };
 }
@@ -118,14 +128,25 @@ beforeEach(() => {
 test("data handed to client islands holds only allowlisted keys and no secret", async () => {
   vi.stubGlobal("fetch", upstream());
   const { loadFeedback, loadOperations } = await import("../../src/server/operations.ts");
-  const { loadProductAnalytics } = await import("../../src/server/analytics.ts");
-  const results = [await loadOperations(), await loadProductAnalytics(), await loadFeedback()];
+  const { loadAnalyticsView, loadProductAnalytics, loadProductReport } = await import(
+    "../../src/server/analytics.ts"
+  );
+  const results = [
+    await loadOperations(),
+    await loadProductAnalytics(),
+    await loadFeedback(),
+    await loadProductReport(defaultReportSelection),
+  ];
   for (const result of results) assert.equal(result.kind, "available");
-  const serialized = JSON.stringify(results);
+  // The default `/analytics` path: the calendar view wraps the report.
+  const view = await loadAnalyticsView({});
+  assert.equal(view.kind === "calendar" && view.result.kind, "available");
+  const everything: unknown[] = [...results, view];
+  const serialized = JSON.stringify(everything);
   for (const secret of [...secrets, "session", "cookie"])
     assert.equal(serialized.includes(secret), false, secret);
   assert.deepEqual(
-    [...new Set(keysOf(results))].filter((key) => !allowedKeys.has(key)),
+    [...new Set(keysOf(everything))].filter((key) => !allowedKeys.has(key)),
     [],
   );
 });
@@ -154,4 +175,23 @@ test("hostile upstream fields are rejected and failures never echo secrets", asy
   });
   const failed = JSON.stringify(await loadOperations());
   for (const leak of secrets) assert.equal(failed.includes(leak), false, leak);
+});
+
+test("hostile report fields, top-level and nested in day objects, never reach the view", async () => {
+  const sentinel = "prompt-and-answer-sentinel@example.test";
+  const { loadAnalyticsView, loadProductReport } = await import("../../src/server/analytics.ts");
+  const { daily, totals, actions } = productReportPayload();
+  assert.ok(daily.length > 0 && actions.length > 0, "fixture must have nested objects");
+  for (const extra of [
+    { email: sentinel },
+    { daily: daily.map((day) => ({ ...day, answer: sentinel })) },
+    { totals: { ...totals, prompt: sentinel } },
+    { actions: actions.map((action) => ({ ...action, email: sentinel })) },
+  ]) {
+    vi.stubGlobal("fetch", upstream(extra));
+    const results = [await loadProductReport(defaultReportSelection), await loadAnalyticsView({})];
+    assert.equal(results[0]?.kind, "unavailable");
+    const serialized = JSON.stringify(results);
+    for (const leak of [sentinel, ...secrets]) assert.equal(serialized.includes(leak), false);
+  }
 });
