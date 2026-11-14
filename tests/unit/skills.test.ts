@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 import { validateSkills } from "../../scripts/check-skills.ts";
 
 test("canonical catalog and relative client discovery resolve", () => {

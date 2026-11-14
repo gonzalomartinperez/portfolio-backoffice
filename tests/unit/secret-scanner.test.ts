@@ -3,8 +3,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { test } from "vitest";
 
 const scanner = fileURLToPath(new URL("../../scripts/check-public-files.ts", import.meta.url));
 const marker = ["gh", "p_", "SyntheticOnly".repeat(4)].join("");

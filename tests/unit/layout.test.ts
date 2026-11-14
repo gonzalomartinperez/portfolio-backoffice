@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { boundaryErrors, moduleGraphErrors } from "../../scripts/check-boundaries.ts";
 import { runtimeTracePath } from "../../scripts/prepare-runtime.ts";
 

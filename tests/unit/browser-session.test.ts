@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { createBrowserSession } from "../../src/features/auth/adapters/browser-session.ts";
 
 test("browser session maps SDK responses to a narrow result and reviewed destinations", async () => {

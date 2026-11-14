@@ -6,25 +6,26 @@
     "dev": "next dev --port 3001",
     "build": "next build --webpack && node scripts/prepare-runtime.ts",
     "start": "next start --port 3001",
-    "lint": "biome check --formatter-enabled=false src tests scripts next.config.ts",
+    "lint": "biome check --formatter-enabled=false src tests scripts next.config.ts vitest.config.ts",
     "typecheck": "node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit",
-    "test": "npm run contract:check && node --test tests/unit/*.test.ts",
+    "test": "npm run contract:check && vitest run --project unit --coverage",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:check && npm run license:check && npm run skills:check && npm run security:check",
-    "check:fast": "npm run format:check && npm run lint && npm run typecheck && node --test tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
+    "check:fast": "npm run format:check && npm run lint && npm run typecheck && vitest run --project unit tests/unit/boundaries.test.ts tests/unit/layout.test.ts",
     "prepare": "git config core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true",
     "contract:check": "node scripts/check-contract.ts",
     "contract:generate": "npm run generate --prefix tooling/api-contract",
     "test:browser": "playwright test",
-    "format:check": "biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts tsconfig.json tooling/api-contract/package.json",
+    "format:check": "biome format src tests scripts docs package.json biome.json playwright.config.ts next.config.ts vitest.config.ts quality tsconfig.json tooling/api-contract/package.json",
     "security:check": "node scripts/check-public-files.ts",
     "docs:check": "node scripts/check-docs.ts",
     "license:check": "node scripts/check-license.ts",
     "preview:fixture": "node scripts/test-server.ts",
     "skills:check": "node scripts/check-skills.ts",
     "auth:migrate": "node scripts/auth-migrate.ts",
-    "test:auth": "node --test tests/integration/auth.test.ts",
+    "test:auth": "vitest run --project integration",
     "contract:install": "npm ci --prefix tooling/api-contract --no-audit --no-fund",
-    "toolchain:check": "node scripts/check-typescript-toolchain.ts"
+    "toolchain:check": "node scripts/check-typescript-toolchain.ts",
+    "test:coverage:scripts": "vitest run --project unit --coverage --coverage.include='scripts/**' --coverage.thresholds.lines=0 --coverage.thresholds.branches=0 --coverage.thresholds.functions=0 --coverage.thresholds.statements=0 --coverage.reportsDirectory=coverage/scripts"
   },
   "engines": {
     "node": ">=24 <25"
@@ -50,9 +51,11 @@
     "@types/react-dom": "19.3.0",
     "@typescript/typescript6": "6.0.2",
     "@vercel/nft": "1.11.0",
+    "@vitest/coverage-v8": "5.1.0",
     "js-yaml": "5.5.0",
     "testcontainers": "12.2.1",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
   },
   "overrides": {
     "glob": "14.0.4",

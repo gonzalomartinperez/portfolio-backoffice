@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { readBoundedJson } from "../../src/shared/http/bounded-json.ts";
 
 test("bounded JSON preserves split UTF-8 and releases the stream reader", async () => {

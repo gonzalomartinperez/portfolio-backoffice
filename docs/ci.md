@@ -12,8 +12,8 @@ release tag in a comment.
 | classify | shared `classify.yml` | always | Profiles and job list; fail closed (diff error, empty diff, unknown path or a changed profile map runs everything) |
 | docs | shared `docs.yml` | every run (`base`) | markdownlint (`.markdownlint-cli2.jsonc`) and lychee offline link and fragment check |
 | security | shared `security.yml` | every run (`base`) | zizmor, actionlint, gitleaks and dependency review with the licence allow-list |
-| static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, unit/contract/architecture tests, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
-| database | this repository | code, contract, workflow | `tests/integration/auth.test.ts` on a Testcontainers PostgreSQL 18 (digest pinned) |
+| static | this repository | docs, harness, code, contract, workflow | Frozen installs, both `npm audit` runs, `npm run check` (format, lint, types, Vitest unit/contract/architecture tests with the coverage floors of `quality/ratchets/coverage.json`, docs, licences, skills, public-file and history secret scan) and generated-contract drift |
+| database | this repository | code, contract, workflow | Vitest `integration` project (`npm run test:auth`) on a Testcontainers PostgreSQL 18 (digest pinned) |
 | build | this repository | code, contract, workflow | Build the image once as a tarball artifact with its SHA-256; file-listing and secret checks before upload |
 | scan | this repository | code, contract, workflow | Load that tarball; container-structure-test, dockle, Grype (fixable HIGH/CRITICAL fail) and a Syft CycloneDX SBOM artifact |
 | container | this repository | code, contract, workflow | Load that tarball; migrated readiness, bounded runtime, anonymous workload and SIGTERM |

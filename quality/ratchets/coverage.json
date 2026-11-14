@@ -1,0 +1,7 @@
+{
+  "$comment": "Unit coverage floors for src/**/*.{ts,tsx} (PBO-M2-1), measured with Vitest 5.1 and @vitest/coverage-v8 over every source file, loaded or not, on 2026-11-14. The pre-port 88.28 % branch baseline counted only files that tests imported and included scripts/, so it is not comparable. The floors may only rise (ecosystem 16, ratchets); lowering needs an ADR and the owner. Targets: 80 % branches on src/ and 90 % on auth, permissions and the DAL (testing.md section 1), reached through the component and integration projects and diff coverage on every PR.",
+  "scope": "src/**/*.{ts,tsx}",
+  "measured": { "lines": 45.13, "branches": 48.61, "functions": 41.8, "statements": 45.25 },
+  "floors": { "lines": 45, "branches": 48, "functions": 41, "statements": 45 },
+  "targets": { "branches": 80, "authBranches": 90 }
+}

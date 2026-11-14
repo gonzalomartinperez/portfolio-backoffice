@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { callbackResponse } from "../../src/features/auth/adapters/callback-response.ts";
 
 test("denied provider callbacks return to the configured origin without arbitrary navigation", () => {

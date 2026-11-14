@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { createFeedbackHttp } from "../../src/features/operations/adapters/feedback-http.ts";
 import { parseFeedback } from "../../src/features/operations/adapters/feedback-validate.ts";
 import { helpfulShare } from "../../src/features/operations/domain/feedback.ts";

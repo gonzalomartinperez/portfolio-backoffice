@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import test from "node:test";
 import { load } from "js-yaml";
+import { test } from "vitest";
 import { field, list, record } from "../../scripts/json.ts";
 
 const config = () => record(load(readFileSync(".github/dependabot.yml", "utf8")));

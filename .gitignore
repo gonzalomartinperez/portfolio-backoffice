@@ -13,3 +13,4 @@ playwright-report/
 .auth-fixture/
 .env.*
 !.env.example
+/coverage

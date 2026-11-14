@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
-import test, { after } from "node:test";
+import { afterAll, test } from "vitest";
 import {
   inviteViewer,
   revokeViewerAccess,
@@ -11,7 +11,7 @@ import { startIamFixture } from "./postgres-fixture.ts";
 // The suite owns a throwaway, digest-pinned PostgreSQL container (Testcontainers). It never
 // reads a database URL from the environment, so it cannot reach a shared or production database.
 const fixture = await startIamFixture();
-after(() => fixture.stop());
+afterAll(() => fixture.stop());
 const databaseUrl = fixture.runtimeUrl;
 const migrationDatabaseUrl = fixture.migratorUrl;
 const [{ betterAuth }, { genericOAuth }, { createAuthRuntime }] = await Promise.all([

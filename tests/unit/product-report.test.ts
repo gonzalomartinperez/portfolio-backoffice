@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { calendarWindow } from "../../src/features/analytics/adapters/calendar.ts";
 import { createProductReportHttp } from "../../src/features/analytics/adapters/report-http.ts";
 import { parseProductReport } from "../../src/features/analytics/adapters/validate-report.ts";

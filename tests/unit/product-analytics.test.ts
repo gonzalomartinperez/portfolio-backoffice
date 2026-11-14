@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { createProductHttp } from "../../src/features/analytics/adapters/http.ts";
 import { parseProductSnapshot } from "../../src/features/analytics/adapters/validate.ts";
 import { dailyTotals } from "../../src/features/analytics/domain/models.ts";

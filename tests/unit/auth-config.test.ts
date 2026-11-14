@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { validEmail } from "../../src/features/auth/domain/access.ts";
 import { invitationToken, readAuthConfiguration } from "../../src/server/auth/config.ts";
 

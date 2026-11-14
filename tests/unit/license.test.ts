@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 import { licenseFindings } from "../../scripts/check-license.ts";
 
 const license = readFileSync(new URL("../../LICENSE", import.meta.url), "utf8");

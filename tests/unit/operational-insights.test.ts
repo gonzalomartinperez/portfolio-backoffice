@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { validateGrafanaDestination } from "../../src/features/operations/adapters/grafana-link.ts";
 import { parseOperationalSnapshot } from "../../src/features/operations/adapters/validate.ts";
 import {
