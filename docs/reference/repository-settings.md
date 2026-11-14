@@ -15,7 +15,7 @@ Run each command from a shell authenticated as `gonzalomartinperez`.
 | CodeQL default setup | not configured | enable (step 3) |
 | Immutable releases | off | enable before the first release (step 4) |
 | `production` environment | does not exist | create with a required reviewer (step 5) |
-| release-please GitHub App | none | create when release automation starts (step 6) |
+| Release automation | tag workflow from `package.json` and CHANGELOG (OD-78); no App needed | none |
 | Default branch | `main` (scheduled workflows and Dependabot read it) | decide (step 7) |
 | dependency-review licence allow-list | ecosystem default plus `LGPL-3.0-or-later` (OD-80) | done (step 8) |
 
@@ -70,12 +70,12 @@ Settings > Environments > New environment `production`: required reviewer `gonza
 deployment branches limited to `main`. `release.yml` `publish` targets it; without it GitHub would
 auto-create an unprotected environment on the first run.
 
-## 6. release-please
+## 6. Release automation
 
-Create a GitHub App with `contents: write` and `pull-requests: write` on this repository, store its
-ID and private key as secrets of a `release` environment, and approve the task PR that adds the
-release-please workflow (config and manifest are already committed). The ecosystem sandbox
-validation of release-please on `develop` (E5) runs first.
+No owner step is needed for release automation (OD-78). `release-tag.yml` uses `github.token`
+to tag the version from `package.json` and create a GitHub Release from its CHANGELOG section
+when the release commit reaches `main`; no GitHub App or PAT is needed. Immutable releases
+(step 4) still apply.
 
 ## 7. Default branch
 

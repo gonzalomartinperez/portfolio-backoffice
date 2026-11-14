@@ -1,0 +1,75 @@
+# OD-78 follows engineering-standards ADR 0003: a release PR bumps package.json and moves the
+# curated CHANGELOG entries under `## [X.Y.Z]`; when that commit reaches main this job creates the
+# tag vX.Y.Z and its GitHub Release. A push without a version section, or for a version that is
+# already released, is a no-op; a tag that already points at another commit fails.
+name: Release tag
+on:
+  push:
+    branches: [main]
+permissions: {}
+concurrency:
+  group: release-tag
+  cancel-in-progress: false
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Harden the runner (audit)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Extract release notes
+        id: notes
+        run: node scripts/release-notes.ts "$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+      - name: Decide whether this push releases a new version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.notes.outputs.version }}
+          HAS_SECTION: ${{ steps.notes.outputs.has_section }}
+          SHA: ${{ github.sha }}
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2> "$RUNNER_TEMP/view.err"; then
+            echo "Release v$VERSION already exists; nothing to do."
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! grep -q 'release not found' "$RUNNER_TEMP/view.err"; then
+            cat "$RUNNER_TEMP/view.err" >&2
+            exit 1
+          fi
+          if [ "$HAS_SECTION" != true ]; then
+            # A promotion without a version bump (no CHANGELOG section for the current version).
+            echo "::notice title=release-tag::No CHANGELOG section for v$VERSION; nothing to release."
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # gh release create would silently reuse an existing tag at another commit.
+          if tag_sha=$(gh api "repos/$GH_REPO/commits/v$VERSION" --jq .sha 2> /dev/null); then
+            if [ "$tag_sha" != "$SHA" ]; then
+              echo "::error title=release-tag::Tag v$VERSION already points at $tag_sha, not $SHA." >&2
+              exit 1
+            fi
+          fi
+          echo "create=true" >> "$GITHUB_OUTPUT"
+      - name: Create the tag and release
+        if: steps.release.outputs.create == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.notes.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: |
+          gh release create "v$VERSION" --target "$SHA" \
+            --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest

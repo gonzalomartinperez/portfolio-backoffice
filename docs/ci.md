@@ -122,14 +122,15 @@ it is skipped). It has no package permission and fails closed even when reached:
 the owner activates them in one reviewed PR. No deployment controller exists here; private
 vps-ops selects releases.
 
-release-please (manifest mode: `release-please-config.json`, `.release-please-manifest.json`,
-`CHANGELOG.md`) will keep one release PR on `develop` once the owner provides a GitHub App token
-(an owner scope). The ecosystem's sandbox validation of release-please on `develop` (E5) is still
-open. At activation, set `"release-as": "2.0.0"` on the `"."` package for the first release
-(PBO-D14) and remove it afterwards. The `production` environment does not exist yet: the owner
-creates it with themselves as required reviewer and a `main`-only branch policy before MV
-(GitHub would otherwise auto-create it unprotected). Immutable releases and the `v*` tag ruleset are repository settings, applied with the
-standards rulesets script (PBO-M1-11). The first release after the refactor is 2.0.0 (PBO-D14).
+Release automation follows engineering-standards ADR 0003 (OD-78). A normal release PR on
+`develop` bumps `package.json` and moves curated CHANGELOG `Unreleased` entries under
+`## [X.Y.Z] - YYYY-MM-DD`. When that commit reaches `main`, `release-tag.yml` creates `vX.Y.Z`
+on the pushed commit and a GitHub Release with that section as its notes, using `github.token`;
+an existing release is a no-op. No GitHub App or PAT is needed. The first release after the
+refactor is 2.0.0 (PBO-D14). The `production` environment does not exist yet: the owner creates
+it with themselves as required reviewer and a `main`-only branch policy before MV (GitHub would
+otherwise auto-create it unprotected). Immutable releases remain an owner repository setting;
+the `v*` tag ruleset is applied with the standards rulesets script (PBO-M1-11).
 
 Earlier CI designs and their evidence are recorded in
 [paired-profile evidence](verification/paired-ci-profile-2026-10-18.md) and git history.
