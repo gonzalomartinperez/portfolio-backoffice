@@ -33,8 +33,11 @@ Explicit adaptations for this project:
   boilerplate on every component or container classes for namespacing.
 - Use `T[]` for straightforward arrays, `Array<T>` when nested syntax reads more clearly.
   Use null intentionally for absent selected conversations and native React refs.
-- Biome's tabs, double quotes, semicolons and wrapping are canonical here; do not reformat
-  to Google's whitespace/quote examples. Native Unicode is appropriate in bilingual copy.
+- Biome's layout is canonical here (ecosystem standard 10.1): 2-space indentation,
+  100 columns, double quotes, semicolons and sorted imports. Do not hand-format against it.
+  The one mechanical reformat commit is listed in `.git-blame-ignore-revs`; run
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs` once so `git blame` skips it.
+  Native Unicode is appropriate in bilingual copy.
 - Preserve generated OpenAPI output, wire-format names and required framework filenames.
   Do not rewrite generated contracts or snake_case transport fields to satisfy naming taste.
 - Accessible native elements and the portfolio's owned shadcn design responsibilities
@@ -43,8 +46,11 @@ Explicit adaptations for this project:
   button implementation and single `data-theme` authority.
 
 `biome.json` makes applicable rules errors: explicit any, non-null assertions, var,
-non-strict equality, parameter reassignment, namespaces, unused imports/variables, and
-missing const/type-only imports. Recommended accessibility/correctness rules stay enabled.
+non-strict equality, parameter reassignment, namespaces, unused imports/variables,
+missing const/type-only imports, import cycles, private and undeclared-dependency imports,
+and Pages Router imports (`next/router`, `next/head`). The `next`, `react`, `test`, `project`
+and `tailwind` rule domains are enabled. `npm run lint` runs `biome check` without the
+formatter, so import order is enforced too. Recommended accessibility/correctness rules stay enabled.
 Strict TypeScript and AST dependency tests enforce complementary constraints. Narrow lint
 suppressions require a concrete reason; broad file-level suppressions are not acceptable.
 Formatting, lint, typing and boundary checks are required in CI. Human review covers names,

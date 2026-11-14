@@ -1,27 +1,60 @@
 {
-	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"files": { "includes": ["**", "!**/*.md"] },
-	"formatter": { "indentStyle": "tab", "lineWidth": 80 },
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"preset": "recommended",
-			"style": {
-				"useConst": "error",
-				"useImportType": "error",
-				"noNonNullAssertion": "error",
-				"noParameterAssign": "error",
-				"noNamespace": "error"
-			},
-			"suspicious": {
-				"noExplicitAny": "error",
-				"noDoubleEquals": "error",
-				"noVar": "error"
-			},
-			"correctness": {
-				"noUnusedVariables": "error",
-				"noUnusedImports": "error"
-			}
-		}
-	}
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": ["**", "!**/*.md", "!docs/verification/**/*.json", "!docs/master-plan/audit/**"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "semicolons": "always" }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "next": "recommended",
+      "react": "recommended",
+      "test": "recommended",
+      "project": "recommended",
+      "tailwind": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "useConst": "error",
+        "useImportType": "error",
+        "noNonNullAssertion": "error",
+        "noParameterAssign": "error",
+        "noNamespace": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/router": "The App Router uses next/navigation; next/router is the Pages Router API.",
+              "next/head": "The App Router uses the Metadata API; next/head is the Pages Router API."
+            }
+          }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noDoubleEquals": "error",
+        "noVar": "error",
+        "noImportCycles": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noPrivateImports": "error",
+        "noUndeclaredDependencies": "error"
+      },
+      "nursery": {
+        "useTailwindSortedClasses": "error"
+      }
+    }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
 }

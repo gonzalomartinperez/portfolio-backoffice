@@ -6,7 +6,7 @@
 		"dev": "next dev --port 3001",
 		"build": "next build --webpack && node scripts/prepare-runtime.ts",
 		"start": "next start --port 3001",
-		"lint": "biome lint src tests scripts next.config.ts",
+		"lint": "biome check --formatter-enabled=false src tests scripts next.config.ts",
 		"typecheck": "node scripts/check-typescript-toolchain.ts && next typegen && node node_modules/typescript/lib/tsc.js --noEmit",
 		"test": "npm run contract:check && node --test tests/unit/*.test.ts",
 		"check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:check && npm run license:check && npm run skills:check && npm run security:check",
