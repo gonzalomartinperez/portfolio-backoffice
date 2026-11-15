@@ -3,8 +3,8 @@ import type { EventName, ProductTarget, Section } from "./models.ts";
 export const reportPeriods = ["day", "week", "month"] as const;
 export const reportViewports = ["mobile", "tablet", "desktop"] as const;
 export const eventLocales = ["all", "en", "es"] as const;
-export const shellRegions = ["site-header", "site-footer"] as const;
-export const regionGroups = {
+const shellRegions = ["site-header", "site-footer"] as const;
+const regionGroups = {
   home: ["home-featured", "home-experience", "home-about", "home-education", "home-contact"],
   about: ["about-story", "about-focus", "about-principles", "about-opportunities"],
   work: [
@@ -27,8 +27,8 @@ export const regionGroups = {
 } as const satisfies Record<Section, readonly string[]>;
 export type Region = (typeof shellRegions)[number] | (typeof regionGroups)[Section][number];
 export type ReportPeriod = (typeof reportPeriods)[number];
-export type ReportViewport = (typeof reportViewports)[number];
-export type EventLocale = (typeof eventLocales)[number];
+type ReportViewport = (typeof reportViewports)[number];
+type EventLocale = (typeof eventLocales)[number];
 export interface ReportSelection {
   period: ReportPeriod;
   offset: 0 | 1 | 2;
@@ -51,7 +51,7 @@ export function regionsFor(section: Section): readonly Region[] {
 export function firstRegion(section: Section): Region {
   return regionGroups[section][0];
 }
-export interface ActivityCounts {
+interface ActivityCounts {
   views: number;
   clicks: number;
   exposures: number;

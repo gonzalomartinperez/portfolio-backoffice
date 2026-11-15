@@ -1,5 +1,5 @@
 export type RunOutcome = "completed" | "cancelled" | "failed";
-export type StageName =
+type StageName =
   | "language"
   | "vector_retrieval"
   | "graph_retrieval"

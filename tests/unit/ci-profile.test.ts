@@ -247,6 +247,7 @@ test("the image is built once and the runtime jobs load that exact tarball", () 
   assert.match(text(field(builder, "with", "outputs")), /^type=docker,dest=/);
   assert.equal(field(builder, "with", "push"), false);
   const upload = build.find((step) => text(step.uses ?? "").startsWith("actions/upload-artifact@"));
+  assert.ok(upload, "upload-artifact step");
   assert.equal(field(upload, "with", "name"), "backoffice-image");
   assert.equal(field(upload, "with", "retention-days"), 1);
   assert.equal(field(upload, "with", "overwrite"), true);
@@ -259,7 +260,7 @@ test("the image is built once and the runtime jobs load that exact tarball", () 
   assert.match(runs, /--scanners secret/);
   assert.match(runs, /docker export/);
   assert.ok(
-    build.findIndex((step) => step === upload) >
+    build.indexOf(upload) >
       build.findIndex((step) => text(step.run ?? "").includes("--scanners secret")),
     "scan before upload",
   );
