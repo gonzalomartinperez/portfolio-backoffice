@@ -40,8 +40,8 @@
     "node": ">=24 <25"
   },
   "dependencies": {
-    "better-auth": "1.7.15",
-    "next": "16.4.4",
+    "better-auth": "1.7.22",
+    "next": "16.4.6",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "2.6.7",
-    "@playwright/test": "1.64.1",
+    "@playwright/test": "1.65.0",
     "@stryker-mutator/core": "10.1.1",
     "@stryker-mutator/vitest-runner": "10.1.1",
     "@testcontainers/postgresql": "12.2.1",
@@ -61,13 +61,13 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@typescript/typescript6": "6.0.2",
-    "@vercel/nft": "1.11.0",
+    "@vercel/nft": "1.11.1",
     "@vitest/browser-playwright": "5.1.0",
     "@vitest/coverage-v8": "5.1.0",
     "fast-check": "4.10.2",
     "js-yaml": "5.5.0",
     "knip": "6.45.1",
-    "lighthouse": "13.5.0",
+    "lighthouse": "13.6.0",
     "typescript": "7.0.2",
     "vitest": "5.1.0",
     "vitest-browser-react": "2.3.0"
