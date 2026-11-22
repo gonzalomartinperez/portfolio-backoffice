@@ -111,7 +111,7 @@
         "complexity": 12
       },
       {
-        "file": "src/app/analytics/page.tsx",
+        "file": "src/app/(operations)/analytics/page.tsx",
         "line": 12,
         "complexity": 21
       },
