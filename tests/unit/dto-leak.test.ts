@@ -29,7 +29,7 @@ const clientIslands: Record<string, Record<string, string[] | null>> = {
   "src/features/operations/presentation/trace-explorer.tsx": {
     TraceExplorer: ["traces", "locale"],
   },
-  "src/features/operations/presentation/preferences.tsx": { Preferences: ["locale"] },
+  "src/features/operations/presentation/preferences.tsx": { Preferences: ["locale", "theme"] },
   "src/features/auth/presentation/invite-form.tsx": { InviteForm: ["locale"] },
   // `subject` is the member email, rendered only on /access, which requireOwner guards.
   "src/features/auth/presentation/revoke-control.tsx": {

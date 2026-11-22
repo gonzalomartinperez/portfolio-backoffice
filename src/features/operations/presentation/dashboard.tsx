@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Button } from "../../../shared/ui/button";
 import { ButtonLink } from "../../../shared/ui/button-link";
 import { languageTag, numberFormat } from "../../../shared/ui/intl.ts";
+import type { ThemePreference } from "../../../shared/ui/theme.ts";
 import { SignOut } from "../../auth/entry";
 import { summarizeOperations } from "../domain/insights";
 import type { OperationalRead } from "../domain/models";
@@ -19,6 +20,7 @@ export function Dashboard({
   result,
   role,
   locale,
+  theme,
   fixture,
   grafanaUrl,
   projectOverview,
@@ -27,6 +29,7 @@ export function Dashboard({
   result: OperationalRead;
   role: "owner" | "viewer";
   locale: OperationsLocale;
+  theme: ThemePreference;
   fixture: boolean;
   grafanaUrl: string | null;
   projectOverview: ReactNode;
@@ -69,7 +72,7 @@ export function Dashboard({
           {role === "owner" && (
             <ButtonLink href={`/access?locale=${locale}`}>{t.access}</ButtonLink>
           )}
-          <Preferences locale={locale} />
+          <Preferences locale={locale} theme={theme} />
           <SignOut label={t.signOut} locale={locale} />
         </nav>
       </header>

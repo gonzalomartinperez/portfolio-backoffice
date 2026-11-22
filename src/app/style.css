@@ -46,6 +46,30 @@
   --signal-warning-wash: rgb(128 80 0 / 8%);
   --overlay-shadow: rgb(25 35 50 / 14%);
 }
+/* theme "system": the server renders no data-theme, so the OS preference decides; dark stays the fallback. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --surface-void: #fafafb;
+    --surface-base: #f1f4f8;
+    --surface-raised: #fff;
+    --line-subtle: #e6e9ee;
+    --line-strong: #d5dae2;
+    --line-control: #7f8a99;
+    --text-primary: #0f141b;
+    --text-secondary: #48546a;
+    --text-muted: #5c687b;
+    --accent: #0a6e9b;
+    --accent-wash: rgb(10 110 155 / 10%);
+    --accent-ink: #fff;
+    --danger: #9b2020;
+    --signal-success: #176445;
+    --signal-success-wash: rgb(23 100 69 / 8%);
+    --signal-warning: #805000;
+    --signal-warning-wash: rgb(128 80 0 / 8%);
+    --overlay-shadow: rgb(25 35 50 / 14%);
+  }
+}
 *,
 *::before,
 *::after {

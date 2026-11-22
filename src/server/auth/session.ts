@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Access } from "../../features/auth/domain/access.ts";
 import { authLocale } from "../../features/auth/domain/locale.ts";
+import { documentTheme, themeCookie, themePreference } from "../../shared/ui/theme.ts";
 import { readAuthConfiguration } from "./config.ts";
 import { createAuthRuntime } from "./runtime.ts";
 
@@ -65,6 +66,14 @@ export async function readiness(): Promise<boolean> {
 export async function getDocumentLocale() {
   const forwarded = (await headers()).get("x-backoffice-locale");
   return forwarded === "en" || forwarded === "es" ? forwarded : getAuthLocale();
+}
+
+export async function getThemePreference() {
+  return themePreference((await cookies()).get(themeCookie)?.value);
+}
+
+export async function getDocumentTheme() {
+  return documentTheme(await getThemePreference());
 }
 
 export async function getAuthLocale() {

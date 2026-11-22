@@ -6,7 +6,7 @@ import { reportCopy } from "../../../features/analytics/presentation/report-copy
 import { ReportFilters } from "../../../features/analytics/presentation/report-filters";
 import { Preferences } from "../../../features/operations/presentation/preferences";
 import { loadAnalyticsView } from "../../../server/analytics";
-import { getAuthLocale, requireAccess } from "../../../server/auth/session";
+import { getAuthLocale, getThemePreference, requireAccess } from "../../../server/auth/session";
 import { ButtonLink } from "../../../shared/ui/button-link";
 import { languageTag } from "../../../shared/ui/intl.ts";
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function Page({
         <nav aria-label={t.back}>
           <ButtonLink href={`/?locale=${locale}`}>{t.back}</ButtonLink>
           <ButtonLink href={`/privacy?locale=${locale}`}>{t.privacy}</ButtonLink>
-          <Preferences locale={locale} />
+          <Preferences locale={locale} theme={await getThemePreference()} />
         </nav>
       </header>
       {process.env.OPERATIONS_SOURCE_MODE === "fixture" && (

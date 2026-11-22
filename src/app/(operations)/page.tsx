@@ -3,7 +3,7 @@ import { ProductOverview } from "../../features/analytics/presentation/overview"
 import { Dashboard } from "../../features/operations/presentation/dashboard";
 import { FeedbackOverview } from "../../features/operations/presentation/feedback";
 import { loadProductAnalytics } from "../../server/analytics";
-import { getAuthLocale, requireAccess } from "../../server/auth/session";
+import { getAuthLocale, getThemePreference, requireAccess } from "../../server/auth/session";
 import { loadFeedback, loadGrafanaDestination, loadOperations } from "../../server/operations";
 import { SectionSkeleton } from "../../shared/ui/route-states";
 export const dynamic = "force-dynamic";
@@ -45,6 +45,7 @@ export default async function Page({
       }
       role={access.role}
       locale={locale}
+      theme={await getThemePreference()}
       fixture={process.env.OPERATIONS_SOURCE_MODE === "fixture"}
       grafanaUrl={loadGrafanaDestination()}
     />
