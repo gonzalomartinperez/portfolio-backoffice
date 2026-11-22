@@ -26,11 +26,13 @@ export function runtimeTracePath(path: string): string {
       [
         "src/server/auth/config.ts",
         "src/server/auth/runtime.ts",
+        "src/features/auth/adapters/audit.ts",
         "src/features/auth/adapters/store.ts",
         "src/features/auth/domain/access.ts",
         "scripts/auth-migrate.ts",
         "package.json",
         "migrations/001-access.sql",
+        "migrations/002-audit.sql",
         "migrations/runtime-grants.sql",
       ].includes(path)
     ) ||
@@ -75,7 +77,11 @@ export async function prepareRuntime(root = process.cwd()) {
   if ([...trace.warnings].some((warning) => !optionalTraceWarning(warning.message)))
     throw new Error("Migration trace has an unexpected unresolved dependency.");
   const files = [...trace.fileList].map(runtimeTracePath).sort();
-  if (!files.includes("scripts/auth-migrate.ts") || !files.includes("migrations/001-access.sql"))
+  if (
+    !files.includes("scripts/auth-migrate.ts") ||
+    !files.includes("migrations/001-access.sql") ||
+    !files.includes("migrations/002-audit.sql")
+  )
     throw new Error("Migration trace is incomplete.");
   let addedBytes = 0;
   for (const file of files) {

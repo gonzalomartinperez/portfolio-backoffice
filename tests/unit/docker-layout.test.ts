@@ -92,6 +92,7 @@ test("each context fails closed for private, unrelated and secret-shaped inputs"
     "src/app/page.tsx",
     "scripts/auth-migrate.ts",
     "migrations/001-access.sql",
+    "migrations/002-audit.sql",
   ]) {
     assert.ok(admitted(file, appPolicy), file);
   }

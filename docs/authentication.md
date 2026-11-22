@@ -35,7 +35,8 @@ Provision a separate PostgreSQL database and least-privileged application role.
 Do not reuse the anonymous conversation database or expose its port publicly.
 Run `npm run auth:migrate` before starting the new application revision.
 The script uses the official `better-auth/db/migration` API for the pinned library
-and applies `migrations/001-access.sql` transactionally with an advisory lock.
+and applies `migrations/001-access.sql` then `migrations/002-audit.sql` transactionally
+with an advisory lock.
 Better Auth's schema migration is separate from the access-table transaction;
 backup and inspect the migration plan before production upgrades. Application
 rollback does not undo schema changes. Never execute migrations automatically on
@@ -54,8 +55,49 @@ invitation: deliver it privately. Only its SHA-256 digest is stored. The recipie
 must authenticate with the exact invited, provider-verified email; the link does
 not replace OAuth. It is consumed atomically at session admission and expires in
 48 hours. Revoked and expired invitations fail closed. No SMTP service is needed.
-Access changes are audited by actor ID, action, subject ID and timestamp without
-provider tokens or transcripts. Viewer accounts cannot invite or revoke anyone.
+Viewer accounts cannot invite or revoke anyone.
+
+## Audit trail
+
+`backoffice_access_audit` is append-only. It records `invite`, `revoke-invitation`,
+`revoke-member`, `sign-in`, `admission`, `denial`, `link` and `sign-out`, each with
+actor ID (null when no user exists, for example a refused registration), subject ID,
+`request_id`, `actor_hash` and timestamp. Rows written before migration 002 keep null
+`request_id` and `actor_hash`.
+
+`actor_hash` is hex HMAC-SHA256 over the lower-cased email (provider account ID when no
+email is known). Its key is itself derived as `HMAC-SHA256(BETTER_AUTH_SECRET,
+"backoffice-audit-actor-v1")`, so the Better Auth secret never keys the hash directly. It
+correlates sign-ins and denials without storing the address; rotating the secret starts a
+new correlation series. `request_id` is always a server-generated UUID shared by every audit
+row of one request. An inbound `x-request-id` is client controlled and is ignored. Rows never
+hold emails, tokens, IP addresses, user agents, prompts or transcripts.
+
+- Admission and owner actions (`invite`, `revoke-*`) are written in the same transaction as
+  the change they describe; if the audit insert fails the change rolls back (fail closed).
+  Revocation audits only the identifier returned by the database; an unknown invitation id
+  changes nothing and leaves no row.
+- Denial, sign-in, link and sign-out are written best effort: a failed audit write is logged
+  without detail and never changes the access decision. Registration and session denials use
+  the same HTTP refusal for the reasons the code checks (unverified email, missing or
+  invalid invitation, revoked member); the audit row is written only after the decision.
+- Sign-in uses Better Auth's `session` create-after database hook, link its `account`
+  create-after hook (a user's second or later account), and sign-out its `session`
+  delete-after hook restricted to the `/sign-out` endpoint. A partial unique index keeps one
+  `sign-out` row per session id even when requests race. Revocation deletes sessions with
+  SQL and is audited as `revoke-member`.
+- The runtime role holds only `SELECT, INSERT` on the table (plus sequence `USAGE`).
+  A trigger additionally rejects `UPDATE` and `DELETE` for every role, including the owner;
+  `TRUNCATE` stays an owner-only maintenance action.
+- Rows are retained. The table grows with every denial, bounded by Better Auth's rate
+  limit. User deletion is not supported while audit rows reference the user (Better Auth
+  `deleteUser` is disabled). Pruning is an owner-run maintenance procedure through the
+  migrator identity, outside the runtime role, never an application feature.
+
+Known gaps, scheduled for M4 (callback boundary): an `account_not_linked` OAuth refusal
+returns before the user and session hooks and is not audited; a scope re-link that updates
+an existing account is not recorded as `link`; Better Auth's `/revoke-session` and
+`/revoke-sessions` endpoints are not audited as sign-out.
 
 The invitation landing response clears the token from the visible URL, uses
 `no-store` and `no-referrer`, and stores it in an HttpOnly cookie for the OAuth
@@ -72,6 +114,11 @@ no frontend analytics or session replay is included.
   IAM runtime role (no inheritance, no DDL, bounded pool). The test starts and owns a
   throwaway digest-pinned PostgreSQL container (Testcontainers) and never reads a database URL
   from the environment, so it cannot touch a production or shared database.
+- The same suite proves the runtime role can `INSERT` and `SELECT` but not `UPDATE`,
+  `DELETE` or `TRUNCATE` audit rows, that the trigger stops the table owner, and that
+  all eight actions carry `request_id` and `actor_hash` and no email, that re-running the
+  migration preserves legacy rows and narrows old grants, and that a failed admission audit
+  write rolls back membership and invitation consumption.
 - `scripts/auth-fixture-session.ts` creates sessions through Better Auth's actual
   adapter for browser tests. It requires loopback origin and a database name
   containing `test` or `fixture`; there is no application authentication bypass.

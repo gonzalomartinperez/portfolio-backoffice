@@ -12,5 +12,10 @@ END $$;
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO portfolio_iam_runtime;
 GRANT SELECT,INSERT,UPDATE,DELETE ON "user",session,account,verification,"rateLimit",
-  backoffice_member,backoffice_invitation,backoffice_access_audit TO portfolio_iam_runtime;
+  backoffice_member,backoffice_invitation TO portfolio_iam_runtime;
+-- The audit trail is append-only for the runtime: reset first so re-applying this file on a
+-- database that predates migration 002 removes the old UPDATE and DELETE grants.
+REVOKE ALL ON backoffice_access_audit FROM portfolio_iam_runtime;
+REVOKE ALL ON SEQUENCE backoffice_access_audit_id_seq FROM portfolio_iam_runtime;
+GRANT SELECT,INSERT ON backoffice_access_audit TO portfolio_iam_runtime;
 GRANT USAGE ON SEQUENCE backoffice_access_audit_id_seq TO portfolio_iam_runtime;

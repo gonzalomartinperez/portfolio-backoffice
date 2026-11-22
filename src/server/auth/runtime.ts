@@ -1,6 +1,7 @@
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { Pool } from "pg";
+import { createAuditTrail } from "../../features/auth/adapters/audit.ts";
 import { createAccessStore } from "../../features/auth/adapters/store.ts";
 import { type AuthConfiguration, invitationToken } from "./config.ts";
 
@@ -15,7 +16,8 @@ export function createAuthRuntime(
   }),
 ) {
   pool.on("error", () => console.error("Backoffice database connection interrupted."));
-  const store = createAccessStore(pool, configuration.ownerEmail);
+  const audit = createAuditTrail(pool, configuration.secret);
+  const store = createAccessStore(pool, configuration.ownerEmail, audit);
   const options = {
     appName: "Portfolio Assistant Backoffice",
     baseURL: configuration.origin,
@@ -61,6 +63,7 @@ export function createAuthRuntime(
                 user.email,
                 user.emailVerified,
                 invitationToken(context?.headers),
+                audit.requestId(context?.headers),
               ))
             )
               throw new APIError("FORBIDDEN", {
@@ -72,14 +75,58 @@ export function createAuthRuntime(
       session: {
         create: {
           before: async (session, context) => {
-            if (!(await store.admit(session.userId, invitationToken(context?.headers))))
+            if (
+              !(await store.admit(
+                session.userId,
+                invitationToken(context?.headers),
+                audit.requestId(context?.headers),
+              ))
+            )
               throw new APIError("FORBIDDEN", {
                 message: "This account does not have access.",
               });
+          },
+          // Runs only after `before` admitted the user and the row was written.
+          after: async (session, context) => {
+            await audit.tryRecord({
+              action: "sign-in",
+              subjectId: session.id,
+              actorId: session.userId,
+              identity: { email: await audit.emailOf(session.userId) },
+              requestId: audit.requestId(context?.headers),
+            });
+          },
+        },
+        delete: {
+          // Scoped to the sign-out endpoint: revocation, expiry and refresh also delete sessions.
+          after: async (session, context) => {
+            if (context?.path !== "/sign-out") return;
+            await audit.tryRecord({
+              action: "sign-out",
+              subjectId: session.id,
+              actorId: session.userId,
+              identity: { email: await audit.emailOf(session.userId) },
+              requestId: audit.requestId(context.headers),
+            });
+          },
+        },
+      },
+      account: {
+        create: {
+          // A user's first account is sign-up; any further account is an explicit link.
+          after: async (account, context) => {
+            if (!(await audit.hasFurtherAccount(account.userId))) return;
+            await audit.tryRecord({
+              action: "link",
+              subjectId: account.providerId,
+              actorId: account.userId,
+              identity: { email: await audit.emailOf(account.userId) },
+              requestId: audit.requestId(context?.headers),
+            });
           },
         },
       },
     },
   } satisfies BetterAuthOptions;
-  return { auth: betterAuth(options), pool, store, options };
+  return { auth: betterAuth(options), pool, store, audit, options };
 }

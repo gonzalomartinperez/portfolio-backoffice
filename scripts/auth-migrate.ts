@@ -19,6 +19,9 @@ try {
     await client.query(
       await readFile(new URL("../migrations/001-access.sql", import.meta.url), "utf8"),
     );
+    await client.query(
+      await readFile(new URL("../migrations/002-audit.sql", import.meta.url), "utf8"),
+    );
     if (args.includes("--project-grants")) {
       await client.query(
         await readFile(new URL("../migrations/runtime-grants.sql", import.meta.url), "utf8"),

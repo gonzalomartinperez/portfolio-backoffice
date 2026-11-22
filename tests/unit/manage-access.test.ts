@@ -16,11 +16,11 @@ function fixture() {
   const writes: unknown[][] = [];
   const port: AccessManagementPort = {
     async invite(...args) {
-      writes.push(args);
+      writes.push(args.filter((argument) => argument !== undefined));
       return "opaque-token";
     },
     async revoke(...args) {
-      writes.push(args);
+      writes.push(args.filter((argument) => argument !== undefined));
     },
   };
   return { writes, port };
@@ -86,4 +86,23 @@ test("revoked owners and persistence failures produce bounded failures without l
     status: "rejected",
     reason: "unavailable",
   });
+});
+
+test("the audit request id is forwarded to the port without framework types", async () => {
+  const seen: unknown[][] = [];
+  const port: AccessManagementPort = {
+    async invite(...args) {
+      seen.push(args);
+      return "opaque-token";
+    },
+    async revoke(...args) {
+      seen.push(args);
+    },
+  };
+  await inviteViewer(owner, "a@example.test", port, "request-1");
+  await revokeViewerAccess(owner, "target", "member", port, "request-2");
+  assert.deepEqual(seen, [
+    [owner.user.id, "a@example.test", "request-1"],
+    [owner.user.id, "target", "member", "request-2"],
+  ]);
 });

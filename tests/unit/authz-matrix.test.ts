@@ -27,6 +27,8 @@ vi.mock("../../src/server/auth/runtime.ts", async () => {
   return { createAuthRuntime: () => harness.fakeAuthRuntime() };
 });
 
+const requestId = "00000000-0000-4000-8000-000000000000";
+
 test("the matrix lists exactly the pages, route handlers and Server Actions in src/", () => {
   const actual = [...enumerateSurface().keys()].sort();
   const listed = authzMatrix.map((row) => row.surface).sort();
@@ -148,8 +150,8 @@ test("page guards and Server Actions follow the matrix for every principal, incl
   resetAuthState("owner");
   await actionCalls["action src/server/auth/actions.ts#inviteUser"]?.();
   await actionCalls["action src/server/auth/actions.ts#revokeAccess"]?.();
-  assert.deepEqual(authState.invites, [["user-1", "new.viewer@example.test"]]);
-  assert.deepEqual(authState.revokes, [["user-1", "member-1", "member"]]);
+  assert.deepEqual(authState.invites, [["user-1", "new.viewer@example.test", requestId]]);
+  assert.deepEqual(authState.revokes, [["user-1", "member-1", "member", requestId]]);
 });
 
 test("GET /api/operations answers 401 without membership and never caches", async () => {

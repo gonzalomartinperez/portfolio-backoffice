@@ -47,6 +47,9 @@ fileExistenceTests:
   - name: IAM migration
     path: /app/migrations/001-access.sql
     shouldExist: true
+  - name: audit migration
+    path: /app/migrations/002-audit.sql
+    shouldExist: true
   - name: no dotenv
     path: /app/.env
     shouldExist: false
