@@ -11,8 +11,8 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --ignore-scripts --no-audit --no-fund
 COPY next.config.ts next-env.d.ts tsconfig.json ./
 COPY src ./src
-COPY contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/feedback.types.d.ts ./contracts/
-COPY contracts/product-analytics-v2.types.d.ts contracts/product-analytics-v2.schema.json ./contracts/
+COPY contracts/assistant-api/operations.types.d.ts contracts/assistant-api/product-analytics.types.d.ts contracts/assistant-api/feedback.types.d.ts ./contracts/assistant-api/
+COPY contracts/assistant-api/product-analytics-v2.types.d.ts contracts/assistant-api/product-analytics-v2.schema.json ./contracts/assistant-api/
 COPY public ./public
 COPY scripts/auth-migrate.ts scripts/prepare-runtime.ts ./scripts/
 COPY migrations ./migrations

@@ -95,7 +95,7 @@ jobs:
       - name: Static quality ratchets (knip, complexity, tokens)
         run: npm run quality:static
       - name: Reject generated contract drift
-        run: npm run contract:generate && git diff --exit-code contracts/types.d.ts contracts/operations.types.d.ts contracts/product-analytics.types.d.ts contracts/product-analytics-v2.types.d.ts contracts/feedback.types.d.ts
+        run: npm run contract:generate && git diff --exit-code -- contracts/assistant-api/
   database:
     name: Database tests and diff coverage
     needs: [classify, static]

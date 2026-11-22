@@ -26,5 +26,5 @@ deliberately and report synthetic versus real compatibility verification separat
 
 If no handoff exists, retain the pin and continue independent fixtures. Publish a precise
 request; never edit the API, start paid model calls or invent compatibility guarantees.
-Public HTTP/SSE conversation integration now belongs to the portfolio. Old snapshots and
-SSE evidence remain historical until migration verification permits their retirement.
+Public HTTP/SSE conversation integration belongs to the portfolio; the historical public-chat
+snapshot was removed in PBO-M3-10. Snapshots live in `contracts/assistant-api/` with a manifest.

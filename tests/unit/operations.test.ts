@@ -156,7 +156,7 @@ test("rejects a non-JSON successful response without consuming untrusted content
 
 test("committed API example maps without infrastructure fields leaking into the model", () => {
   const result = parseOperationalSnapshot(
-    JSON.parse(readFileSync("contracts/operations.example.json", "utf8")),
+    JSON.parse(readFileSync("contracts/assistant-api/operations.example.json", "utf8")),
   );
   assert.equal(result.executions.total, 3);
   assert.equal(result.usage.settledUsd, 0.01);

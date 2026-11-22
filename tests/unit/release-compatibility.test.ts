@@ -3,42 +3,33 @@ import { test } from "vitest";
 import { releaseCompatibility } from "../../scripts/release-compatibility.ts";
 
 const commit = "a".repeat(40);
-const source = { api_commit: "b".repeat(40), openapi_sha256: "c".repeat(64) };
 const operations = {
   api_commit: "e".repeat(40),
   operations_schema_json_sha256: "f".repeat(64),
 };
 const image = `ghcr.io/owner/portfolio-backoffice@sha256:${"d".repeat(64)}`;
 
-test("records immutable image and both contract pins without claiming deployed compatibility", () => {
-  const release = releaseCompatibility(commit, image, source, operations);
+test("records immutable image and the operations contract pin without claiming deployed compatibility", () => {
+  const release = releaseCompatibility(commit, image, operations);
   assert.equal(release.backoffice_commit, commit);
-  assert.equal(release.historical_public_api_commit, source.api_commit);
   assert.equal(release.operational_api_commit, operations.api_commit);
   assert.equal(release.operational_api_contract_sha256, operations.operations_schema_json_sha256);
-  assert.equal(release.schema_version, 2);
+  assert.equal(release.schema_version, 3);
   assert.equal(release.backoffice_image, image);
   assert.equal(release.production_deployment, "disabled");
 });
 
 test("rejects mutable tags and unverifiable revisions or provenance", () => {
   for (const invalid of [image.replace("@sha256:", ":"), "ghcr.io/owner/web:latest", ""])
-    assert.throws(() => releaseCompatibility(commit, invalid, source, operations));
-  assert.throws(() => releaseCompatibility("develop", image, source, operations));
+    assert.throws(() => releaseCompatibility(commit, invalid, operations));
+  assert.throws(() => releaseCompatibility("develop", image, operations));
   for (const invalid of [
     null,
     {},
-    { ...source, api_commit: "main" },
-    { ...source, openapi_sha256: "missing" },
+    { ...operations, api_commit: "develop" },
+    { ...operations, operations_schema_json_sha256: "missing" },
   ])
-    assert.throws(() => releaseCompatibility(commit, image, invalid, operations));
-  assert.throws(() => releaseCompatibility(commit, image, source, {}));
-  assert.throws(() =>
-    releaseCompatibility(commit, image, source, {
-      ...operations,
-      api_commit: "develop",
-    }),
-  );
+    assert.throws(() => releaseCompatibility(commit, image, invalid));
 });
 
 test("release verifies through ci.yml, attests the tested tarball and gates publication", async () => {

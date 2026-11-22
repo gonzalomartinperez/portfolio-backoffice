@@ -89,7 +89,7 @@ All P0 and P1 findings that do not need the new architecture.
 | PBO-M3-7 | `<html lang>` from cookie; one locale `es-419`; `Intl` with explicit `timeZone: "UTC"`; grep test forbids `es-AR`. | S, 2 h | todo |
 | PBO-M3-8 | Self-hosted fonts through `next/font/local` (removes build-time network fetch); update licences. | S, 1 h | todo |
 | PBO-M3-9 | Docs: README per template, Diataxis moves, ADR move to `docs/decisions/`, archive `docs/verification/`, delete dated handoffs, CHANGELOG, SUPPORT, CODE_OF_CONDUCT, CODEOWNERS. | M, 4 h | todo |
-| PBO-M3-10 | Delete the historical public-chat contract artifacts and the `COPY contracts/types.d.ts` line; contracts move to `contracts/assistant-api/` with SHA-256 manifest. | S, 2 h | todo |
+| PBO-M3-10 | Delete the historical public-chat contract artifacts and the `COPY contracts/types.d.ts` line; contracts move to `contracts/assistant-api/` with SHA-256 manifest. | S, 2 h | done (this PR) |
 | PBO-M3-11 | Open the API ticket for a historical operations contract (PBO-D17). | S, 1 h | todo |
 | PBO-M3-12 | Re-score (first scorecard since M2) and tighten ratchets. | S, 2 h | todo |
 

@@ -1,4 +1,4 @@
-import type { components } from "../../contracts/product-analytics-v2.types";
+import type { components } from "../../contracts/assistant-api/product-analytics-v2.types";
 import { calendarWindow } from "../../src/features/analytics/adapters/calendar.ts";
 import { sections } from "../../src/features/analytics/domain/models.ts";
 import {

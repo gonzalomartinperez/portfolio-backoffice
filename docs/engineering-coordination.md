@@ -12,9 +12,11 @@ edits, main promotion, artifact publication, assistant activation or deployment.
 
 All four sessions directly confirmed their scopes through Codex task messages or the
 owner-relayed technical handoff. The Pequeverso confirmation arrived after the initial
-application PRs; its store/API/backoffice ownership is now explicit. Coordinated changes use committed contracts/handoffs; nobody
-edits another owner's worktree or shared workspace instructions. Production remains
-disabled. Reference repository code is not imported across repository boundaries.
+application PRs and clarified ownership of its store, API and backoffice. Coordinated
+changes use committed handoffs and keep edits within each owner's worktree. Reference
+repository code stays in its own repository. This backoffice consumes the private
+assistant API snapshots in `contracts/assistant-api/`. PBO-M3-10 removed the historical
+public-chat snapshot. Production remains disabled.
 
 ## Observed baseline and enforcement
 

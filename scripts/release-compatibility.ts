@@ -3,45 +3,18 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { record, text } from "./json.ts";
 
-interface ContractSource {
-  api_commit: string;
-  openapi_sha256: string;
-}
-
-export function releaseCompatibility(
-  commit: string,
-  image: string,
-  source: unknown,
-  operations: unknown,
-) {
+export function releaseCompatibility(commit: string, image: string, operations: unknown) {
   if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error("Invalid source revision");
   if (!/^ghcr\.io\/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$/.test(image))
     throw new Error("A published immutable GHCR image digest is required");
-  if (
-    typeof source !== "object" ||
-    source === null ||
-    !("api_commit" in source) ||
-    typeof source.api_commit !== "string" ||
-    !/^[a-f0-9]{40}$/.test(source.api_commit) ||
-    !("openapi_sha256" in source) ||
-    typeof source.openapi_sha256 !== "string" ||
-    !/^[a-f0-9]{64}$/.test(source.openapi_sha256)
-  )
-    throw new Error("Invalid pinned contract provenance");
-  const provenance: ContractSource = {
-    api_commit: source.api_commit,
-    openapi_sha256: source.openapi_sha256,
-  };
   const operationalSource = record(operations);
   const operationalCommit = text(operationalSource.api_commit);
   const operationalHash = text(operationalSource.operations_schema_json_sha256);
   if (!/^[a-f0-9]{40}$/.test(operationalCommit) || !/^[a-f0-9]{64}$/.test(operationalHash))
     throw new Error("Invalid operational contract provenance");
   return {
-    schema_version: 2,
+    schema_version: 3,
     backoffice_commit: commit,
-    historical_public_api_commit: provenance.api_commit,
-    historical_public_api_contract_sha256: provenance.openapi_sha256,
     operational_api_commit: operationalCommit,
     operational_api_contract_sha256: operationalHash,
     backoffice_image: image,
@@ -60,8 +33,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const release = releaseCompatibility(
     commit,
     readFileSync(digestPath, "utf8").trim(),
-    JSON.parse(readFileSync("contracts/source.json", "utf8")),
-    JSON.parse(readFileSync("contracts/operations.source.json", "utf8")),
+    JSON.parse(
+      readFileSync(
+        new URL("../contracts/assistant-api/operations.source.json", import.meta.url),
+        "utf8",
+      ),
+    ),
   );
   writeFileSync(outputPath, `${JSON.stringify(release, null, 2)}\n`);
 }

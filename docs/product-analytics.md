@@ -3,8 +3,8 @@
 `/analytics` requires live owner/viewer membership before reading its source. The
 calendar report uses `/internal/ops/v2/product-analytics`; `?view=legacy` explicitly
 selects the retained seven-day v1 view. There is no automatic fallback or double
-fetch. Each contract has its own committed source SHA and SHA256 in `contracts/`;
-refresh from committed Git objects, never a sibling working tree.
+fetch. Each contract has its own committed source SHA and SHA-256 in
+`contracts/assistant-api/`. Refresh from committed Git objects.
 
 `PRODUCT_ANALYTICS_ENABLED=false` is the server-runtime default. When enabled,
 `OPERATIONS_API_ORIGIN` and `OPERATIONS_READ_TOKEN` remain private server settings.
@@ -57,11 +57,12 @@ session files, environment files, raw request logs or private traces.
 
 ## Refresh and deployment
 
+PBO-M3-10 removed the historical public-chat snapshot.
+
 1. Review the identified API commit and compatibility notes.
-2. Copy the owned schema using `git show`, update its source/hash and regenerate the
-   local OpenAPI wrapper/types with the maintained contract commands.
-3. Run contract, strict typing, unit and authenticated browser checks. Keep the
-   historical public-chat snapshot independently pinned.
+2. Copy the owned schema using `git show`, update its source pin and OpenAPI wrapper,
+   regenerate the types and update the snapshot manifest.
+3. Run contract, strict typing, unit and authenticated browser checks.
 4. Coordinate private routing, privacy/retention/backup approval and resource limits
    with the API and vps-ops owners before activation.
 

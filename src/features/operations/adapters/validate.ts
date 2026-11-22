@@ -1,4 +1,4 @@
-import type { components } from "../../../../contracts/operations.types";
+import type { components } from "../../../../contracts/assistant-api/operations.types";
 import type { ExecutionTrace, OperationalSnapshot, RunOutcome } from "../domain/models.ts";
 export class OperationalPayloadError extends Error {
   constructor() {

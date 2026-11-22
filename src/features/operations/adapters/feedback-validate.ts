@@ -1,4 +1,4 @@
-import type { components } from "../../../../contracts/feedback.types";
+import type { components } from "../../../../contracts/assistant-api/feedback.types";
 import type { FeedbackSnapshot } from "../domain/feedback.ts";
 export function parseFeedback(value: unknown): FeedbackSnapshot {
   if (!value || typeof value !== "object" || Array.isArray(value))

@@ -1,5 +1,7 @@
-import schema from "../../../../contracts/product-analytics-v2.schema.json" with { type: "json" };
-import type { components } from "../../../../contracts/product-analytics-v2.types";
+import schema from "../../../../contracts/assistant-api/product-analytics-v2.schema.json" with {
+  type: "json",
+};
+import type { components } from "../../../../contracts/assistant-api/product-analytics-v2.types";
 import { eventNames, productTargets, sections, validSemanticDimensions } from "../domain/models.ts";
 import {
   eventLocales,

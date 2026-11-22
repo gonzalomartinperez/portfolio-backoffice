@@ -34,6 +34,8 @@ in `tooling/api-contract`, with its own package manifest and lockfile pinning
 TypeScript **5.9.3**. This package generates the committed API declarations only;
 it is absent from application runtime code and is not the application checker.
 Do not replace frozen installs with an unpinned download or override its peer range.
+PBO-M3-10 removed the historical public-chat snapshot. The generator now targets
+the four private declarations in `contracts/assistant-api/`.
 
 ## Reproducible commands
 
@@ -43,7 +45,7 @@ npm run contract:install
 npm run toolchain:check
 npm run typecheck
 npm run contract:generate
-git diff --exit-code contracts/types.d.ts
+git diff --exit-code -- contracts/assistant-api/
 npm test
 npm run build
 ```

@@ -1,39 +1,58 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { record, text } from "./json.ts";
 
-const source = record(JSON.parse(readFileSync("contracts/source.json", "utf8")));
-for (const [file, expected] of [
-  ["openapi.json", text(source.openapi_sha256)],
-  ["sse.schema.json", text(source.sse_sha256)],
-  ["sse.examples.json", text(source.sse_examples_sha256)],
-]) {
-  const actual = createHash("sha256")
-    .update(readFileSync(`contracts/${file}`))
-    .digest("hex");
-  if (actual !== expected)
-    throw new Error(`${file} differs from API commit ${text(source.api_commit)}`);
-}
-console.log(`Historical public contract matches API ${text(source.api_commit)}`);
+const snapshot = new URL("../contracts/assistant-api/", import.meta.url);
 
-const operations = record(JSON.parse(readFileSync("contracts/operations.source.json", "utf8")));
+function readArtifact(file: string): Buffer {
+  return readFileSync(new URL(encodeURIComponent(file), snapshot));
+}
+
+function readJson(file: string): unknown {
+  return JSON.parse(readArtifact(file).toString("utf8"));
+}
+
+function sha256(bytes: Buffer): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+const manifest = record(readJson("manifest.json"));
+if (manifest.contract_version !== "1") throw new Error("Unsupported contract manifest version");
+const files = new Set(
+  readdirSync(snapshot, { withFileTypes: true })
+    .filter((entry) => entry.name !== "manifest.json")
+    .map((entry) => {
+      if (!entry.isFile()) throw new Error(`Unexpected contract directory entry: ${entry.name}`);
+      return entry.name;
+    }),
+);
+for (const [file, value] of Object.entries(record(manifest.artifacts))) {
+  if (!files.delete(file)) throw new Error(`Manifest lists a missing snapshot file: ${file}`);
+  const { revision, sha256: expectedHash } = record(value);
+  if (sha256(readArtifact(file)) !== expectedHash)
+    throw new Error(`Snapshot SHA-256 mismatch: ${file}`);
+  const family = file.slice(0, file.indexOf("."));
+  const source = record(readJson(`${family}.source.json`));
+  if (!/^[a-f0-9]{40}$/.test(text(revision)) || revision !== source.api_commit)
+    throw new Error(`Snapshot API commit mismatch: ${file}`);
+}
+if (files.size > 0)
+  throw new Error(`Snapshot files missing from manifest: ${[...files].join(", ")}`);
+
+const operations = record(readJson("operations.source.json"));
 for (const file of ["operations.schema.json", "operations.example.json"]) {
   const expected = text(operations[`${file.replaceAll(".", "_")}_sha256`]);
-  const actual = createHash("sha256")
-    .update(readFileSync(`contracts/${file}`))
-    .digest("hex");
+  const actual = sha256(readArtifact(file));
   if (actual !== expected)
     throw new Error(`${file} differs from operations API ${text(operations.api_commit)}`);
 }
 console.log(`Private operations contract matches API ${text(operations.api_commit)}`);
 
-const product = record(JSON.parse(readFileSync("contracts/product-analytics.source.json", "utf8")));
-const productHash = createHash("sha256")
-  .update(readFileSync("contracts/product-analytics.schema.json"))
-  .digest("hex");
+const product = record(readJson("product-analytics.source.json"));
+const productHash = sha256(readArtifact("product-analytics.schema.json"));
 if (productHash !== text(product.schema_sha256))
   throw new Error("Product schema differs from pinned API");
-const copied = record(JSON.parse(readFileSync("contracts/product-analytics.schema.json", "utf8")));
+const copied = record(readJson("product-analytics.schema.json"));
 const { $defs, ...root } = copied;
 const expectedWrapper = JSON.parse(
   JSON.stringify({
@@ -43,21 +62,16 @@ const expectedWrapper = JSON.parse(
     components: { schemas: { ...record($defs), ProductSnapshot: root } },
   }).replaceAll("#/$defs/", "#/components/schemas/"),
 );
-if (
-  JSON.stringify(JSON.parse(readFileSync("contracts/product-analytics.openapi.json", "utf8"))) !==
-  JSON.stringify(expectedWrapper)
-)
+if (JSON.stringify(readJson("product-analytics.openapi.json")) !== JSON.stringify(expectedWrapper))
   throw new Error("Product OpenAPI wrapper drift");
 console.log(`Product contract matches API ${text(product.api_commit)}`);
 
-const detailedProduct = record(
-  JSON.parse(readFileSync("contracts/product-analytics-v2.source.json", "utf8")),
-);
-const detailedBytes = readFileSync("contracts/product-analytics-v2.schema.json");
+const detailedProduct = record(readJson("product-analytics-v2.source.json"));
+const detailedBytes = readArtifact("product-analytics-v2.schema.json");
 if (
   !/^([a-f0-9]{40})$/.test(text(detailedProduct.api_commit)) ||
   detailedProduct.endpoint !== "/internal/ops/v2/product-analytics" ||
-  createHash("sha256").update(detailedBytes).digest("hex") !== text(detailedProduct.schema_sha256)
+  sha256(detailedBytes) !== text(detailedProduct.schema_sha256)
 )
   throw new Error("Detailed product schema differs from pinned API");
 const { $defs: detailedDefinitions, ...detailedRoot } = record(
@@ -77,16 +91,14 @@ const detailedWrapper = JSON.parse(
   }).replaceAll("#/$defs/", "#/components/schemas/"),
 );
 if (
-  JSON.stringify(
-    JSON.parse(readFileSync("contracts/product-analytics-v2.openapi.json", "utf8")),
-  ) !== JSON.stringify(detailedWrapper)
+  JSON.stringify(readJson("product-analytics-v2.openapi.json")) !== JSON.stringify(detailedWrapper)
 )
   throw new Error("Detailed product OpenAPI wrapper drift");
 console.log(`Detailed product contract matches API ${text(detailedProduct.api_commit)}`);
 
-const feedback = record(JSON.parse(readFileSync("contracts/feedback.source.json", "utf8")));
-const feedbackBytes = readFileSync("contracts/feedback.schema.json");
-if (createHash("sha256").update(feedbackBytes).digest("hex") !== text(feedback.schema_sha256))
+const feedback = record(readJson("feedback.source.json"));
+const feedbackBytes = readArtifact("feedback.schema.json");
+if (sha256(feedbackBytes) !== text(feedback.schema_sha256))
   throw new Error("Feedback schema differs from pinned API");
 const feedbackWrapper = {
   openapi: "3.1.0",
@@ -96,9 +108,6 @@ const feedbackWrapper = {
     schemas: { FeedbackView: JSON.parse(feedbackBytes.toString()) },
   },
 };
-if (
-  JSON.stringify(JSON.parse(readFileSync("contracts/feedback.openapi.json", "utf8"))) !==
-  JSON.stringify(feedbackWrapper)
-)
+if (JSON.stringify(readJson("feedback.openapi.json")) !== JSON.stringify(feedbackWrapper))
   throw new Error("Feedback OpenAPI wrapper drift");
 console.log(`Feedback contract matches API ${text(feedback.api_commit)}`);
