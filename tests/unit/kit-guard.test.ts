@@ -22,7 +22,7 @@ test("the page decides at request time and answers not found when disabled", () 
 test("the runtime image, deployment contract, env template and workflows never set the kit flag", () => {
   const tracked = [
     "infra",
-    "docs/deployment-contract.md",
+    "docs/reference/deployment-contract.md",
     ".env.example",
     ".github",
     "next.config.ts",

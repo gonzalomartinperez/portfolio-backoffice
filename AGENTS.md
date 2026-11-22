@@ -27,7 +27,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - The public conversation UI belongs to the portfolio. This repository owns authenticated
   operations, IAM migrations and its runtime image; it never handles visitor transcripts.
   Do not modify other repositories merely because a handoff is needed
-  ([ADR 004](docs/adrs/004-native-chat-and-private-operations.md)).
+  ([ADR 004](docs/decisions/0004-native-chat-and-private-operations.md)).
 - Domain/application stay framework-free; server-only composition and runtime-validated
   adapters keep service tokens out of browsers. Missing metrics are unavailable, never zero
   or unlabeled fixture data.
@@ -54,12 +54,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Where things are
 
 - Skills: canonical `.agents/skills/<name>/SKILL.md` (with `evals/`); `.claude/skills/` holds
-  relative symlinks for Claude Code. Catalog and maintenance: [docs/agent-skills.md](docs/agent-skills.md).
+  relative symlinks for Claude Code. Catalog and maintenance: [docs/reference/agent-skills.md](docs/reference/agent-skills.md).
 - Full contract behind these boundaries: [docs/reference/backoffice-conventions.md](docs/reference/backoffice-conventions.md).
 - Owner-only repository settings and their commands: [docs/reference/repository-settings.md](docs/reference/repository-settings.md).
 - Style and TypeScript adaptations: [CONTRIBUTING.md](CONTRIBUTING.md). Auth:
-  [docs/authentication.md](docs/authentication.md). Runtime contract:
-  [docs/deployment-contract.md](docs/deployment-contract.md). CI: [docs/ci.md](docs/ci.md).
+  [docs/explanation/authentication.md](docs/explanation/authentication.md). Runtime contract:
+  [docs/reference/deployment-contract.md](docs/reference/deployment-contract.md). CI: [docs/reference/ci.md](docs/reference/ci.md).
 
 ## Master plan (2026-11)
 

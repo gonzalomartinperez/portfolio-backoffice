@@ -119,7 +119,7 @@ test("CI and dependency discovery select owned recipes and never build a sibling
 });
 
 test("current documented builds use explicit recipes and root context", () => {
-  for (const file of ["README.md", "docs/deployment-contract.md"]) {
+  for (const file of ["README.md", "docs/reference/deployment-contract.md"]) {
     const commands = [...readFileSync(file, "utf8").matchAll(/docker build(?:x build)?[^`\n]+/g)];
     assert.ok(commands.length > 0, file);
     for (const [command] of commands) {

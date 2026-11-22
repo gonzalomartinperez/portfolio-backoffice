@@ -5,7 +5,7 @@ and constructive feedback are welcome through the repository’s available chann
 Development priorities, implementation, reviews and releases remain the maintainer’s
 responsibility. Security reports use the private channel in [SECURITY.md](SECURITY.md).
 
-Read the [README](README.md) for setup and [architecture](docs/architecture.md) for
+Read the [README](README.md) for setup and [architecture](docs/explanation/architecture.md) for
 boundaries. Work on a focused task branch and open a PR against `develop`; never merge
 feature work into `main`. An explicitly owner-authorized promotion uses a separate
 `develop` → `main` PR and must pass the full CI graph at its current head before merging.
@@ -87,7 +87,7 @@ CSS and shell/container glue keep their native formats. Do not rewrite working o
 just to make file extensions uniform. Stable TypeScript 7.0.2 performs project checking and Next builds. The official TypeScript
 6 API supports architecture tools; isolated OpenAPI generation requires its locked TypeScript
 5.9.3 peer. Exact commands and compatibility evidence are in
-[ADR 003](docs/adrs/003-typescript7-compatibility.md). More TypeScript source does not imply
+[ADR 003](docs/decisions/0003-typescript7-compatibility.md). More TypeScript source does not imply
 a compiler upgrade or a browser-performance gain.
 
 ## Verification and review
@@ -111,7 +111,7 @@ Never commit credentials, private documents, `.env.local`, build output or brows
 containing personal sessions. `npm run security:check` checks current files and reachable
 Git history, including ignored-but-tracked files; shallow clones fail closed. It reports
 rule names and file/object locations, never matched values. It complements review and
-does not prove absence of secrets. See [CI guidance](docs/ci.md#local-browser-lease-and-redacted-history-checks)
+does not prove absence of secrets. See [CI guidance](docs/reference/ci.md#local-browser-lease-and-redacted-history-checks)
 for safe shared-cache browser installation and local history prerequisites.
 
 `npm run check` is the single local and CI gate (the CI static job runs it and the versioned
@@ -123,11 +123,11 @@ independent generator install. `npm run typecheck` verifies and explicitly invok
 native 7.0.2 checker, including generated Next route types. Do not invoke bare `tsc`: the
 compatibility package can own npm's `.bin/tsc` link. `npm run toolchain:check` detects
 accidental fallback. Keep strictness and full application coverage. See
-[ADR 003](docs/adrs/003-typescript7-compatibility.md) for compiler API and generator details.
+[ADR 003](docs/decisions/0003-typescript7-compatibility.md) for compiler API and generator details.
 
 ## Microsoft engineering references and architectural review
 
-The [engineering coordination handoff](docs/engineering-coordination.md) records the
+The [engineering coordination handoff](docs/master-plan/RESUME.md) records the
 Google/Microsoft primary references and cross-session ownership. Apply inward dependency
 rules, capability-based ports and behavior-focused review; do not copy .NET project/class
 patterns into React or replace Biome/Next conventions. `npm test` includes the architecture

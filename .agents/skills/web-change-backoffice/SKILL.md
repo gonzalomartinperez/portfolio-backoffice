@@ -9,7 +9,7 @@ metadata:
 
 Read the [operating contract](../../../AGENTS.md) and establish whether the request
 allows edits. Inspect status and relevant diffs; preserve other writers' work. Read
-[architecture decision](../../../docs/adrs/004-native-chat-and-private-operations.md)
+[architecture decision](../../../docs/decisions/0004-native-chat-and-private-operations.md)
 and [coding conventions](../../../CONTRIBUTING.md), not the whole documentation tree.
 
 Choose the responsible boundary: pure operations models in domain, small read ports in
@@ -19,7 +19,7 @@ and presentation components for interaction. Authentication guards live in
 live membership. Hiding a control is not authorization. Never expose service tokens,
 provider secrets, prompts or transcript text through props, logs or browser storage.
 
-For access changes read [authentication](../../../docs/authentication.md). Preserve
+For access changes read [authentication](../../../docs/explanation/authentication.md). Preserve
 verified-email admission, explicit account linking, single-use invitations and live
 revocation. Do not add password login or open signup. For UI preserve data-theme,
 semantic tokens, both dictionaries, native controls and reduced motion. Missing metrics
@@ -41,7 +41,7 @@ animation. Snapshot totals are not historical trends. Prometheus/Grafana infrast
 belongs to vps-ops; do not expose datasource credentials or embed shared dashboards.
 
 For workbench changes read [design decisions](../../../docs/design-system.md) and
-[acceptance](../../../docs/verification/operations-workbench.md). Preserve observed windows,
+[acceptance](../../../docs/verification/archive/operations-workbench.md). Preserve observed windows,
 nullable latency, reservation/settlement separation and zero-budget semantics. Native
 trace filters operate on validated IDs/outcomes only; relative phase bars are not a
 waterfall. Optional Grafana links require the owned URL validator and runtime configuration,
@@ -51,24 +51,24 @@ Access policy and mutation ports live in `auth/domain` and `auth/application`.
 Server Actions decode/authorize and format outcomes; PostgreSQL rechecks the owner
 inside each transaction. Test both fake-port use cases and isolated database behavior.
 `npm test` includes cycle and transitive client/server guards; new import/composition
-patterns need negative probes, not broader exceptions. See [architecture](../../../docs/architecture.md).
+patterns need negative probes, not broader exceptions. See [architecture](../../../docs/explanation/architecture.md).
 Source placement is fail-closed, including importless files: use an owned feature layer,
 exact entry module or documented shell/shared location. A new location needs classifier
 and negative-fixture updates; renaming a directory must not evade dependency checks.
 
-For product counts read [analytics semantics](../../../docs/product-analytics.md).
+For product counts read [analytics semantics](../../../docs/explanation/product-analytics.md).
 Keep the server-runtime flag off by default, require live membership before reads,
 validate the separately pinned schema and retain table alternatives. Never equate
 interactions with people, completed downloads or exact generation totals. Read
-[privacy review](../../../docs/privacy-review.md) before changing notices; IAM session
+[privacy review](../../../docs/explanation/privacy-review.md) before changing notices; IAM session
 metadata and essential cookies are not anonymous product analytics.
 
 This is `portfolio-backoffice`, the project's private operations UI. Read
-[ADR006](../../../docs/adrs/006-project-backoffice.md) before naming or scope changes.
+[ADR006](../../../docs/decisions/0006-project-backoffice.md) before naming or scope changes.
 Website analytics and assistant health are separate features composed by the server;
 repository renaming never authorizes renaming cookies, IAM tables, health IDs or data.
 
-For feedback read [current-rating semantics](../../../docs/feedback-and-improvement.md).
+For feedback read [current-rating semantics](../../../docs/explanation/feedback-and-improvement.md).
 Keep its flag independent and off by default. Use count-only server reads; never turn
 visitor ratings into verified accuracy or introduce raw-chat review, automatic training
 or corpus mutation. The retained-answer creation window is not a vote-event timeline.

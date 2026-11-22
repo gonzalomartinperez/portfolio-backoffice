@@ -1,5 +1,5 @@
 {
-  "$comment": "Lighthouse 13.5 mobile (simulated throttling) medians of 5 runs per route on the GitHub ubuntu-24.04 runner, recorded 2026-11-14 from CI run 43642010798 (PBO-M2-9, scripts/lighthouse-gate.ts). Enforced from day one with the noise margins in docs/ci.md; values only tighten (--write) and tighten further at M3 and M5. The 2026-11-09 audit numbers (/ mobile 60) came from a loaded workstation and are not comparable.",
+  "$comment": "Lighthouse 13.5 mobile (simulated throttling) medians of 5 runs per route on the GitHub ubuntu-24.04 runner, recorded 2026-11-14 from CI run 43642010798 (PBO-M2-9, scripts/lighthouse-gate.ts). Enforced from day one with the noise margins in docs/reference/ci.md; values only tighten (--write) and tighten further at M3 and M5. The 2026-11-09 audit numbers (/ mobile 60) came from a loaded workstation and are not comparable.",
   "mode": "enforce",
   "baseline": {
     "routes": {

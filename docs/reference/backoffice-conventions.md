@@ -8,8 +8,8 @@ stricter rule wins. Binding owner decisions are in
 ## Implementation conventions
 
 The public conversation UI belongs to the portfolio. This repository owns authenticated
-operations, IAM migrations and its runtime image. Read [ADR 004](../adrs/004-native-chat-and-private-operations.md),
-[authentication](../authentication.md) and [the deployment contract](../deployment-contract.md) as relevant. Do not modify other
+operations, IAM migrations and its runtime image. Read [ADR 004](../decisions/0004-native-chat-and-private-operations.md),
+[authentication](../explanation/authentication.md) and [the deployment contract](deployment-contract.md) as relevant. Do not modify other
 repositories merely because a handoff is needed. Domain/application stay framework-free;
 server-only composition and runtime-validated adapters keep service tokens out of browsers.
 Missing metrics are unavailable, never zero or unlabeled fixture data. No prompts, answers,
@@ -44,4 +44,4 @@ Use fixtures; paid model calls and production actions require separate explicit 
 Skill source is `.agents/skills/`; `.claude/skills/` provides Claude Code discovery links.
 Skills are selected automatically by task; explicit invocation is optional.
 Read only the selected skill and relevant references. Catalog maintenance, validation and
-client compatibility evidence are in [docs/agent-skills.md](../agent-skills.md).
+client compatibility evidence are in [docs/reference/agent-skills.md](agent-skills.md).

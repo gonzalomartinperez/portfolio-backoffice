@@ -1,6 +1,6 @@
 # Source release acceptance
 
-The single prioritized status is [the work checklist](work-checklist.md). This
+The single prioritized status is [the work checklist](master-plan/roadmap.md). This
 repository is the authenticated backoffice; historical chat/iframe acceptance
 belongs to its dated receipts and the portfolio owner, not to this runtime.
 
@@ -14,9 +14,9 @@ belongs to its dated receipts and the portfolio owner, not to this runtime.
 | ci (`static`, `database`, `container`, `browser`) | Frozen installation, Biome, strict TypeScript7/generated routes, unit/contract/architecture checks, real IAM/fake-provider integration, Chromium/Firefox/WebKit accessibility/interaction checks and redacted history scan. |
 | Delivery | Normal current-head CI/review before develop/main PR merge. Publication and production require separate authority; vps-ops owns Coolify, routing, shared resources and recovery. |
 
-Review [the runtime contract](deployment-contract.md), [Docker ownership](ci.md),
-[skill compatibility evidence](agent-skills.md) and the dated reports linked from
-[the checklist](work-checklist.md). Existing software is MIT with separately scoped
+Review [the runtime contract](reference/deployment-contract.md), [Docker ownership](reference/ci.md),
+[skill compatibility evidence](reference/agent-skills.md) and the dated reports linked from
+[the checklist](master-plan/roadmap.md). Existing software is MIT with separately scoped
 identity, reference content, fonts and third-party rights.
 
 Remaining release limitations are explicit: blocked API Neo4j vendor acceptance,
