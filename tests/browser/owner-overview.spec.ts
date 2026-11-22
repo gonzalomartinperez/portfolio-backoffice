@@ -40,15 +40,12 @@ test("owner receives validated fixture metrics and restricted access navigation"
   expect(data.ok()).toBe(true);
   expect(data.headers()["cache-control"]).toContain("no-store");
   expect(await data.text()).not.toContain("public-loopback-operations-fixture");
+  // The breakdown is server-rendered (PBO-M3-2): both tables at once, and no chart library on `/`.
   await expect(page.getByRole("table", { name: "Executions" })).toBeVisible();
-  await page.getByRole("application").focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.locator(".recharts-tooltip-wrapper")).toBeVisible();
-  await page.getByLabel("Metric", { exact: true }).selectOption("tokens");
-  await expect(page.getByRole("table", { name: "Tokens" })).toBeVisible();
-  await expect(page.getByRole("table").getByRole("row", { name: /Input tokens/ })).toBeVisible();
-  await page.getByLabel("Metric", { exact: true }).selectOption("executions");
-  await expect(page.getByRole("table", { name: "Executions" })).toBeVisible();
+  const tokens = page.getByRole("table", { name: "Tokens" });
+  await expect(tokens).toBeVisible();
+  await expect(tokens.getByRole("row", { name: /Input tokens/ })).toBeVisible();
+  await expect(page.locator(".recharts-wrapper")).toHaveCount(0);
   await page.locator("summary").filter({ hasText: "cccccccccccc" }).click();
   await expect(page.getByText("Vector retrieval", { exact: true })).toBeVisible();
   await expect(page.getByText("Generation", { exact: true })).toBeVisible();
