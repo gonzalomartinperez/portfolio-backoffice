@@ -40,9 +40,16 @@ Migrations are explicit, not run automatically at startup. Required configuratio
 validated before authentication initialization. Missing configuration or database access
 makes readiness fail; no secrets or SQL errors are returned to the browser.
 
-- `GET /api/health`: process liveness only; no database, OAuth or operational guarantees.
-- `GET /api/ready`: configuration and authentication schema/database readiness; 200 or 503
-  with a minimal status. It does not certify OAuth providers or the private operational API.
+- `GET /api/health` reports process liveness with `status: "alive"`, `application`, `version`
+  and `revision`.
+- `GET /api/ready` checks configuration and authentication schema/database readiness.
+  It returns 200 with `status: "ready"` or 503 with `status: "unavailable"`. Both responses
+  include `version`, `revision` and `schema_version`, the latest SQL migration ID expected
+  by the application. It does not certify OAuth providers or the private operational API.
+- Both endpoints send `Cache-Control: no-store` and use `APP_VERSION` for the release
+  version and `APP_REVISION` for the git commit. Each field defaults to `"unknown"` when
+  its variable is unset or empty. The image always sets both: CI passes the package version
+  and commit SHA, and a local build without arguments reports `0.0.0` and `unknown`.
 - Docker health checks readiness every 30s, timeout 5s (HTTP abort4s), start period20s,
   retries3. Use it for traffic admission. Monitor liveness separately; dependency failure
   is not sufficient justification for a repeated restart loop.

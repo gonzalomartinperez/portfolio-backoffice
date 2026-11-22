@@ -44,6 +44,8 @@ Updated on each task merge (the same PR that sets the roadmap row to `done (PR #
 | PBO-M2-11 | `test/m2-scorecard`, `docs/m2-progress` | #144, this PR | merged | `scripts/scorecard/run.ts`, nightly job; first evaluator run ([record](evaluator-run-2026-11-14.md)) |
 | PBO-M2-12 | `test/m2-contract-consumer` | #137 | merged | nightly contract consumer check, paired-API stub until the digest exists |
 | PBO-M2-13 | `spike/m2-lighthouse` | #145 (closed, spike) | done | result in the scorecard notes below |
+| PBO-M3-1 | `chore/m3-knip-findings` | #150 | merged | knip findings and lint info removed |
+| PBO-M3-6 | `feat/m3-ready-version` | this PR | merged | health and readiness report `version` (`APP_VERSION`) and `revision` (`APP_REVISION`); readiness adds `schema_version`, pinned to the latest migration by a unit test |
 
 ## Scorecard snapshot (rubrics v2; P and R from the first independent evaluator run, D still planner estimates until the nightly scorecard covers them)
 
