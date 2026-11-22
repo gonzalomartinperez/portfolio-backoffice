@@ -66,7 +66,7 @@ validation. `allowJs: false`, `strict`, `noUncheckedIndexedAccess`,
 complete project, including tooling and generated Next route types. Do not exclude scripts
 or add casts/suppressions merely to satisfy the migration.
 
-Pinned Node 24.22.2 executes erasable TypeScript directly (`node scripts/check-docs.ts`), and
+Pinned Node 24.22.3 executes erasable TypeScript directly (`node scripts/check-docs.ts`), and
 Vitest runs the tests (`vitest.config.ts`: `unit`, `component` and `integration` projects, `node:assert` stays
 the assertion library). Neither type-checks: `npm run typecheck` remains the required check. Use
 explicit relative `.ts` imports and `import type`; no enum/parameter-property transform or
