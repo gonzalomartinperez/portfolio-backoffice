@@ -109,18 +109,33 @@ test("unit (handler layer, not the wire): handlers add their own cache policy pe
 
 test("unit (handler layer): health and readiness bodies carry no secrets, SQL or database errors", async () => {
   resetAuthState("owner");
+  vi.stubEnv("APP_VERSION", "1.2.3");
+  vi.stubEnv("APP_REVISION", "abc123");
+  const build = { version: "1.2.3", revision: "abc123" };
+  const { SCHEMA_VERSION } = await import("../../src/server/build-info.ts");
   const health = (await import("../../src/app/api/health/route.ts")).GET();
   assert.deepEqual(await health.json(), {
     status: "alive",
     application: "portfolio-assistant-backoffice",
+    ...build,
   });
   const ready = await (await import("../../src/app/api/ready/route.ts")).GET();
-  assert.deepEqual(await ready.json(), { status: "ready" });
+  assert.deepEqual(await ready.json(), {
+    status: "ready",
+    ...build,
+    schema_version: SCHEMA_VERSION,
+  });
   resetAuthState("owner");
   authState.poolError = new Error(
     'relation "session" does not exist: SELECT id,token FROM session at postgres://app:pw@db:5432/iam',
   );
   const down = await (await import("../../src/app/api/ready/route.ts")).GET();
   assert.equal(down.status, 503);
-  assert.equal(await down.text(), JSON.stringify({ status: "unavailable" }));
+  const body = await down.text();
+  assert.doesNotMatch(body, /postgres|session|SELECT|token|pw@/);
+  assert.deepEqual(JSON.parse(body), {
+    status: "unavailable",
+    ...build,
+    schema_version: SCHEMA_VERSION,
+  });
 });

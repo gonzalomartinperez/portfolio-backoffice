@@ -80,12 +80,12 @@ All P0 and P1 findings that do not need the new architecture.
 
 | ID | Task | Effort | Status |
 |---|---|---|---|
-| PBO-M3-1 | Fix the lint info and any new findings from the M2 tools; delete the dead exports and files that knip reports. | S, 1 h | todo |
+| PBO-M3-1 | Fix the lint info and any new findings from the M2 tools; delete the dead exports and files that knip reports. | S, 1 h | done (#150, `bbbfc1f`) |
 | PBO-M3-2 | Performance: load Recharts through a lazy client wrapper (dynamic import, after intersection) so `/` ships no chart chunk; drop the redundant chart (the table already carries the data) in favour of a minimal server-rendered bar until M5. | M, 5 h | todo |
 | PBO-M3-3 | Audit trail: migration `0002` (runtime role `INSERT, SELECT` only; `request_id`, `actor_hash`), record sign-in, admission, denial, link, sign-out; integration test that the runtime role cannot `UPDATE` or `DELETE`. | M, 4 h | todo |
 | PBO-M3-4 | CSP with per-request nonce, HSTS, theme cookie rendered server-side, delete the inline theme script; header snapshot updated; invitation token transport decision recorded (ADR 0015). | M, 4 h | todo |
 | PBO-M3-5 | `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`; per-section `<Suspense>`. | S, 2 h | todo |
-| PBO-M3-6 | Readiness returns `version` and `schema_version`; liveness returns `version`; contract test. | S, 1 h | todo |
+| PBO-M3-6 | Readiness returns `version` and `schema_version`; liveness returns `version`; contract test. | S, 1 h | done (this PR) |
 | PBO-M3-7 | `<html lang>` from cookie; one locale `es-419`; `Intl` with explicit `timeZone: "UTC"`; grep test forbids `es-AR`. | S, 2 h | todo |
 | PBO-M3-8 | Self-hosted fonts through `next/font/local` (removes build-time network fetch); update licences. | S, 1 h | todo |
 | PBO-M3-9 | Docs: README per template, Diataxis moves, ADR move to `docs/decisions/`, archive `docs/verification/`, delete dated handoffs, CHANGELOG, SUPPORT, CODE_OF_CONDUCT, CODEOWNERS. | M, 4 h | todo |
