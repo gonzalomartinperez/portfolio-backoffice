@@ -41,7 +41,12 @@ test("log calls in src/ pass only static literals free of emails, tokens, IPs an
   const found = sinks();
   assert.deepEqual(
     found.map(({ file, call }) => `${file} ${call}`),
-    ["src/server/auth/runtime.ts console.error("],
+    [
+      "src/features/auth/adapters/audit.ts console.error(",
+      "src/features/auth/adapters/audit.ts console.error(",
+      "src/features/auth/adapters/audit.ts console.error(",
+      "src/server/auth/runtime.ts console.error(",
+    ],
     "a new log call needs review: add it here only with literal-only arguments",
   );
   for (const { file, args } of found) {

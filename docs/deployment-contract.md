@@ -88,9 +88,11 @@ See [authentication](authentication.md) for admission, invitations and revocatio
 ## Migration, storage and compatibility
 
 Run the tested image with `node scripts/auth-migrate.ts` before admitting traffic.
-It applies the official Better Auth migrations and repository IAM SQL. Use a dedicated
+It applies the official Better Auth migrations and the repository IAM SQL
+(`migrations/001-access.sql`, then `migrations/002-audit.sql`). Use a dedicated
 PostgreSQL connection, backup first and serialize migration execution in vps-ops. The
-current migration is initial schema creation; multi-version migration/rollback compatibility
+first migration is initial schema creation and `002-audit.sql` extends the audit table
+(new columns, nullable actor, append-only trigger; it is idempotent); multi-version migration/rollback compatibility
 has not been validated. Image rollback does not reverse database migrations. Do not run
 fixture-session or integration reset tools against production.
 Coolify's generic pre-deployment command can run in the previous container. It is not
@@ -283,10 +285,16 @@ The same `BACKOFFICE_DATABASE_URL` variable points to the migrator for this one-
 task and to **`portfolio_iam_runtime`** for the normal server. No new public build
 variable or secret format is introduced. The CLI executes the official Better
 Auth migration and repository access migration, then applies the exact
-`migrations/runtime-grants.sql` resource from the image. Runtime has DML on eight
-named tables (including the database-backed `rateLimit`) and one audit sequence;
+`migrations/runtime-grants.sql` resource from the image. Runtime has DML on seven
+named tables (including the database-backed `rateLimit`), `SELECT, INSERT` only on
+`backoffice_access_audit` and `USAGE` on its sequence;
 it has no owner membership, DDL, TEMP or cross-database CONNECT. It cannot migrate.
 Do not grant all tables or use the provisioning identity to run the web server.
+The shared PostgreSQL needs the updated `runtime-grants.sql` applied by the cluster owner
+(vps-ops) together with migration `002-audit.sql`: the file revokes the former
+`UPDATE, DELETE` on the audit table, so re-applying it on an existing database narrows the
+grant. Until it is applied the previous grants remain, and the trigger from `002-audit.sql`
+still rejects row rewrites.
 
 A local dual-application proof ran the existing fake-OAuth membership/revocation
 flows against this restricted runtime, tested its actual five-connection pool,

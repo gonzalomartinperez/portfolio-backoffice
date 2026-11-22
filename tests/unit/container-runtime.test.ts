@@ -27,6 +27,7 @@ test("runtime trace rejects private files and escapes while accepting migration 
   for (const path of [
     "scripts/auth-migrate.ts",
     "migrations/001-access.sql",
+    "migrations/002-audit.sql",
     "migrations/runtime-grants.sql",
     "src/server/auth/runtime.ts",
     "node_modules/pg/package.json",
@@ -59,11 +60,12 @@ async function fixture(run: (root: string) => Promise<void>) {
     await writeFile(join(root, "package.json"), '{"type":"module"}');
     await writeFile(join(root, ".next/standalone/server.js"), "// Isolated trace fixture.\n");
     await writeFile(join(root, "migrations/001-access.sql"), "SELECT 1;");
+    await writeFile(join(root, "migrations/002-audit.sql"), "SELECT 3;");
     await writeFile(join(root, "migrations/runtime-grants.sql"), "SELECT 2;");
     await writeFile(join(root, "src/server/auth/config.ts"), "export const version: number = 1;");
     await writeFile(
       join(root, "scripts/auth-migrate.ts"),
-      'import {readFile} from "node:fs/promises";\nimport {version} from "../src/server/auth/config.ts";\nconst value: number = version;\nawait readFile(new URL("../migrations/001-access.sql", import.meta.url), "utf8");\nif (process.argv.includes("--project-grants")) await readFile(new URL("../migrations/runtime-grants.sql", import.meta.url), "utf8");\nconsole.log(value);',
+      'import {readFile} from "node:fs/promises";\nimport {version} from "../src/server/auth/config.ts";\nconst value: number = version;\nawait readFile(new URL("../migrations/001-access.sql", import.meta.url), "utf8");\nawait readFile(new URL("../migrations/002-audit.sql", import.meta.url), "utf8");\nif (process.argv.includes("--project-grants")) await readFile(new URL("../migrations/runtime-grants.sql", import.meta.url), "utf8");\nconsole.log(value);',
     );
     await run(root);
   } finally {

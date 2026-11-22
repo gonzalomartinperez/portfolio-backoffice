@@ -1,6 +1,6 @@
 import "server-only";
 
-export const SCHEMA_VERSION = "001-access";
+export const SCHEMA_VERSION = "002-audit";
 
 export function buildInfo() {
   return {

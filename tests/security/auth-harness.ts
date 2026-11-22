@@ -81,6 +81,7 @@ export function fakeAuthRuntime() {
         authState.revokes.push(args);
       },
     },
+    audit: { requestId: () => "00000000-0000-4000-8000-000000000000" },
     options: { baseURL: ORIGIN },
     pool: {
       query: async () => {

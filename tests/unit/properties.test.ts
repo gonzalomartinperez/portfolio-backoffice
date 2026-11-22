@@ -55,12 +55,12 @@ function recordingPort(options: { fail?: boolean } = {}) {
   const writes: unknown[][] = [];
   const port: AccessManagementPort = {
     async invite(...args) {
-      writes.push(["invite", ...args]);
+      writes.push(["invite", ...args.filter((argument) => argument !== undefined)]);
       if (options.fail) throw new Error("secret database detail");
       return "opaque-token";
     },
     async revoke(...args) {
-      writes.push(["revoke", ...args]);
+      writes.push(["revoke", ...args.filter((argument) => argument !== undefined)]);
       if (options.fail) throw new Error("secret database detail");
     },
   };
