@@ -1,14 +1,14 @@
-import { productCopy } from "../../features/analytics/presentation/copy";
-import { ProductMetrics } from "../../features/analytics/presentation/metrics";
-import { CalendarReport } from "../../features/analytics/presentation/report";
-import styles from "../../features/analytics/presentation/report.module.css";
-import { reportCopy } from "../../features/analytics/presentation/report-copy";
-import { ReportFilters } from "../../features/analytics/presentation/report-filters";
-import { Preferences } from "../../features/operations/presentation/preferences";
-import { loadAnalyticsView } from "../../server/analytics";
-import { getAuthLocale, requireAccess } from "../../server/auth/session";
-import { ButtonLink } from "../../shared/ui/button-link";
-import { languageTag } from "../../shared/ui/intl.ts";
+import { productCopy } from "../../../features/analytics/presentation/copy";
+import { ProductMetrics } from "../../../features/analytics/presentation/metrics";
+import { CalendarReport } from "../../../features/analytics/presentation/report";
+import styles from "../../../features/analytics/presentation/report.module.css";
+import { reportCopy } from "../../../features/analytics/presentation/report-copy";
+import { ReportFilters } from "../../../features/analytics/presentation/report-filters";
+import { Preferences } from "../../../features/operations/presentation/preferences";
+import { loadAnalyticsView } from "../../../server/analytics";
+import { getAuthLocale, requireAccess } from "../../../server/auth/session";
+import { ButtonLink } from "../../../shared/ui/button-link";
+import { languageTag } from "../../../shared/ui/intl.ts";
 export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,

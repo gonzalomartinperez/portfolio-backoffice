@@ -18,6 +18,9 @@ vi.mock("server-only", () => ({}));
 // name (for example `subject` or `target`) or compose data outside these loaders; value flow
 // through page-level composition is not tracked, and rendered HTML or flight output is not read.
 const clientIslands: Record<string, Record<string, string[] | null>> = {
+  // Route error boundaries (PBO-M3-5): only Next's retry callback crosses; the error is not rendered.
+  "src/app/error.tsx": { RouteError: ["retry"] },
+  "src/app/global-error.tsx": { GlobalError: ["retry"] },
   "src/features/analytics/presentation/metrics.tsx": { ProductMetrics: ["snapshot", "locale"] },
   "src/features/analytics/presentation/report-chart.tsx": { DailyViewsChart: ["days", "locale"] },
   "src/features/analytics/presentation/report-filters.tsx": {
