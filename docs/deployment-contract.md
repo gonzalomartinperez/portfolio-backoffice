@@ -256,8 +256,8 @@ This policy does not relabel historical acceptance or replace runtime verificati
 ## Optional feedback summary
 
 See [rating semantics and compatibility](feedback-and-improvement.md). The consumed
-schema is pinned to API `bb36012eef55e85f7e0cf78df1845f38ef13da63`; public API/SSE
-and the independent operations/product contract pins remain unchanged. Set
+schema is pinned to API `bb36012eef55e85f7e0cf78df1845f38ef13da63`; the independent
+operations and product contract pins remain unchanged. Set
 `FEEDBACK_OVERVIEW_ENABLED=true` on both compatible applications only after approval.
 This is an aggregate-only read using the existing private token/origin. It adds no
 migration, persistent path, service, host port or provider access. The API's Neo4j

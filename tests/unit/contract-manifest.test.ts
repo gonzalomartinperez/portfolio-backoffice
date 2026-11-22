@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import {
+  appendFileSync,
+  cpSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "vitest";
 import { record } from "../../scripts/json.ts";
 
@@ -35,5 +46,33 @@ test("the manifest pins the exact bytes and API commit of every snapshot artifac
       { revision: source.api_commit, sha256: createHash("sha256").update(bytes).digest("hex") },
       file,
     );
+  }
+});
+
+// The check runs at import time, so each mutation runs it on a temporary copy of the repository
+// layout it reads (scripts/ and contracts/).
+test("the contract check fails closed on changed, unlisted or missing snapshot files", () => {
+  const mutations: Record<string, (directory: string) => void> = {
+    changed: (directory) => appendFileSync(join(directory, "feedback.types.d.ts"), " "),
+    unlisted: (directory) => writeFileSync(join(directory, "extra.json"), "{}"),
+    missing: (directory) => rmSync(join(directory, "feedback.types.d.ts")),
+  };
+  for (const [name, mutate] of Object.entries(mutations)) {
+    const root = mkdtempSync(join(tmpdir(), "contract-check-"));
+    try {
+      for (const file of ["check-contract.ts", "json.ts"])
+        cpSync(new URL(`../../scripts/${file}`, import.meta.url), join(root, "scripts", file));
+      cpSync(contracts, join(root, "contracts"), { recursive: true });
+      mutate(join(root, "contracts", "assistant-api"));
+      assert.throws(
+        () =>
+          execFileSync(process.execPath, [join(root, "scripts", "check-contract.ts")], {
+            stdio: "pipe",
+          }),
+        name,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   }
 });
