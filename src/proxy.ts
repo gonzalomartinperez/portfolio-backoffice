@@ -1,6 +1,15 @@
-import { NextResponse } from "next/server";
-export function proxy() {
-  const response = NextResponse.next();
+import { type NextRequest, NextResponse } from "next/server";
+
+// The root layout cannot read search params, so the proxy forwards a validated `?locale=` as a
+// request header (always set or removed here, so a client cannot inject it) for `<html lang>`.
+export const localeHeader = "x-backoffice-locale";
+
+export function proxy(request?: NextRequest) {
+  const forwarded = new Headers(request?.headers);
+  const query = request?.nextUrl.searchParams.get("locale");
+  if (query === "en" || query === "es") forwarded.set(localeHeader, query);
+  else forwarded.delete(localeHeader);
+  const response = NextResponse.next({ request: { headers: forwarded } });
   response.headers.set(
     "Content-Security-Policy",
     "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",

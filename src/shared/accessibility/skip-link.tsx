@@ -1,22 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
+import { languageTag } from "../ui/intl.ts";
 
-export function SkipLink() {
-  const [locale, setLocale] = useState<"en" | "es">("en");
-  useEffect(() => {
-    const preference = document.cookie
-      .split(";")
-      .map((value) => value.trim())
-      .find((value) => value.startsWith("backoffice-locale="))
-      ?.slice("backoffice-locale=".length);
-    const query = new URLSearchParams(window.location.search).get("locale");
-    const value = query === "es" || query === "en" ? query : preference;
-    const selected = value === "es" ? "es" : "en";
-    setLocale(selected);
-    document.documentElement.lang = selected;
-  }, []);
+// Server-rendered with the document locale, so Spanish pages never flash an English skip link.
+export function SkipLink({ locale }: { locale: "en" | "es" }) {
   return (
-    <a className="skip-link" href="#main">
+    <a className="skip-link" href="#main" lang={languageTag(locale)}>
       {locale === "es" ? "Ir al contenido" : "Skip to content"}
     </a>
   );

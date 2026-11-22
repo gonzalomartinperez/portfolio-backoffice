@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { dateTimeFormat, displayNames, numberFormat } from "../../../shared/ui/intl.ts";
 import type { ProductTarget } from "../domain/models";
 import type { ProductReport } from "../domain/report";
 import { productCopy } from "./copy";
@@ -9,17 +10,15 @@ import { regionCopy, reportCopy } from "./report-copy";
 export function CalendarReport({ report, locale }: { report: ProductReport; locale: "en" | "es" }) {
   const t = reportCopy[locale];
   const common = productCopy[locale];
-  const format = new Intl.NumberFormat(locale === "es" ? "es-419" : "en-US");
-  const date = new Intl.DateTimeFormat(locale === "es" ? "es-419" : "en-US", {
+  const format = numberFormat(locale);
+  const date = dateTimeFormat(locale, {
     dateStyle: "medium",
-    timeZone: "UTC",
   });
-  const instant = new Intl.DateTimeFormat(locale === "es" ? "es-419" : "en-US", {
+  const instant = dateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
-    timeZone: "UTC",
   });
-  const countries = new Intl.DisplayNames([locale === "es" ? "es-419" : "en-US"], {
+  const countries = displayNames(locale, {
     type: "region",
   });
   const countryName = (code: string) =>

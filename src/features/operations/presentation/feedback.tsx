@@ -1,3 +1,4 @@
+import { dateTimeFormat, numberFormat } from "../../../shared/ui/intl.ts";
 import { type FeedbackRead, helpfulShare } from "../domain/feedback";
 
 const en = {
@@ -35,8 +36,8 @@ export function FeedbackOverview({
   const t = locale === "es" ? es : en;
   const snapshot = result.kind === "available" ? result.snapshot : null;
   const share = snapshot ? helpfulShare(snapshot) : null;
-  const format = new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US");
-  const percent = new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US", {
+  const format = numberFormat(locale);
+  const percent = numberFormat(locale, {
     style: "percent",
     maximumFractionDigits: 1,
   });
@@ -62,10 +63,9 @@ export function FeedbackOverview({
           <p>
             {t.observed}:{" "}
             <time dateTime={snapshot.observedAt}>
-              {new Intl.DateTimeFormat(locale === "es" ? "es-AR" : "en-US", {
+              {dateTimeFormat(locale, {
                 dateStyle: "medium",
                 timeStyle: "short",
-                timeZone: "UTC",
               }).format(new Date(snapshot.observedAt))}
             </time>
           </p>

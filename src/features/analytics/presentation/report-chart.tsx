@@ -1,6 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { numberFormat } from "../../../shared/ui/intl.ts";
 import styles from "./report.module.css";
 import { reportCopy } from "./report-copy";
 
@@ -12,7 +13,7 @@ export function DailyViewsChart({
   locale: "en" | "es";
 }) {
   const t = reportCopy[locale];
-  const format = new Intl.NumberFormat(locale === "es" ? "es-419" : "en-US");
+  const format = numberFormat(locale);
   return (
     <div className={styles.plot}>
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>

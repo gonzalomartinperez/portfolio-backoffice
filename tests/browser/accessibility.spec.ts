@@ -13,14 +13,18 @@ async function auditState(
 ) {
   // Four full axe passes per state (theme x locale) need more than the 30 s default.
   test.setTimeout(120_000);
+  await page.context().clearCookies({ name: "backoffice-locale" });
   for (const locale of locales) {
     for (const theme of themes) {
       await test.step(`${path} ${locale}/${theme}`, async () => {
         const separator = path.includes("?") ? "&" : "?";
         await page.goto(`${path}${separator}locale=${locale}`);
-        await expect(page.locator("main#main")).toBeVisible();
-        // The lang assertion also waits for hydration (the skip link sets it on mount).
-        await expect(page.locator("html")).toHaveAttribute("lang", locale);
+        const main = page.locator("main#main");
+        await expect(main).toBeVisible();
+        const tag = locale === "es" ? "es-419" : "en-US";
+        // `?locale=` wins over the cookie for the whole document (src/proxy.ts forwards it).
+        await expect(main).toHaveAttribute("lang", tag);
+        await expect(page.locator("html")).toHaveAttribute("lang", tag);
         await setTheme(page, theme);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         await open?.(page, locale);
@@ -80,9 +84,8 @@ test("axe wcag22aa owner access revoke confirmation dialog", { tag: "@owner" }, 
 }) => {
   test.skip(!available, "Available-mode lifecycle only");
   await auditState(page, "/access", async (current) => {
-    // Opens the confirmation on an existing viewer member; it is never confirmed. The server may
-    // already render lang="en", so wait for the client scripts to settle (hydration) and click
-    // once; a retried click could act on a half-open dialog.
+    // Wait for hydration before opening the confirmation. A retried click could act on a
+    // half-open dialog.
     await current.waitForLoadState("networkidle");
     await current
       .getByRole("button", { name: /^(Revoke|Revocar)/ })

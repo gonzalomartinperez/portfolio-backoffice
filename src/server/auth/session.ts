@@ -61,6 +61,12 @@ export async function readiness(): Promise<boolean> {
   }
 }
 
+// The document locale: a supported `?locale=` (forwarded by src/proxy.ts) wins over the cookie.
+export async function getDocumentLocale() {
+  const forwarded = (await headers()).get("x-backoffice-locale");
+  return forwarded === "en" || forwarded === "es" ? forwarded : getAuthLocale();
+}
+
 export async function getAuthLocale() {
   return authLocale((await cookies()).get("backoffice-locale")?.value);
 }

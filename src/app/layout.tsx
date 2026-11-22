@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { getDocumentLocale } from "../server/auth/session";
 import { SkipLink } from "../shared/accessibility/skip-link";
+import { languageTag } from "../shared/ui/intl.ts";
 import { fontClassName } from "./fonts";
 import "./style.css";
 export const viewport: Viewport = {
@@ -15,9 +17,10 @@ export const metadata: Metadata = {
     "Authenticated website interactions, assistant health and access for Gonzalo’s portfolio.",
   robots: { index: false, follow: false },
 };
-export default function Layout({ children }: { children: ReactNode }) {
+export default async function Layout({ children }: { children: ReactNode }) {
+  const locale = await getDocumentLocale();
   return (
-    <html lang="en" className={fontClassName} suppressHydrationWarning>
+    <html lang={languageTag(locale)} className={fontClassName} suppressHydrationWarning>
       <head>
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: fixed pre-paint theme replay, no user HTML.
@@ -28,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <SkipLink />
+        <SkipLink locale={locale} />
         {children}
       </body>
     </html>

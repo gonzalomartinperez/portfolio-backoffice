@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { numberFormat } from "../../../shared/ui/intl.ts";
 import { selectTraces } from "../domain/insights";
 import type { ExecutionTrace, RunOutcome } from "../domain/models";
 import { type OperationsLocale, operationsCopy } from "./copy";
@@ -16,7 +17,7 @@ export function TraceExplorer({
   const [outcome, setOutcome] = useState<RunOutcome | "all">("all");
   const [query, setQuery] = useState("");
   const t = operationsCopy[locale];
-  const format = new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US");
+  const format = numberFormat(locale);
   const visible = selectTraces(traces, outcome, query);
   return (
     <div>

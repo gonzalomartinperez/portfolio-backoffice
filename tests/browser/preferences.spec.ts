@@ -12,9 +12,9 @@ test("preferences synchronize language and the single theme authority", { tag: "
   await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("es");
   await expect(page.getByRole("heading", { name: "Operaciones del portfolio" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Opiniones sobre las respuestas" })).toContainText(
-    "82,4%",
+    "82.4%",
   );
-  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es-419");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
 

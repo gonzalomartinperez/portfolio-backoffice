@@ -18,7 +18,6 @@ vi.mock("server-only", () => ({}));
 // name (for example `subject` or `target`) or compose data outside these loaders; value flow
 // through page-level composition is not tracked, and rendered HTML or flight output is not read.
 const clientIslands: Record<string, Record<string, string[] | null>> = {
-  "src/shared/accessibility/skip-link.tsx": { SkipLink: [] },
   "src/features/analytics/presentation/metrics.tsx": { ProductMetrics: ["snapshot", "locale"] },
   "src/features/analytics/presentation/report-chart.tsx": { DailyViewsChart: ["days", "locale"] },
   "src/features/analytics/presentation/report-filters.tsx": {
