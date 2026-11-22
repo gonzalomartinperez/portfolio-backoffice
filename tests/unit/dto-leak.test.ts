@@ -24,9 +24,6 @@ const clientIslands: Record<string, Record<string, string[] | null>> = {
   "src/features/analytics/presentation/report-filters.tsx": {
     ReportFilters: ["selection", "locale"],
   },
-  "src/features/operations/presentation/charts.tsx": {
-    SnapshotChart: ["executions", "usage", "locale"],
-  },
   "src/features/operations/presentation/trace-explorer.tsx": {
     TraceExplorer: ["traces", "locale"],
   },

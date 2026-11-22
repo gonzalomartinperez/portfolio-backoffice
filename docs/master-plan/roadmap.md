@@ -81,7 +81,7 @@ All P0 and P1 findings that do not need the new architecture.
 | ID | Task | Effort | Status |
 |---|---|---|---|
 | PBO-M3-1 | Fix the lint info and any new findings from the M2 tools; delete the dead exports and files that knip reports. | S, 1 h | todo |
-| PBO-M3-2 | Performance: load Recharts through a lazy client wrapper (dynamic import, after intersection) so `/` ships no chart chunk; drop the redundant chart (the table already carries the data) in favour of a minimal server-rendered bar until M5. | M, 5 h | todo |
+| PBO-M3-2 | Performance: load Recharts through a lazy client wrapper (dynamic import, after intersection) so `/` ships no chart chunk; drop the redundant chart (the table already carries the data) in favour of a minimal server-rendered bar until M5. | M, 5 h | done (this PR; server-rendered, so `/` has no chart chunk at all) |
 | PBO-M3-3 | Audit trail: migration `0002` (runtime role `INSERT, SELECT` only; `request_id`, `actor_hash`), record sign-in, admission, denial, link, sign-out; integration test that the runtime role cannot `UPDATE` or `DELETE`. | M, 4 h | todo |
 | PBO-M3-4 | CSP with per-request nonce, HSTS, theme cookie rendered server-side, delete the inline theme script; header snapshot updated; invitation token transport decision recorded (ADR 0015). | M, 4 h | todo |
 | PBO-M3-5 | `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`; per-section `<Suspense>`. | S, 2 h | todo |
