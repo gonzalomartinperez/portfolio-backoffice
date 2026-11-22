@@ -8,6 +8,7 @@ import { Preferences } from "../../features/operations/presentation/preferences"
 import { loadAnalyticsView } from "../../server/analytics";
 import { getAuthLocale, requireAccess } from "../../server/auth/session";
 import { ButtonLink } from "../../shared/ui/button-link";
+import { languageTag } from "../../shared/ui/intl.ts";
 export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
@@ -22,7 +23,7 @@ export default async function Page({
   const t = productCopy[locale];
   const reportText = reportCopy[locale];
   return (
-    <main id="main" lang={locale} className="operations-shell">
+    <main id="main" lang={languageTag(locale)} className="operations-shell">
       <header className="operations-header">
         <div>
           <p className="eyebrow">GMP / Backoffice</p>

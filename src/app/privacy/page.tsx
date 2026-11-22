@@ -1,5 +1,7 @@
 import styles from "../../features/auth/presentation/auth.module.css";
+import { getDocumentLocale } from "../../server/auth/session.ts";
 import { ButtonLink } from "../../shared/ui/button-link";
+import { languageTag } from "../../shared/ui/intl.ts";
 export const metadata = {
   title: "Privacy / Privacidad — Portfolio backoffice",
   robots: { index: false, follow: false },
@@ -42,15 +44,11 @@ const es: typeof en = {
     "Comunícate con el responsable mediante la página de contacto del portfolio para consultar por acceso, corrección o eliminación. Revocar permisos impide nuevos accesos; no significa que todos los registros de auditoría y respaldos se borren de inmediato. La retención de auditoría, el vencimiento de respaldos, la región de alojamiento y las obligaciones legales aplicables deben confirmarse antes de producción. Este aviso no afirma certificaciones legales ni una exención por no usar cookies de seguimiento.",
   contact: "Contactar al responsable",
 };
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const locale = (await searchParams).locale === "es" ? "es" : "en";
+export default async function Page() {
+  const locale = await getDocumentLocale();
   const t = locale === "es" ? es : en;
   return (
-    <main id="main" lang={locale} className={styles.main}>
+    <main id="main" lang={languageTag(locale)} className={styles.main}>
       <article className={`${styles.card} ${styles.stack}`}>
         <h1>{t.title}</h1>
         <p>{t.intro}</p>

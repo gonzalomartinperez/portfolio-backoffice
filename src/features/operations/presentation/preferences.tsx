@@ -7,9 +7,8 @@ export function Preferences({ locale }: { locale: OperationsLocale }) {
   const preferenceId = useId();
   const [theme, setTheme] = useState("dark");
   useEffect(() => {
-    document.documentElement.lang = locale;
     setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
-  }, [locale]);
+  }, []);
   return (
     <details
       className={styles.preferences}

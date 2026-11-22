@@ -2,6 +2,7 @@ import { SignIn } from "../../features/auth/entry.tsx";
 import styles from "../../features/auth/presentation/auth.module.css";
 import { authCopy, authLocale } from "../../features/auth/presentation/copy.ts";
 import { getAuthLocale, readiness } from "../../server/auth/session.ts";
+import { languageTag } from "../../shared/ui/intl.ts";
 export const metadata = {
   title: "Sign in — Portfolio backoffice",
   robots: { index: false, follow: false },
@@ -17,7 +18,7 @@ export default async function SignInPage({
   const available = await readiness();
   const copy = authCopy[locale];
   return (
-    <main id="main" lang={locale} className={styles.main}>
+    <main id="main" lang={languageTag(locale)} className={styles.main}>
       <SignIn locale={locale} unavailable={!available} />
       <p>
         <a href={`/privacy?locale=${locale}`}>

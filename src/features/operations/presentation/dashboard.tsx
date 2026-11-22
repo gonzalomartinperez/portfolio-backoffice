@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "../../../shared/ui/button";
 import { ButtonLink } from "../../../shared/ui/button-link";
+import { languageTag, numberFormat } from "../../../shared/ui/intl.ts";
 import { SignOut } from "../../auth/entry";
 import { summarizeOperations } from "../domain/insights";
 import type { OperationalRead } from "../domain/models";
@@ -34,14 +35,13 @@ export function Dashboard({
   const t = operationsCopy[locale];
   const snapshot = result.kind === "available" ? result.snapshot : null;
   const insights = snapshot ? summarizeOperations(snapshot) : null;
-  const language = locale === "es" ? "es-AR" : "en-US";
-  const format = new Intl.NumberFormat(language);
-  const money = new Intl.NumberFormat(language, {
+  const format = numberFormat(locale);
+  const money = numberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 4,
   });
-  const percent = new Intl.NumberFormat(language, {
+  const percent = numberFormat(locale, {
     style: "percent",
     maximumFractionDigits: 1,
   });
@@ -50,7 +50,7 @@ export function Dashboard({
       ? 0
       : Math.min(100, Math.max(0, insights.budgetShare * 100));
   return (
-    <main id="main" className={`operations-shell ${styles.shell}`} lang={locale}>
+    <main id="main" className={`operations-shell ${styles.shell}`} lang={languageTag(locale)}>
       <header className={`operations-header ${styles.header}`}>
         <div className={styles.identity}>
           <span className={styles.brandMark} aria-hidden="true">

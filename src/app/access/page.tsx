@@ -4,6 +4,7 @@ import { authCopy, authLocale } from "../../features/auth/presentation/copy.ts";
 import { InviteForm } from "../../features/auth/presentation/invite-form.tsx";
 import { RevokeControl } from "../../features/auth/presentation/revoke-control.tsx";
 import { getAuthLocale, getAuthRuntime, requireOwner } from "../../server/auth/session.ts";
+import { languageTag } from "../../shared/ui/intl.ts";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Access — Assistant backoffice",
@@ -23,7 +24,7 @@ export default async function AccessPage({
     data = await getAuthRuntime().store.list();
   } catch {
     return (
-      <main id="main" lang={locale} className={styles.main}>
+      <main id="main" lang={languageTag(locale)} className={styles.main}>
         <h1>{copy.access}</h1>
         <p role="status">{copy.unavailable}</p>
         <a className={styles.link} href={`/?locale=${locale}`}>
@@ -33,7 +34,7 @@ export default async function AccessPage({
     );
   }
   return (
-    <main id="main" lang={locale} className={`${styles.main} ${styles.stack}`}>
+    <main id="main" lang={languageTag(locale)} className={`${styles.main} ${styles.stack}`}>
       <a className={styles.link} href={`/?locale=${locale}`}>
         {copy.back}
       </a>

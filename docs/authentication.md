@@ -94,6 +94,9 @@ Authentication surfaces support typed US English and neutral Latin American
 Spanish copy. Supported `?locale=en|es` parameters take priority over the
 `backoffice-locale` cookie; English is the safe default. Callback, invitation and
 back links retain that preference. Locale never changes authorization policy.
+The proxy forwards a supported `?locale=` to the root layout, so `<html lang>` (`en-US` or
+`es-419`) and the skip link match the page on the server. Every number and date is formatted
+through `src/shared/ui/intl.ts`: `es-419` for Spanish, `timeZone: "UTC"` for dates.
 Protected routes redirect infrastructure failures to a safe unavailable sign-in
 surface; provider controls are disabled until configuration and database schema
 are ready. No raw database or OAuth errors are rendered.

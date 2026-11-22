@@ -1,4 +1,5 @@
 import { ButtonLink } from "../../../shared/ui/button-link";
+import { numberFormat } from "../../../shared/ui/intl.ts";
 import type { ProductRead } from "../domain/models";
 import { productCopy } from "./copy";
 import styles from "./metrics.module.css";
@@ -22,7 +23,7 @@ const es: typeof en = {
 export function ProductOverview({ result, locale }: { result: ProductRead; locale: "en" | "es" }) {
   const t = locale === "es" ? es : en;
   const labels = productCopy[locale];
-  const format = new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US");
+  const format = numberFormat(locale);
   return (
     <section
       className={`operation-card ${styles.overview}`}

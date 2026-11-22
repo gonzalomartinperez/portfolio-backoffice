@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { numberFormat } from "../../../shared/ui/intl.ts";
 import { dailyTotals, type EventName, eventNames, type ProductSnapshot } from "../domain/models";
 import { productCopy } from "./copy";
 import styles from "./metrics.module.css";
@@ -16,7 +17,7 @@ export function ProductMetrics({
   const targetLabel = (target: string) =>
     Object.entries(t.targets).find(([key]) => key === target)?.[1] ?? "—";
   const maximum = Math.max(1, ...totals.map((row) => row.count));
-  const format = new Intl.NumberFormat(locale === "es" ? "es-AR" : "en-US");
+  const format = numberFormat(locale);
   return (
     <section className="operation-card" aria-labelledby="product-counts-title">
       <h2 id="product-counts-title">{t.count}</h2>
