@@ -14,8 +14,10 @@ does not include Gonzalo's likeness, personal identity assets or third-party mat
   portfolio at `45d8a42faa78bfb94952639ed462832c3b4ad109`. The original portfolio's owned
   primitives derive from [shadcn/ui](https://github.com/shadcn-ui/ui), MIT licensed.
   This app uses a small native CSS Module button, not a redistributed preset/library.
-- Inter, Inter Tight and JetBrains Mono are fetched at build time by Next/font from Google
-  Fonts and self-hosted at runtime. Each uses the SIL Open Font License 1.1. Font notices
+- Inter, Inter Tight and JetBrains Mono are committed as unmodified variable WOFF2 files
+  (latin subset, as served by Google Fonts) in `src/app/_fonts/` and self-hosted through
+  `next/font/local`, so the build fetches nothing. Each uses the SIL Open Font License 1.1.
+  Font notices
   are distributed in `public/licenses/`; upstream sources are
   [Inter](https://github.com/google/fonts/tree/main/ofl/inter),
   [Inter Tight](https://github.com/google/fonts/tree/main/ofl/intertight) and
