@@ -120,7 +120,7 @@ test("unit (proxy layer): every request gets a fresh nonce and it reaches render
   assert.equal(seen.size, 20);
 });
 
-test("unit (proxy layer): HSTS and upgrade-insecure-requests only on https origins", () => {
+test("unit (proxy layer): HSTS and upgrade-insecure-requests follow the configured origin, not X-Forwarded-Proto", () => {
   const hsts = "max-age=63072000; includeSubDomains";
   const run = (origin: string, url: string, headers: Record<string, string> = {}) => {
     vi.stubEnv("BACKOFFICE_ORIGIN", origin);
@@ -136,9 +136,30 @@ test("unit (proxy layer): HSTS and upgrade-insecure-requests only on https origi
   ]);
   assert.deepEqual(
     run("http://localhost:3107", "http://internal:3000/", { "x-forwarded-proto": "https" }),
-    [hsts, "upgrade-insecure-requests"],
+    [null, undefined],
   );
   assert.deepEqual(run("http://localhost:3107", "http://localhost:3107/"), [null, undefined]);
+});
+
+test("unit (proxy layer): development allows inline styles, production keeps nonce styles", () => {
+  const style = (mode: string) => {
+    vi.stubEnv("NODE_ENV", mode);
+    return directive(
+      proxy(new NextRequest("http://localhost:3107/")).headers.get("content-security-policy"),
+      "style-src",
+    );
+  };
+  assert.equal(style("development"), "style-src 'self' 'unsafe-inline'");
+  assert.match(style("production") ?? "", /^style-src 'self' 'nonce-[^']+'$/);
+});
+
+test("unit (proxy layer): the invitation landing gets no-referrer from the proxy itself", () => {
+  const referrer = (path: string) =>
+    proxy(new NextRequest(`http://localhost:3107${path}`)).headers.get("referrer-policy");
+  assert.equal(referrer(`/access/invitation?token=${"a".repeat(64)}`), "no-referrer");
+  assert.equal(referrer("/access/invitation"), "no-referrer");
+  assert.equal(referrer("/access"), "strict-origin-when-cross-origin");
+  assert.equal(referrer("/sign-in"), "strict-origin-when-cross-origin");
 });
 
 // Routes the proxy may legitimately skip, with the reason. Everything else must be matched.

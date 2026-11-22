@@ -56,7 +56,10 @@ style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; con
 object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ```
 
-- Development adds `'unsafe-eval'` to `script-src` only (React uses it for debugging stacks).
+- Development adds `'unsafe-eval'` to `script-src` (React uses it for debugging stacks) and uses
+  `style-src 'self' 'unsafe-inline'` instead of the nonce, because the Next dev overlay injects
+  nonce-less `<style>` elements (a nonce would also disable `'unsafe-inline'`). Production keeps
+  nonce styles.
 - `upgrade-insecure-requests` is added only on https origins, so plain-http local runs still work.
 - Style: element styles (`<style>`, next/font and CSS Modules output) are strict (`'self'` plus
   the nonce). React `style={{...}}` attributes (chart bars, metric bars, `global-error.tsx`)
@@ -80,20 +83,30 @@ object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ### HSTS
 
 `Strict-Transport-Security: max-age=63072000; includeSubDomains` (no `preload`) is sent when
-`BACKOFFICE_ORIGIN` starts with `https:`, when `X-Forwarded-Proto` is `https`, or when the
-request URL is https. Plain-http local and CI runs never receive it, so a developer browser
+`BACKOFFICE_ORIGIN` starts with `https:` or the request URL is https. A caller-supplied
+`X-Forwarded-Proto` is deliberately not trusted: a client could otherwise force HSTS on an http
+origin. The configured public origin is the single source of truth. Plain-http local and CI runs never receive it, so a developer browser
 does not pin `localhost`. Preload is excluded because it is effectively irreversible and
 covers the parent domain, which the owner has not authorized.
 
 ### Theme cookie
 
 `backoffice-theme` is `dark`, `light` or `system`, `Path=/`, `SameSite=Lax`, one year,
-`Secure` on https, not HttpOnly (the preferences control writes it). The root layout renders
+`Secure` on https, not HttpOnly (the preferences control writes it). The control offers Dark,
+Light and System, is initialised from the server-rendered preference, and choosing System
+writes `system` and removes `data-theme`. The root layout renders
 `data-theme="dark|light"`; a missing or invalid value renders `dark`, the existing default, and
 `system` renders no attribute so `style.css` follows `prefers-color-scheme` with dark as the
 fallback. The inline script is deleted. Existing `assistant-theme` localStorage values are
 not migrated: the theme resets to dark once, which avoids a script. Density is not part of this
 decision because it does not exist yet.
+
+### Referrer-Policy on the invitation landing
+
+Next keeps a `Referrer-Policy` that is already present on the response, so the proxy default
+(`strict-origin-when-cross-origin`) would have won over the handler's `no-referrer` on the
+307. The proxy therefore sets `no-referrer` for `/access/invitation` itself; the handler keeps
+its own header.
 
 ### Invitation token transport
 
@@ -109,6 +122,12 @@ weakness that a different transport would fix, so option (a) stays. A SameSite=L
 sent on the top-level OAuth callback navigation, which is why it survives the provider round
 trip.
 
+## Known limitation
+
+Next's built-in static 500 page (`builtin/app-error`) emits a nonce-less `<style>`, which the
+production CSP blocks, so that page renders unstyled. It is accepted: the application's
+`error.tsx` and `global-error.tsx` cover normal failures and the unstyled page keeps its text.
+
 ## Consequences
 
 - Good: injected markup cannot execute script; no inline script remains; no theme flash.
@@ -121,7 +140,8 @@ trip.
 ## Confirmation
 
 - `tests/unit/security-headers.test.ts`: exact CSP, fresh nonce per request, nonce forwarded to
-  rendering, development-only `'unsafe-eval'`, HSTS and `upgrade-insecure-requests` only on https.
+  rendering, development-only `'unsafe-eval'`, HSTS and `upgrade-insecure-requests` only on https origins (not on a forged `X-Forwarded-Proto`),
+  development-only inline styles, and `no-referrer` on the invitation path.
 - `tests/unit/theme.test.ts`: cookie parsing and attribute rendering rules.
 - `tests/browser/csp.spec.ts`: zero CSP violations on `/sign-in`, `/privacy` and the owner
   overview, inline scripts carry the response nonce, and the theme cookie renders

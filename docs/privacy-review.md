@@ -2,7 +2,8 @@
 
 `/privacy?locale=en|es` is public and does not initialize authentication or query the
 database. It describes actual account admission, host-only essential cookies,
-eight-hour renewable sessions, theme localStorage and language cookie. It does not
+eight-hour renewable sessions, the one-year `backoffice-theme` preference cookie (sent to the server, holding only
+dark, light or system) and the language cookie. It does not
 label the whole backoffice cookieless: Better Auth session rows can contain IP and
 user-agent, and IAM stores verified identity/membership/invitations/audit records.
 OAuth tokens are encrypted by the application; this is not a guarantee that every

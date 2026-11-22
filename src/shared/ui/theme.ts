@@ -12,6 +12,6 @@ export function documentTheme(preference: ThemePreference): "dark" | "light" | u
   return preference === "system" ? undefined : preference;
 }
 
-export function themeCookieValue(value: "dark" | "light", secure: boolean) {
+export function themeCookieValue(value: ThemePreference, secure: boolean) {
   return `${themeCookie}=${value}; Path=/; Max-Age=31536000; SameSite=Lax${secure ? "; Secure" : ""}`;
 }

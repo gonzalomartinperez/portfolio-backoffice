@@ -68,8 +68,12 @@ export async function getDocumentLocale() {
   return forwarded === "en" || forwarded === "es" ? forwarded : getAuthLocale();
 }
 
+export async function getThemePreference() {
+  return themePreference((await cookies()).get(themeCookie)?.value);
+}
+
 export async function getDocumentTheme() {
-  return documentTheme(themePreference((await cookies()).get(themeCookie)?.value));
+  return documentTheme(await getThemePreference());
 }
 
 export async function getAuthLocale() {
