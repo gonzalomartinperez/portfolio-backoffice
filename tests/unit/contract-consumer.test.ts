@@ -15,7 +15,10 @@ function snapshots(): Map<string, string> {
     "operations.example.json",
   ];
   return new Map([
-    ...files.map((file): [string, string] => [file, readFileSync(`contracts/${file}`, "utf8")]),
+    ...files.map((file): [string, string] => [
+      file,
+      readFileSync(`contracts/assistant-api/${file}`, "utf8"),
+    ]),
     ["product-analytics-v2.example.json", JSON.stringify(productReportPayload())],
   ]);
 }
@@ -59,7 +62,7 @@ test("missing upstream schema has a null hash and drift without breaking", () =>
     {
       file: "feedback.schema.json",
       localSha256: createHash("sha256")
-        .update(readFileSync("contracts/feedback.schema.json", "utf8"))
+        .update(readFileSync("contracts/assistant-api/feedback.schema.json", "utf8"))
         .digest("hex"),
       upstreamSha256: null,
       drift: true,

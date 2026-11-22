@@ -87,7 +87,11 @@ test("profiles select the expected jobs", () => {
     "budgets",
     "mutation",
   ]);
-  for (const path of [".github/workflows/ci.yml", "contracts/openapi.json", "migrations/x.sql"])
+  for (const path of [
+    ".github/workflows/ci.yml",
+    "contracts/assistant-api/operations.openapi.json",
+    "migrations/x.sql",
+  ])
     assert.ok(jobsFor(profilesFor(path)).includes("browser"), path);
   assert.deepEqual(profilesFor(".agents/skills/x/evals/evals.json"), ["harness"]);
   for (const name of ["deps-weekly", "release", "hotfix"])

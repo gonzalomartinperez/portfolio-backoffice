@@ -1,10 +1,9 @@
 # Embedded assistant protocol v1
 
-Historical contract for the former public frontend. [ADR 004](adrs/004-native-chat-and-private-operations.md)
-supersedes iframe delivery with the portfolio's native conversation feature and an
-authenticated backoffice here. The evidence below belongs to the identified historical
-revision; it is not the current product's integration contract. Preserve it for migration
-comparison. Do not integrate a new portfolio iframe from these instructions.
+PBO-M3-10 removed the historical public-chat snapshot, including the embed schema
+and handshake examples. The evidence below describes the former public frontend for
+migration comparison. The portfolio now owns the native conversation feature, and
+this repository owns the authenticated backoffice. See [ADR 004](adrs/004-native-chat-and-private-operations.md).
 
 ## Acceptance results
 
@@ -74,7 +73,6 @@ the latest controller snapshot. Never treat minimize as clear, delete, retry or 
 
 ## Wire messages
 
-[JSON Schema v1](../contracts/embed.v1.schema.json) and [handshake examples](../contracts/embed.v1.examples.json).
 Historical types and runtime validator: [protocol.ts at the preserved baseline](https://github.com/gonzalomartinperez/portfolio-assistant-backoffice/blob/aed8ea710c8b847ddc9066aaef5ce48d3793b494/src/features/embed/protocol.ts).
 Every object has numeric `version: 1`. Extra keys, unsupported enums/types/versions and
 arbitrary navigation/actions are rejected. No dynamic HTML, URLs or model output crosses

@@ -1,4 +1,4 @@
-import type { components } from "../../../../contracts/product-analytics.types";
+import type { components } from "../../../../contracts/assistant-api/product-analytics.types";
 import {
   eventNames,
   type ProductSnapshot,

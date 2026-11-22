@@ -70,10 +70,10 @@ access separately. Databases, internal monitoring and operational APIs stay priv
 The native portfolio requires its reviewed exact origin in API configuration;
 historical iframe and assistant-only origin assumptions are obsolete. Consume the
 current API runtime handoff and verify the effective exact allowlist rather than
-copying the original audit's configuration. Backoffice's retained public contract snapshot is
-historical (`6b1e65f2406ba5ddf21d15c56c34ccf672d90bbb`). The separate private v1
-contract now has its own pin/hash in `contracts/operations.source.json`; release metadata
-retains this distinction and does not claim deployed OAuth/API pairing.
+copying the original audit's configuration. PBO-M3-10 removed the historical public-chat
+snapshot. Release metadata schema v3 records the private v1 operations pin and hash from
+`contracts/assistant-api/operations.source.json`. Deployed OAuth/API pairing remains
+unverified.
 
 ## Backoffice runtime to preserve
 

@@ -167,7 +167,7 @@ async function main(): Promise<void> {
       schemaFiles.map(
         async (file): Promise<[string, string]> => [
           file,
-          await readFile(new URL(`../contracts/${file}`, import.meta.url), "utf8"),
+          await readFile(new URL(`../contracts/assistant-api/${file}`, import.meta.url), "utf8"),
         ],
       ),
     ),

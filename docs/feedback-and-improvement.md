@@ -13,7 +13,7 @@ No public collection or production activation follows from this implementation.
 
 ## Meaning and contract
 
-The separately pinned `contracts/feedback.source.json` identifies API
+The separately pinned `contracts/assistant-api/feedback.source.json` identifies API
 `bb36012eef55e85f7e0cf78df1845f38ef13da63` and the SHA256 of
 `feedback.schema.json`. The private bearer-protected endpoint is
 `GET /internal/ops/v1/feedback`; it is not browser-accessible or part of public OpenAPI.

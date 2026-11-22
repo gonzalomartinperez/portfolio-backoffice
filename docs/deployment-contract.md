@@ -127,8 +127,9 @@ framing and exclude shared caches. Effective Coolify/proxy headers must preserve
 policies without exposing private operational routes.
 
 The consumed private operations schema/example revision is
-`d30d36857c9053693c7817d967a7b38b97d9f12a`; provenance and generated types are
-maintained separately from the historical public contract. See [API procedure](api-contract.md).
+`d30d36857c9053693c7817d967a7b38b97d9f12a`. Its provenance and generated types live
+in `contracts/assistant-api/`. PBO-M3-10 removed the historical public-chat snapshot.
+See [API procedure](api-contract.md).
 Current browser acceptance uses deterministic operational fixtures; deployed OAuth/API
 pairing remains a separate vps-ops gate.
 The adapter uses no-store, a five-second timeout, no redirects, bounded UTF-8 JSON and
