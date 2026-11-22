@@ -140,3 +140,63 @@ Review diagrams at full intrinsic size and in a 390px README context, in both th
 Check text fits its card, connectors avoid labels, and alt text explains the flow without
 depending on the figure. Inner documentation may render Mermaid; verify it on GitHub.
 A graphical edit is documentation work, never authority to alter contracts or infrastructure.
+
+
+## Trust boundaries
+
+Solid arrows show requests or synchronization; dashed arrows show returned data.
+Frames identify trust boundaries. This overview describes implemented responsibilities,
+not production deployment or a security certification. [Diagram conventions](../explanation/architecture.md#diagrams) explain the symbols and review procedure.
+
+<details>
+<summary>Editable Mermaid source</summary>
+
+```text
+flowchart LR
+    U[Owner or invited viewer] --> AUTH[Google / GitHub OAuth]
+    AUTH --> IAM[(Private PostgreSQL IAM)]
+    U --> PAGE[Protected Next.js server page]
+    IAM --> GUARD[Live membership check]
+    GUARD --> PAGE
+    PAGE --> READ[Application read port]
+    READ --> HTTP[Bounded private HTTP adapter]
+    HTTP --> API[Project API · private status and product counts]
+    API --> VIEW[Validated operational view]
+    VIEW --> UI[Dashboard + accessible charts]
+    UI --> U
+```
+
+</details>
+
+Website counts use the same bounded server-only transport boundary and a separate
+versioned contract. Product reads are default-off and are not public collection approval.
+The backoffice server holds the operational read token. Browsers receive allowlisted view
+data, never that token, an internal service URL or a raw backend error. Every protected
+page, action and API checks current membership; hiding an action does not authorize it.
+
+<details>
+<summary>Editable Mermaid source · Dependency directions</summary>
+
+```text
+flowchart TB
+    C[Server composition] --> P[Presentation · pages and controls]
+    C --> T[Adapters · private HTTP validation]
+    P --> A[Application · feature read ports]
+    T --> A
+    A --> D[Domain · feature models]
+    C --> AUTH[Authentication · membership and sessions]
+```
+
+</details>
+
+| Location | Responsibility |
+| --- | --- |
+| `src/features/operations/domain`, `application` | Pure models, explicit available/unconfigured/unavailable results and a small read port. |
+| `src/features/operations/adapters`, `presentation` | Bounded transport, wire mapping, dashboard and intentional client controls. |
+| `src/features/analytics` | Pure product-count models, a private read port/adapter and accessible project summary/detail views. |
+| `src/features/auth`, `src/server/auth`, `migrations` | Pure access/session ports, OAuth and membership adapters, private composition and explicit IAM migration. |
+| `src/shared/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
+
+Architecture tests cover static, dynamic and type-only imports and server/client boundaries.
+Missing metrics never silently become zero. The UI displays configured usage estimates,
+not invoice totals; availability does not certify the paid model provider.

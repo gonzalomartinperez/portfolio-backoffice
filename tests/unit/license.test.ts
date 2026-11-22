@@ -17,7 +17,7 @@ function fixture(): string {
   );
   writeFileSync(
     path.join(root, "README.md"),
-    "## Software license\n\n[MIT](LICENSE) · [Notices](THIRD_PARTY_NOTICES.md)\n",
+    "## License\n\n[MIT](LICENSE) · [Notices](THIRD_PARTY_NOTICES.md)\n",
   );
   writeFileSync(
     path.join(root, "THIRD_PARTY_NOTICES.md"),
@@ -93,7 +93,7 @@ const invalidCases: ReadonlyArray<{
   },
   {
     name: "README without a license link",
-    mutate: (root) => writeFileSync(path.join(root, "README.md"), "## Software license\n"),
+    mutate: (root) => writeFileSync(path.join(root, "README.md"), "## License\n"),
   },
 ];
 

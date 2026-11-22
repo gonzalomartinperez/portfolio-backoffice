@@ -1,362 +1,124 @@
-# Portfolio Backoffice
+<!-- Variant: PUBLIC -->
+<div align="center">
+  <h1>Portfolio Backoffice</h1>
+  <p>Private operations console for the portfolio website and its assistant: invited access, health, usage and site activity.</p>
+  <a href="https://github.com/gonzalomartinperez/portfolio-backoffice/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gonzalomartinperez/portfolio-backoffice/actions/workflows/ci.yml/badge.svg?branch=develop"></a>
+  <a href="https://github.com/gonzalomartinperez/portfolio-backoffice/releases"><img alt="Release" src="https://img.shields.io/github/v/release/gonzalomartinperez/portfolio-backoffice"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/gonzalomartinperez/portfolio-backoffice"></a>
+</div>
 
-**Private operations for the portfolio website and its assistant.**
+<img src="docs/assets/gallery/02-availability.png" alt="Operations overview rendered from labelled synthetic fixture data: assistant availability, knowledge freshness, executions and estimated usage." width="100%">
 
-Review bounded website interactions, assistant availability, knowledge freshness and
-estimated usage. Product counts remain disabled by default. Google/GitHub authentication, owner-managed
-access and a bilingual dashboard keep operational visibility separate from the public chat.
+## Why
 
-![Node 24 LTS, Next.js 16, React 19, TypeScript 7, Better Auth, PostgreSQL, Recharts, Biome and Playwright](docs/assets/technology-stack.svg)
+The portfolio's public assistant lives in the [portfolio](https://github.com/gonzalomartinperez/portfolio)
+site and its [API](https://github.com/gonzalomartinperez/portfolio-assistant-api). The owner still
+needs to know whether the assistant is healthy, how fresh its knowledge is, what it costs and how
+visitors use the site, without exposing prompts, answers, credentials or visitor identities. This
+application is that private view. Access is Google or GitHub sign-in for the verified owner and
+invited viewers only. Every page, action and API checks live membership on the server. Missing
+metrics read as unavailable, never as zero, and fixture data is always labelled synthetic.
 
-[Explore the dashboard](#the-dashboard-in-use) · [Run locally](#run-locally) · [Architecture](#architecture-and-trust-boundaries) · [Verification](#verification) · [Documentation](#documentation-map)
+## Highlights
 
-> **Current state:** authentication, invitations, revocation, private-API validation and
-> dashboard rendering are implemented. Browser evidence uses real isolated PostgreSQL
-> and clearly labeled synthetic metrics. The local native-site/API/PostgreSQL/dashboard chain is also verified; live OAuth-provider and production API pairing
-> remain unverified. The VPS is not purchased/provisioned and production activation
-> is not authorized. Dependency/image CVEs are advisory for deployment by owner
-> decision; unresolved findings and original assessments remain visible in the
-> [API artifact evidence](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/develop/docs/verification/final-artifact-closeout-2026-10-18.md).
-> Green source CI is not full-stack production acceptance. No deployment or
-> publication is activated here.
+- Invitation-only OAuth (Google, GitHub) with explicit account linking, atomic invitations, live
+  revocation and an append-only audit trail in PostgreSQL ([authentication](docs/explanation/authentication.md)).
+- Operations overview: availability, knowledge freshness, 30-day executions, first-token latency,
+  sampled stage timings, UTC-month usage and budget headroom, and answer feedback.
+- Optional website-interaction reports over bounded daily aggregates, off by default
+  ([product analytics](docs/explanation/product-analytics.md)).
+- Bilingual US English and Latin American Spanish (`es-419`), dark and light themes, and WCAG 2.2 AA
+  checked with axe on every route, state, theme and locale.
+- Strict security headers, contract snapshots pinned by SHA-256, and service tokens that never reach
+  the browser ([deployment contract](docs/reference/deployment-contract.md)).
+- One required CI aggregate (`ci-gate`) over the profiles in [CI reference](docs/reference/ci.md).
 
-## What you can inspect
+## Architecture
 
-| Area | What it tells you |
-| --- | --- |
-| Website interactions | Default-off UTC day/week/month reports, reviewed-region click grids and an explicit legacy event view; no visitor journeys or conversation text. |
-| Availability | The latest observed API state; missing data stays unavailable instead of becoming a fabricated zero. |
-| Knowledge freshness | Indexed portfolio revision, corpus version and indexing time. |
-| Executions | Observed 30-day outcomes and first-token p50/p95; searchable sampled phase timings. |
-| Estimated usage | UTC-month settlement/reservations, budget utilization and remaining headroom, plus reported token totals. |
-| Execution stages | Allowlisted retrieval/generation timings, with no prompts, responses or visitor identifiers. |
-| Answer feedback | Independently default-off current ratings on retained answers, without transcripts or a verified-accuracy claim. |
-| Access management | Verified owner admission, invited viewers, explicit account linking and live revocation. |
-
-This is the **project backoffice**, with website interactions and assistant operations
-as separate features; it is not a second conversation frontend. The native
-assistant belongs to the [portfolio](https://github.com/gonzalomartinperez/portfolio);
-sessions, generation and measurements belong to the
-[API](https://github.com/gonzalomartinperez/portfolio-assistant-api). Public repository
-visibility does not make the dashboard or operational endpoints publicly accessible.
-
-## The dashboard in use
-
-Actual production-build captures at double pixel density. Operational values are explicitly
-synthetic; PostgreSQL-backed admission and signed test sessions are real. No live OAuth
-credentials, service tokens or private conversations appear in the images.
-
-### Availability, freshness and usage at a glance
-
-<p align="center">
-  <a href="docs/assets/gallery/02-availability.png"><img src="docs/assets/gallery/02-availability.png" width="1000" alt="Complete operations workbench with availability and knowledge cards, outcome chart, latency, searchable execution stages and monthly budget panel"></a>
-</p>
-
-### A complete operational walkthrough
-
-Each frame focuses on an actual function. Click to open the original-resolution image.
-
-**1 · Restricted sign-in.** Google/GitHub only; no open signup or password fallback.
-
-<p align="center">
-  <a href="docs/assets/gallery/01-sign-in.png"><img src="docs/assets/gallery/01-sign-in.png" width="640" alt="Backoffice sign-in screen with Google and GitHub authentication and restricted-access explanation"></a>
-</p>
-
-<table>
-  <tr>
-    <td valign="top" width="50%"><strong>2 · Execution outcomes</strong><br>A selectable chart with an accessible data table.<br><a href="docs/assets/gallery/03-executions.png"><img src="docs/assets/gallery/03-executions.png" width="480" alt="Execution chart and table showing completed, cancelled and failed synthetic requests"></a></td>
-    <td valign="top" width="50%"><strong>3 · Token breakdown</strong><br>Reported input/output totals, independent of monetary estimates.<br><a href="docs/assets/gallery/04-tokens.png"><img src="docs/assets/gallery/04-tokens.png" width="480" alt="Selected token metric displaying input and output token bars and equivalent table values"></a></td>
-  </tr>
-</table>
-
-**4 · Execution detail.** Filter outcomes, search an opaque trace ID and inspect relative phase timings alongside p50/p95 latency.
-
-<p align="center">
-  <a href="docs/assets/gallery/05-execution-stages.png"><img src="docs/assets/gallery/05-execution-stages.png" width="900" alt="Latency percentiles, outcome filter and trace search with expanded vector retrieval and generation duration bars"></a>
-</p>
-
-<table>
-  <tr>
-    <td valign="top" width="50%"><strong>5 · Owner-managed access</strong><br>Invite viewers and manage membership; invitation tokens remain private.<br><a href="docs/assets/gallery/06-access.png"><img src="docs/assets/gallery/06-access.png" width="480" alt="Owner access-management screen with a synthetic guest email draft, membership list and account-linking controls"></a></td>
-    <td valign="top" width="50%"><strong>6 · Safe operational failure</strong><br>Clear no-data state and manual refresh, without invented measurements.<br><a href="docs/assets/gallery/07-unavailable.png"><img src="docs/assets/gallery/07-unavailable.png" width="480" alt="Dashboard showing operational data unavailable, refresh controls and missing-value placeholders"></a></td>
-  </tr>
-</table>
-
-<details>
-<summary><strong>Spanish, light theme and mobile layout</strong></summary>
-
-The same dashboard adapts to a narrow viewport. Theme uses one `data-theme` authority;
-locale covers visible and assistive copy. Desktop chart tables remain available on mobile.
-
-<p align="center">
-  <a href="docs/assets/gallery/08-mobile-es.png"><img src="docs/assets/gallery/08-mobile-es.png" width="320" alt="Full mobile dashboard in Spanish and light mode, showing availability, freshness, usage, execution chart and trace section"></a>
-</p>
-
-</details>
-
-[Gallery provenance](docs/verification/archive/readme-gallery.md) records viewports, source revision,
-fixture behavior and limits. [Full-dashboard captures](docs/verification/archive/backoffice.md)
-provide wider context. Emulation and automated accessibility checks do not prove
-physical-device or screen-reader acceptance.
-
-The custom dashboard complements OpenTelemetry/Prometheus/Grafana. It reads a bounded
-private API summary; infrastructure monitoring stays under vps-ops. An optional approved
-Grafana link requires independent access controls. No historical trends or provider uptime
-are fabricated. [Design research](docs/explanation/design-research.md) explains the
-layout and measurement choices.
-
-<details>
-<summary><strong>Calendar reports and reviewed-region interactions</strong></summary>
-
-Choose a UTC day, ISO week or calendar month. Global counts and regional grid
-filters have separate scopes; cells below the publication threshold remain hidden.
-These original production-container captures use labeled synthetic data.
-
-[Tests, source revisions and measurement limits](docs/verification/archive/calendar-report-2026-10-18.md)
-
-</details>
-
-## Architecture and trust boundaries
-
-
-
-Solid arrows show requests or synchronization; dashed arrows show returned data.
-Frames identify trust boundaries. This overview describes implemented responsibilities,
-not production deployment or a security certification. [Diagram conventions](docs/explanation/architecture.md#diagrams) explain the symbols and review procedure.
-
-<details>
-<summary>Editable Mermaid source</summary>
-
-```text
+```mermaid
 flowchart LR
-    U[Owner or invited viewer] --> AUTH[Google / GitHub OAuth]
-    AUTH --> IAM[(Private PostgreSQL IAM)]
-    U --> PAGE[Protected Next.js server page]
-    IAM --> GUARD[Live membership check]
-    GUARD --> PAGE
-    PAGE --> READ[Application read port]
-    READ --> HTTP[Bounded private HTTP adapter]
-    HTTP --> API[Project API · private status and product counts]
-    API --> VIEW[Validated operational view]
-    VIEW --> UI[Dashboard + accessible charts]
-    UI --> U
+  Viewer([Owner or invited viewer]) --> App[Backoffice server]
+  App --> IdP[Google or GitHub OAuth]
+  App --> IAM[(PostgreSQL IAM and audit)]
+  App --> API[Private assistant API]
 ```
 
-</details>
+Dependencies point inward: domain and application code are framework-free, adapters validate every
+upstream payload at runtime, and only server composition holds service tokens. Trust boundaries and
+diagram sources: [docs/explanation/architecture.md](docs/explanation/architecture.md).
 
-Website counts use the same bounded server-only transport boundary and a separate
-versioned contract. Product reads are default-off and are not public collection approval.
-The backoffice server holds the operational read token. Browsers receive allowlisted view
-data, never that token, an internal service URL or a raw backend error. Every protected
-page, action and API checks current membership; hiding an action does not authorize it.
+## Quickstart
 
-<details>
-<summary>Editable Mermaid source · Dependency directions</summary>
-
-```text
-flowchart TB
-    C[Server composition] --> P[Presentation · pages and controls]
-    C --> T[Adapters · private HTTP validation]
-    P --> A[Application · feature read ports]
-    T --> A
-    A --> D[Domain · feature models]
-    C --> AUTH[Authentication · membership and sessions]
+```bash
+nvm use && npm ci            # Node from .nvmrc, frozen install
+npm run check                # format, lint, types, unit and contract tests, docs, licences, skills, secrets
+npm run test:browser         # production build against an isolated fixture database (see First run)
 ```
 
-</details>
+Requirements: Node 24 LTS (`.nvmrc`), Docker for the disposable PostgreSQL used by the integration
+and browser suites. The [First run](docs/tutorials/first-run.md) tutorial covers development OAuth
+applications, the credential-free fixture preview and the runtime image.
 
-| Location | Responsibility |
-| --- | --- |
-| `src/features/operations/domain`, `application` | Pure models, explicit available/unconfigured/unavailable results and a small read port. |
-| `src/features/operations/adapters`, `presentation` | Bounded transport, wire mapping, dashboard and intentional client controls. |
-| `src/features/analytics` | Pure product-count models, a private read port/adapter and accessible project summary/detail views. |
-| `src/features/auth`, `src/server/auth`, `migrations` | Pure access/session ports, OAuth and membership adapters, private composition and explicit IAM migration. |
-| `src/shared/ui`, `docs/design-system.md` | Owned primitives and portfolio-aligned tokens, variants, themes and localization. |
+## Usage
 
-Architecture tests cover static, dynamic and type-only imports and server/client boundaries.
-Missing metrics never silently become zero. The UI displays configured usage estimates,
-not invoice totals; availability does not certify the paid model provider.
+Where it runs: on the owner's VPS, deployed by the private `vps-ops` repository after separate
+authorization ([deployment contract](docs/reference/deployment-contract.md)). Locally, the fixture
+preview serves synthetic data with signed fixture sessions.
 
-## Run locally
+| Route | Question it answers |
+|---|---|
+| `/` | Is the assistant up, fresh and within budget, and what do visitors think of its answers? |
+| `/analytics` | How do visitors use the site, by UTC day, week or month? |
+| `/access` | Who can sign in? Invite, link and revoke (owner only). |
+| `/privacy` | What does the backoffice store about the people who sign in? |
 
-### With your development OAuth applications
+## Quality
 
-Use Linux/WSL, Node **24.22.3** from `.nvmrc`, npm and a dedicated PostgreSQL database.
+| Gate | Tool | Threshold |
+|---|---|---|
+| Required check | `ci-gate` over the shared CI profiles | green on every PR |
+| Lint, format and types | Biome, TypeScript 7 strict | zero findings |
+| Unit and diff coverage | Vitest | floors in `quality/ratchets/coverage.json`; changed lines 80 %, auth and data access 90 % |
+| Database | Testcontainers PostgreSQL 18 | IAM, grants and audit integration suite passes |
+| Browser and accessibility | Playwright, axe-core | journeys, visual baseline and WCAG 2.2 AA with 0 violations |
+| Mutation | Stryker | floor in `quality/ratchets/mutation.json` |
+| Performance | Lighthouse (median of 5) and script bytes | budgets in `quality/ratchets/` |
+| Image | structure test, dockle, Grype, SBOM | no fixable High or Critical findings |
 
-```sh
-gh repo clone gonzalomartinperez/portfolio-backoffice
-cd portfolio-backoffice
-nvm use
-npm ci --no-audit --no-fund
-npm run contract:install
-cp .env.example .env.local
-```
+Scores: [scorecard](docs/master-plan/scorecard.md); latest results: the
+[CI workflow](https://github.com/gonzalomartinperez/portfolio-backoffice/actions/workflows/ci.yml).
 
-Fill the server-only placeholders, register the exact Google/GitHub callbacks and run
-migration before admitting users. Node CLI commands do not load `.env.local` automatically:
+## Documentation
 
-```sh
-node --env-file=.env.local scripts/auth-migrate.ts
-npm run dev
-```
+[Tutorials](docs/tutorials/first-run.md) · [How-to](docs/how-to/) · [Reference](docs/reference/) ·
+[Explanation](docs/explanation/) ([ADRs](docs/decisions/)) · [Master plan](docs/master-plan/README.md).
+The full map is in [docs/README.md](docs/README.md).
 
-The application runs at `http://localhost:3001`. Migration is explicit; startup does not
-change schema. See [authentication setup](docs/explanation/authentication.md) for owner admission,
-OAuth callbacks, invitation lifecycle and safe secret handling. Password login and public
-registration are disabled.
+## Ecosystem
 
-### Deterministic local preview without provider credentials
+| Repository | Role |
+|---|---|
+| [portfolio](https://github.com/gonzalomartinperez/portfolio) | Public bilingual portfolio site |
+| [portfolio-assistant-api](https://github.com/gonzalomartinperez/portfolio-assistant-api) | Portfolio assistant API (RAG, evals) |
+| [portfolio-backoffice](https://github.com/gonzalomartinperez/portfolio-backoffice) | Portfolio backoffice (IAM, operations) |
+| [pequeverso](https://github.com/gonzalomartinperez/pequeverso) | Pequeverso public store site |
+| [pequeverso-assistant-api](https://github.com/gonzalomartinperez/pequeverso-assistant-api) | Pequeverso shopping assistant API |
+| [pequeverso-backoffice](https://github.com/gonzalomartinperez/pequeverso-backoffice) | Pequeverso backoffice (IAM, operations) |
+| vps-ops (private) | Operations CLI and deploy contract |
 
-Use a disposable database on an unused loopback port. The values below are public test
-credentials, not production secrets.
-Integration tests start their own digest-pinned PostgreSQL 18 container with Testcontainers
-(`npm run test:auth`, Docker required). For the browser preview, run the same pinned image:
+## Contributing and security
 
-```sh
-docker run -d --rm --name portfolio-readme-fixture \
-  -e POSTGRES_USER=backoffice_fixture -e POSTGRES_PASSWORD=public-fixture-only \
-  -e POSTGRES_DB=backoffice_test \
-  -p 127.0.0.1:15432:5432 \
-  postgres:18.7-trixie@sha256:9f4fd4aa918f52ae3d6f3b687f1de90d8f867cd4d520021545a9a50c120eae3b
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [SUPPORT.md](SUPPORT.md) and
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Agents follow [AGENTS.md](AGENTS.md).
 
-docker exec portfolio-readme-fixture pg_isready -h 127.0.0.1 -U backoffice_fixture -d backoffice_test
-npm run build
-PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium
-npm run test:browser -- --project=chromium-viewer
-```
+## Scope and limits
 
-Wait until PostgreSQL reports readiness. Playwright’s managed lifecycle runs migration,
-provisions private signed owner/viewer sessions and starts the synthetic operations service.
-It requires ports **3107**, **3108** and **8117** to be free. Add `--headed` to the test
-command to watch the real flows in a local desktop environment; headless works in CI.
-No external OAuth provider or model API is contacted.
-The pinned image is the one in `scripts/postgres-image.ts`, also used by the CI
-service containers. Use fresh data only; production PostgreSQL is provisioned by vps-ops. See the
-[shared database handoff](docs/reference/deployment-contract.md#shared-project-postgresql-artifact).
+- No public chat, no visitor tracking beyond bounded aggregates, and no prompts, answers or provider keys.
+- Usage figures are estimates from configured prices, not a provider invoice.
+- CI evidence uses synthetic data and an isolated database; it does not prove live OAuth, TLS or production capacity.
+- Nothing is deployed or published without the owner's explicit authorization.
 
-`npm run preview:fixture` is an optional manual server preview. Protected pages still
-require a signed fixture session, so an ordinary browser initially sees sign-in. The
-[fixture procedure](docs/verification/archive/readme-gallery.md) explains this boundary. Stop any
-manual preview before running Playwright; each lifecycle owns the same isolated ports.
+## License
 
-The browser suite starts/stops its own servers. Remove only the disposable database you
-created with `docker stop portfolio-readme-fixture` (its `--rm` removes only that
-owned fixture). If 15432 is occupied, select another
-port and pass `BACKOFFICE_DATABASE_URL` explicitly to the fixture/test processes. Never
-point fixture reset or session tooling at shared/production databases.
-
-### Connect private API measurements
-
-Configure server-runtime `OPERATIONS_API_ORIGIN` and `OPERATIONS_READ_TOKEN` against the
-API’s [committed private contract](https://github.com/gonzalomartinperez/portfolio-assistant-api/blob/30f2d565ce38d15f5a6e69c2323c0f3e358b3eed/docs/private-observability.md).
-Omit `OPERATIONS_SOURCE_MODE` in production. No `NEXT_PUBLIC_*` service configuration is
-needed. Production pairing remains a separate acceptance step.
-
-## Verification
-
-```sh
-npm run format:check
-npm run lint
-npm run typecheck
-npm test
-npm run security:check
-npm run docs:check
-npm run skills:check
-```
-
-For production-image/browser acceptance, install the engines and use the isolated fixture
-database described above:
-
-```sh
-npm run build
-PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install --with-deps chromium firefox webkit
-npm run test:browser
-```
-
-`npm run test:auth` additionally exercises real PostgreSQL with a local OAuth provider; it
-starts its own digest-pinned PostgreSQL container with Testcontainers (Docker required).
-It does not contact Google/GitHub. Private session artifacts are ignored and never uploaded.
-
-| CI job | Purpose |
-| --- | --- |
-| `classify` | Select jobs from the changed files through `.github/ci-profile.json`; unknown paths run everything. |
-| `docs`, `security` | Shared standards jobs: markdownlint and links; zizmor, actionlint, gitleaks and dependency review. |
-| `static` | `npm run check` (format, lint, types, unit/contract/boundary tests, docs, skills, secret scan), audits and contract drift. |
-| `database` | Testcontainers PostgreSQL 18 (digest-pinned): IAM migrations, restricted runtime role, invitations, revocation and OAuth boundaries. |
-| `build` | Build the image once as a one-day tarball artifact (SHA-256 recorded, file and secret checks before upload). |
-| `scan` | Structure test, dockle, Grype (fixable HIGH/CRITICAL) and a CycloneDX SBOM of that exact image. |
-| `container` | Run that exact non-root distroless image: readiness, resource bounds and shutdown. |
-| `browser` | Run that exact image against the digest-pinned PostgreSQL service; verify admission, three browser engines and accessibility. |
-| `ci-gate` | The single required check: fails unless every selected job succeeded. |
-
-The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict
-indexed/optional checks. The official TypeScript 6 compiler API is isolated to tooling;
-the frozen OpenAPI generator uses TypeScript 5.9.3. [ADR 003](docs/decisions/0003-typescript7-compatibility.md)
-explains why. Node’s TypeScript execution is not a type check.
-
-[Browser/authentication evidence](docs/verification/archive/backoffice.md) and
-[container measurements](docs/verification/archive/container-readiness.md) distinguish fixture,
-real-database and unverified production behavior. Local figures are not field performance.
-
-## Runtime and release ownership
-
-```sh
-docker build -f infra/docker/app/Dockerfile --platform linux/amd64 -t portfolio-backoffice:local .
-```
-
-The standalone image runs as UID **65532**, exposes private port **3000**, has no shell/npm,
-and supports read-only execution with bounded writable caches. `/api/health` checks the
-process; `/api/ready` checks configuration and IAM schema/database readiness. Neither
-proves live OAuth or operational-API availability.
-
-Runtime environment changes require restart, not rebuilding the UI. Migration uses
-`node scripts/auth-migrate.ts` in the tested image. Private **vps-ops** owns Coolify,
-production composition, proxy/TLS, secret delivery, monitoring and recovery on Hostinger
-KVM 4. The portfolio remains on Business and its assistant stays disabled.
-
-Only separately authorized publication prepares an immutable image for vps-ops selection.
-Main promotion never authorizes production deployment. Live OAuth registrations, effective
-proxy headers, API pairing, backup/restore and physical-device behavior remain explicit gates.
-
-## Documentation map
-
-| Work | Start here |
-| --- | --- |
-| Configure accounts and invitations | [Authentication](docs/explanation/authentication.md) |
-| Understand architecture and security | [Architecture](docs/explanation/architecture.md) · [Security reporting](SECURITY.md) |
-| Extend the UI | [Design system](docs/design-system.md) · [Contributing](CONTRIBUTING.md) |
-| Consume or refresh contracts | [API contract](docs/how-to/refresh-contract.md) |
-| Inspect verification | [Browser evidence](docs/verification/archive/backoffice.md) · [Gallery](docs/verification/archive/readme-gallery.md) |
-| Prepare a compatible image | [Runtime contract](docs/reference/deployment-contract.md) · [vps-ops handoff](docs/reference/deployment-contract.md) |
-| Maintain checks and dependencies | [CI](docs/reference/ci.md) · [Dependency policy](docs/dependency-updates.md) |
-| Work with agents | [Codex/Claude skills](docs/reference/agent-skills.md) |
-| Review remaining acceptance | [Checklist](docs/master-plan/progress.md) |
-| Review the planned target state (not scheduled) | [Master plan](docs/master-plan/README.md) |
-
-Shared runtime/version acceptance: [runtime baseline](docs/reference/runtime-baseline.md).
-
-Cross-session ownership, verified toolchain baselines and Google/Microsoft adaptations
-are recorded in [master-plan resume notes](docs/master-plan/RESUME.md).
-
-## Optional product-interaction view
-
-The authenticated `/analytics` surface provides keyboard-selectable daily portfolio
-counts and semantic table alternatives in EN/ES. `PRODUCT_ANALYTICS_ENABLED=false`
-by default means it requests no product data. Public collection remains separately
-disabled. See [contract, local fixture and meaning](docs/explanation/product-analytics.md) and
-[privacy review and unresolved production requirements](docs/explanation/privacy-review.md).
-The public bilingual `/privacy` notice describes actual essential account storage;
-it does not claim compliance certification or erase backup/retention limitations.
-
-[Feedback semantics and the reviewed improvement loop](docs/explanation/feedback-and-improvement.md)
-explain what the optional summary measures and what it deliberately does not collect.
-[Executed evidence](docs/verification/archive/product-feedback-2026-10-17.md) includes current
-browser results, inspected screenshots and dated image-resource observations.
-
-## Software license
-
-Application code retains the [MIT license](LICENSE). Fonts, identity assets and external
-code retain their own [attribution and terms](THIRD_PARTY_NOTICES.md).
-
-`npm run license:check` checks the standard grant, package/lock metadata and these
-links. It does not audit dependency licenses or grant rights over personal content.
+Software: [MIT](LICENSE). Fonts, identity assets and external code keep their own
+[attribution and terms](THIRD_PARTY_NOTICES.md).

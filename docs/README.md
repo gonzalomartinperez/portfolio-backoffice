@@ -2,7 +2,7 @@
 
 ## Tutorials
 
-None yet.
+- [First run](tutorials/first-run.md)
 
 ## How-to
 
