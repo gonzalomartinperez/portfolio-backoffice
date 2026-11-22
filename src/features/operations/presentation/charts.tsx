@@ -1,5 +1,7 @@
 // Server-rendered snapshot breakdown (PBO-M3-2). The table carries the data; each row draws a
 // decorative CSS bar, so `/` ships no chart library. M5 replaces this with the server SVG forms.
+
+import { numberFormat } from "../../../shared/ui/intl.ts";
 import type { OperationalSnapshot } from "../domain/models";
 import { type OperationsLocale, operationsCopy } from "./copy";
 import styles from "./workbench.module.css";
@@ -30,7 +32,7 @@ export function SnapshotChart({
     { name: t.input, value: usage.inputTokens, color: "var(--accent)" },
     { name: t.output, value: usage.outputTokens, color: "var(--signal-success)" },
   ];
-  const format = new Intl.NumberFormat(locale === "es" ? "es-419" : "en-US");
+  const format = numberFormat(locale);
   return (
     <section
       className={`operation-card snapshot-chart ${styles.chartPanel}`}
@@ -52,7 +54,7 @@ function BreakdownTable({
 }: {
   caption: string;
   rows: BreakdownRow[];
-  format: Intl.NumberFormat;
+  format: ReturnType<typeof numberFormat>;
   t: (typeof operationsCopy)[OperationsLocale];
 }) {
   const max = Math.max(1, ...rows.map((row) => row.value));

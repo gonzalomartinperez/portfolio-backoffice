@@ -41,12 +41,7 @@ test("source uses the shared locale and formatting helpers", () => {
     if (!entry.isFile()) continue;
     const file = `${entry.parentPath}/${entry.name}`;
     const source = read(file);
-    // TODO PBO-M3-7: remove after the PBO-M3-2 rebase
-    if (file !== "src/features/operations/presentation/charts.tsx") {
-      assert.doesNotMatch(source, /es-AR/, file);
-    }
-    // TODO PBO-M3-7: remove after the PBO-M3-2 rebase
-    if (file === "src/features/operations/presentation/charts.tsx") continue;
+    assert.doesNotMatch(source, /es-AR/, file);
     if (file !== "src/shared/ui/intl.ts") {
       assert.doesNotMatch(
         source,
