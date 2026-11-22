@@ -94,15 +94,15 @@ locale covers visible and assistive copy. Desktop chart tables remain available 
 
 </details>
 
-[Gallery provenance](docs/verification/readme-gallery.md) records viewports, source revision,
-fixture behavior and limits. [Full-dashboard captures](docs/verification/backoffice.md)
+[Gallery provenance](docs/verification/archive/readme-gallery.md) records viewports, source revision,
+fixture behavior and limits. [Full-dashboard captures](docs/verification/archive/backoffice.md)
 provide wider context. Emulation and automated accessibility checks do not prove
 physical-device or screen-reader acceptance.
 
 The custom dashboard complements OpenTelemetry/Prometheus/Grafana. It reads a bounded
 private API summary; infrastructure monitoring stays under vps-ops. An optional approved
 Grafana link requires independent access controls. No historical trends or provider uptime
-are fabricated. [Design research](docs/research/operations-dashboard.md) explains the
+are fabricated. [Design research](docs/explanation/design-research.md) explains the
 layout and measurement choices.
 
 <details>
@@ -112,24 +112,17 @@ Choose a UTC day, ISO week or calendar month. Global counts and regional grid
 filters have separate scopes; cells below the publication threshold remain hidden.
 These original production-container captures use labeled synthetic data.
 
-<p align="center">
-  <a href="docs/assets/calendar/after-desktop.png"><img src="docs/assets/calendar/after-desktop.png" width="960" alt="Calendar interaction report with explicit period filters, page views, daily and country tables, a thresholded region grid and coverage details"></a>
-</p>
-
-[Before](docs/assets/calendar/before-desktop.png) · [Spanish mobile](docs/assets/calendar/after-mobile.png) · [Keyboard at200% text](docs/assets/calendar/keyboard-200-webkit.png) · [Tests, source revisions and measurement limits](docs/verification/calendar-report-2026-10-18.md)
+[Tests, source revisions and measurement limits](docs/verification/archive/calendar-report-2026-10-18.md)
 
 </details>
 
 ## Architecture and trust boundaries
 
-<p align="center">
-  <a href="docs/assets/architecture-overview.svg"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-overview.svg"><source media="(prefers-color-scheme: light)" srcset="docs/assets/architecture-overview.svg"><img src="docs/assets/architecture-overview.svg" width="1100" alt="Invited OAuth access, protected Next.js composition, separate IAM and private API reads feeding accessible aggregate views. Click for the full-size diagram"></picture></a>
-</p>
+
 
 Solid arrows show requests or synchronization; dashed arrows show returned data.
 Frames identify trust boundaries. This overview describes implemented responsibilities,
-not production deployment or a security certification. Open the original to zoom. [Diagram source and visual conventions](docs/diagrams.md)
-explain the symbols and review procedure.
+not production deployment or a security certification. [Diagram conventions](docs/explanation/architecture.md#diagrams) explain the symbols and review procedure.
 
 <details>
 <summary>Editable Mermaid source</summary>
@@ -208,7 +201,7 @@ npm run dev
 ```
 
 The application runs at `http://localhost:3001`. Migration is explicit; startup does not
-change schema. See [authentication setup](docs/authentication.md) for owner admission,
+change schema. See [authentication setup](docs/explanation/authentication.md) for owner admission,
 OAuth callbacks, invitation lifecycle and safe secret handling. Password login and public
 registration are disabled.
 
@@ -239,11 +232,11 @@ command to watch the real flows in a local desktop environment; headless works i
 No external OAuth provider or model API is contacted.
 The pinned image is the one in `scripts/postgres-image.ts`, also used by the CI
 service containers. Use fresh data only; production PostgreSQL is provisioned by vps-ops. See the
-[shared database handoff](docs/deployment-contract.md#shared-project-postgresql-artifact).
+[shared database handoff](docs/reference/deployment-contract.md#shared-project-postgresql-artifact).
 
 `npm run preview:fixture` is an optional manual server preview. Protected pages still
 require a signed fixture session, so an ordinary browser initially sees sign-in. The
-[fixture procedure](docs/verification/readme-gallery.md) explains this boundary. Stop any
+[fixture procedure](docs/verification/archive/readme-gallery.md) explains this boundary. Stop any
 manual preview before running Playwright; each lifecycle owns the same isolated ports.
 
 The browser suite starts/stops its own servers. Remove only the disposable database you
@@ -298,11 +291,11 @@ It does not contact Google/GitHub. Private session artifacts are ignored and nev
 
 The primary checker is **TypeScript 7.0.2**, including generated Next route types and strict
 indexed/optional checks. The official TypeScript 6 compiler API is isolated to tooling;
-the frozen OpenAPI generator uses TypeScript 5.9.3. [ADR 003](docs/adrs/003-typescript7-compatibility.md)
+the frozen OpenAPI generator uses TypeScript 5.9.3. [ADR 003](docs/decisions/0003-typescript7-compatibility.md)
 explains why. Node’s TypeScript execution is not a type check.
 
-[Browser/authentication evidence](docs/verification/backoffice.md) and
-[container measurements](docs/verification/container-readiness.md) distinguish fixture,
+[Browser/authentication evidence](docs/verification/archive/backoffice.md) and
+[container measurements](docs/verification/archive/container-readiness.md) distinguish fixture,
 real-database and unverified production behavior. Local figures are not field performance.
 
 ## Runtime and release ownership
@@ -329,35 +322,35 @@ proxy headers, API pairing, backup/restore and physical-device behavior remain e
 
 | Work | Start here |
 | --- | --- |
-| Configure accounts and invitations | [Authentication](docs/authentication.md) |
-| Understand architecture and security | [Architecture](docs/architecture.md) · [Security reporting](SECURITY.md) |
+| Configure accounts and invitations | [Authentication](docs/explanation/authentication.md) |
+| Understand architecture and security | [Architecture](docs/explanation/architecture.md) · [Security reporting](SECURITY.md) |
 | Extend the UI | [Design system](docs/design-system.md) · [Contributing](CONTRIBUTING.md) |
-| Consume or refresh contracts | [API contract](docs/api-contract.md) |
-| Inspect verification | [Browser evidence](docs/verification/backoffice.md) · [Gallery](docs/verification/readme-gallery.md) |
-| Prepare a compatible image | [Runtime contract](docs/deployment-contract.md) · [vps-ops handoff](docs/vps-ops-optimization-handoff.md) |
-| Maintain checks and dependencies | [CI](docs/ci.md) · [Dependency policy](docs/dependency-updates.md) |
-| Work with agents | [Codex/Claude skills](docs/agent-skills.md) |
-| Review remaining acceptance | [Checklist](docs/work-checklist.md) |
+| Consume or refresh contracts | [API contract](docs/how-to/refresh-contract.md) |
+| Inspect verification | [Browser evidence](docs/verification/archive/backoffice.md) · [Gallery](docs/verification/archive/readme-gallery.md) |
+| Prepare a compatible image | [Runtime contract](docs/reference/deployment-contract.md) · [vps-ops handoff](docs/reference/deployment-contract.md) |
+| Maintain checks and dependencies | [CI](docs/reference/ci.md) · [Dependency policy](docs/dependency-updates.md) |
+| Work with agents | [Codex/Claude skills](docs/reference/agent-skills.md) |
+| Review remaining acceptance | [Checklist](docs/master-plan/progress.md) |
 | Review the planned target state (not scheduled) | [Master plan](docs/master-plan/README.md) |
 
-Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
+Shared runtime/version acceptance: [runtime baseline](docs/reference/runtime-baseline.md).
 
 Cross-session ownership, verified toolchain baselines and Google/Microsoft adaptations
-are recorded in [engineering coordination](docs/engineering-coordination.md).
+are recorded in [master-plan resume notes](docs/master-plan/RESUME.md).
 
 ## Optional product-interaction view
 
 The authenticated `/analytics` surface provides keyboard-selectable daily portfolio
 counts and semantic table alternatives in EN/ES. `PRODUCT_ANALYTICS_ENABLED=false`
 by default means it requests no product data. Public collection remains separately
-disabled. See [contract, local fixture and meaning](docs/product-analytics.md) and
-[privacy review and unresolved production requirements](docs/privacy-review.md).
+disabled. See [contract, local fixture and meaning](docs/explanation/product-analytics.md) and
+[privacy review and unresolved production requirements](docs/explanation/privacy-review.md).
 The public bilingual `/privacy` notice describes actual essential account storage;
 it does not claim compliance certification or erase backup/retention limitations.
 
-[Feedback semantics and the reviewed improvement loop](docs/feedback-and-improvement.md)
+[Feedback semantics and the reviewed improvement loop](docs/explanation/feedback-and-improvement.md)
 explain what the optional summary measures and what it deliberately does not collect.
-[Executed evidence](docs/verification/product-feedback-2026-10-17.md) includes current
+[Executed evidence](docs/verification/archive/product-feedback-2026-10-17.md) includes current
 browser results, inspected screenshots and dated image-resource observations.
 
 ## Software license

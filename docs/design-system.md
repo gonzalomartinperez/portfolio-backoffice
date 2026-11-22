@@ -38,7 +38,7 @@ reading surfaces and controls remain stable. No avatar animation or graph engine
 for this private operational application.
 
 Inspect both themes/locales at narrow and desktop widths, keyboard focus and 200% text.
-[Current browser evidence](verification/backoffice.md) distinguishes real PostgreSQL,
+[Current browser evidence](verification/archive/backoffice.md) distinguishes real PostgreSQL,
 labeled fixtures, automated accessibility and unverified live providers/physical devices.
 The [historical public-chat guide](https://github.com/gonzalomartinperez/portfolio-assistant-backoffice/blob/aed8ea710c8b847ddc9066aaef5ce48d3793b494/docs/design-system.md)
 explains the former avatar/iframe; it is not current backoffice guidance.
@@ -73,8 +73,8 @@ closes on Escape and restores focus. In-page overview/detail links avoid a specu
 sidebar with nonfunctional destinations. Layouts collapse at 1100/900/560px and preserve
 controls at 200% text. No looping/chart animation is introduced.
 
-[Research and adaptation](research/operations-dashboard.md) records official references
-and the three owner-supplied visual examples. [Workbench acceptance](verification/operations-workbench.md)
+[Research and adaptation](explanation/design-research.md) records official references
+and the three owner-supplied visual examples. [Workbench acceptance](verification/archive/operations-workbench.md)
 records actual testing, screenshots and measured bundle impact.
 
 Trace input/select text uses the body-sized 1rem control type independently of compact

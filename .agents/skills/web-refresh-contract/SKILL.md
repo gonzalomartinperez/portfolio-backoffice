@@ -8,8 +8,8 @@ metadata:
 ---
 
 Read the [operating contract](../../../AGENTS.md),
-[API procedure](../../../docs/api-contract.md) and
-[operational request](../../../docs/backend-operations-request.md).
+[API procedure](../../../docs/how-to/refresh-contract.md) and
+[operational request](../../../docs/reference/deployment-contract.md).
 Require an immutable API commit, committed schema/examples and authorization notes.
 A proposed endpoint or mutable sibling working tree is not a consumed contract.
 Review-only requests compare and report without imports or external mutations.

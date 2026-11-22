@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { available } from "./support/fixture.ts";
 
 // PBO-M2-4: visual regression of the CURRENT (pre-redesign) UI, the safety net for M3-M4. Runs
-// only with VISUAL=1 in the pinned Playwright container (docs/ci.md), on a fresh fixture
+// only with VISUAL=1 in the pinned Playwright container (docs/reference/ci.md), on a fresh fixture
 // database before any journey creates invitations. Baselines are labelled pre-redesign and are
 // re-approved at M5.
 const viewports = {

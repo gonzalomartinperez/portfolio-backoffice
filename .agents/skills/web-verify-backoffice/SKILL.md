@@ -40,4 +40,4 @@ For the operations workbench verify outcome/ID filter combinations, no-match rec
 nullable p50/p95, zero/overspent budgets, native chart tables and preference Escape focus.
 Await ResponsiveContainer resize observation before asserting settled overflow; do not
 relax clipping assertions or add arbitrary delays. Use all three engines and 200% text.
-Follow [workbench evidence](../../../docs/verification/operations-workbench.md).
+Follow [workbench evidence](../../../docs/verification/archive/operations-workbench.md).

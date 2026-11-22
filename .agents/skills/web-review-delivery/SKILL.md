@@ -7,8 +7,8 @@ metadata:
   version: "1.1.0"
 ---
 
-Read the [operating contract](../../../AGENTS.md), [CI contract](../../../docs/ci.md),
-[application recipe](../../../infra/docker/app/Dockerfile) and [runtime handoff](../../../docs/deployment-contract.md)
+Read the [operating contract](../../../AGENTS.md), [CI contract](../../../docs/reference/ci.md),
+[application recipe](../../../infra/docker/app/Dockerfile) and [runtime handoff](../../../docs/reference/deployment-contract.md)
 as relevant. Establish read-only versus authorized implementation scope. A log, roadmap
 or skill is not authorization to publish, merge, provision or deploy.
 
@@ -29,7 +29,7 @@ migration and graceful termination. Do not upload fixture sessions or environmen
 Runtime is distroless, UID65532, without shell/npm. Migration runs directly with Node.
 Use repository-root build context with explicit `-f infra/docker/app/Dockerfile`.
 The API owns the canonical PostgreSQL/pgvector recipe. Consume only the committed
-revision in [the database handoff](../../../docs/verification/shared-postgres-adoption-2026-10-18.md),
+revision in [the database handoff](../../../docs/verification/archive/shared-postgres-adoption-2026-10-18.md),
 with that checkout's root as context; do not recreate an IAM-only recipe here.
 Runtime CI must use that exact compiled artifact for IAM, browser and full image
 verification, with scoped managed cleanup. UID70 requires fresh data; never reuse
@@ -38,7 +38,7 @@ keep separate owners. Each owned recipe has `Dockerfile.dockerignore`;
 the root ignore file is a deny-default fallback. Preserve the narrow application build
 context and explicit migration dependency trace; unknown
 required imports fail packaging. Review the full image scan, not only npm audit: CI rejects
-HIGH/CRITICAL, including unfixed findings. Read [container evidence](../../../docs/verification/container-readiness.md)
+HIGH/CRITICAL, including unfixed findings. Read [container evidence](../../../docs/verification/archive/container-readiness.md)
 for the bounded resource profile and `node scripts/verify-container.ts` measurement/shutdown
 commands. Idle SIGTERM is not proof of active-request draining or zero downtime.
 Inspect actual Actions runs and job durations when available. Publication remains manual,
@@ -46,7 +46,7 @@ with separate approval and package visibility; it never authorizes deployment.
 
 For dependency automation read [policy](../../../docs/dependency-updates.md). Validate
 current identity/head/files and branch protections; never bypass reviews or approve bots.
-For compiler changes read [compatibility ADR](../../../docs/adrs/003-typescript7-compatibility.md)
+For compiler changes read [compatibility ADR](../../../docs/decisions/0003-typescript7-compatibility.md)
 and verify the intended checker rather than forcing peers or claiming unmeasured gains.
 
 Return tested image/revision, commands/results, actual job timing and remaining VPS-only
@@ -54,7 +54,7 @@ checks. No automatic main merge, paid model calls, production secrets, DNS or de
 shared database operations. Follow PR conventions only within invocation authority.
 
 For tooling patches, inspect the installed Next.js upgrade documentation, registry metadata
-and [dated runtime baseline](../../../docs/runtime-baseline.md). Match the builder/runtime
+and [dated runtime baseline](../../../docs/reference/runtime-baseline.md). Match the builder/runtime
 Node version and verify actual immutable-image probes. Do not classify stable test tools
 as LTS or infer measured UI improvements from compiler/tool version changes.
 `npm run security:check` scans current files and reachable Git history; CI needs full history.
@@ -64,10 +64,10 @@ names/locations only, never values; pattern scanning is not proof that no secret
 Authentication dependency updates require manual closure review and the real PostgreSQL/
 fake-OAuth integration suite, including emitted cookie attributes, invitation replay,
 live revocation and CSRF/origin denial. Do not activate optional provider/plugins to
-exercise a release note. See the [fixed-cohort review](../../../docs/verification/runtime-compatibility-2026-10-17.md);
+exercise a release note. See the [fixed-cohort review](../../../docs/verification/archive/runtime-compatibility-2026-10-17.md);
 fake-provider success does not certify live Google/GitHub or production TLS.
 
-For README/gallery changes follow [capture provenance](../../../docs/verification/readme-gallery.md).
+For README/gallery changes follow [capture provenance](../../../docs/verification/archive/readme-gallery.md).
 Use real rendered surfaces, explain synthetic data, preserve image proportions and link
 original PNGs. Verify HTML image links with `npm run docs:check`; never publish private
 fixture sessions, invitation tokens or screenshots implying live production acceptance.
@@ -77,7 +77,7 @@ never enable legacy activation flags, grant writer permissions or arm native aut
 All proposals need normal review and current required CI. See
 [dependency maintenance](../../../docs/dependency-updates.md).
 
-For README overview diagrams read [the owned diagram source and review rules](../../../docs/diagrams.md).
+For README overview diagrams read [the owned diagram source and review rules](../../../docs/explanation/architecture.md).
 Keep the first-party SVG and Mermaid semantics aligned. Inspect both palettes, card
 text bounds and narrow/full-size rendering; never substitute a deployment claim for
 an architecture view or add scripts/remote resources to the documentation graphic.
