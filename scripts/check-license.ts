@@ -33,7 +33,7 @@ export function licenseFindings(root: string): string[] {
       findings.push("Manifest and lock root must identify MIT.");
     const readme = readFileSync(path.join(root, "README.md"), "utf8");
     if (
-      !/^## Software license$/m.test(readme) ||
+      !/^## License$/m.test(readme) ||
       !readme.includes("](LICENSE)") ||
       !readme.includes("](THIRD_PARTY_NOTICES.md)")
     )

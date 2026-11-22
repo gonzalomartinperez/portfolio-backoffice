@@ -45,8 +45,8 @@ jobs:
     permissions:
       contents: read
     with:
-      # The README follows the ecosystem template from the M6 copy refresh (OD-09).
-      readme-check: false
+      # README structure follows the ecosystem template since PBO-M3-9; the copy refresh is M6 (OD-09).
+      readme-check: true
   security:
     needs: classify
     if: contains(fromJSON(needs.classify.outputs.jobs), 'security')
