@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { getDocumentLocale } from "../server/auth/session";
+import { getDocumentLocale, getDocumentTheme } from "../server/auth/session";
 import { SkipLink } from "../shared/accessibility/skip-link";
 import { languageTag } from "../shared/ui/intl.ts";
 import { fontClassName } from "./fonts";
@@ -18,18 +18,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 export default async function Layout({ children }: { children: ReactNode }) {
-  const locale = await getDocumentLocale();
+  const [locale, theme] = await Promise.all([getDocumentLocale(), getDocumentTheme()]);
   return (
-    <html lang={languageTag(locale)} className={fontClassName} suppressHydrationWarning>
-      <head>
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: fixed pre-paint theme replay, no user HTML.
-          dangerouslySetInnerHTML={{
-            __html:
-              'try{var t=localStorage.getItem("assistant-theme");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}',
-          }}
-        />
-      </head>
+    <html lang={languageTag(locale)} data-theme={theme} className={fontClassName}>
       <body>
         <SkipLink locale={locale} />
         {children}

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useState } from "react";
+import { themeCookieValue } from "../../../shared/ui/theme.ts";
 import { type OperationsLocale, operationsCopy } from "./copy";
 import styles from "./workbench.module.css";
 export function Preferences({ locale }: { locale: OperationsLocale }) {
@@ -49,11 +50,8 @@ export function Preferences({ locale }: { locale: OperationsLocale }) {
               const value = event.target.value === "light" ? "light" : "dark";
               setTheme(value);
               document.documentElement.dataset.theme = value;
-              try {
-                localStorage.setItem("assistant-theme", value);
-              } catch {
-                /* Preference changes still apply when storage is blocked. */
-              }
+              // biome-ignore lint/suspicious/noDocumentCookie: the server reads this cookie to render data-theme; session credentials remain HttpOnly.
+              document.cookie = themeCookieValue(value, window.location.protocol === "https:");
             }}
           >
             <option value="dark">{t.dark}</option>

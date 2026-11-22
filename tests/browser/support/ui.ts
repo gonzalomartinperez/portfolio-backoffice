@@ -44,7 +44,7 @@ export async function expectNoWcagViolations(page: Page, tags = wcag22Tags) {
   expect(summary(violations)).toEqual([]);
 }
 
-/** Switches theme the way the pre-paint script does, which is the single theme authority. */
+/** Switches theme the way the preferences control does (the backoffice-theme cookie is the server-side authority). */
 export async function setTheme(page: Page, theme: "dark" | "light") {
   await page.evaluate((value) => {
     document.documentElement.dataset.theme = value;

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
-import { beforeEach, test, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { afterEach, beforeEach, test, vi } from "vitest";
 import nextConfig from "../../next.config.ts";
 import { proxy, config as proxyConfig } from "../../src/proxy.ts";
 import { operationalPayload } from "../fixtures/operations.ts";
@@ -17,11 +18,10 @@ vi.mock("../../src/server/auth/runtime.ts", async () => {
   return { createAuthRuntime: () => harness.fakeAuthRuntime() };
 });
 
-// Set by src/proxy.ts on every matched request. There is no nonce CSP and no HSTS in the app:
-// the CSP is static (no script-src) and HSTS belongs to the TLS-terminating reverse proxy.
+// Set by src/proxy.ts on every matched request. The CSP carries a per-request nonce (checked
+// separately below), so it is not in this fixed map. HSTS is sent only on https origins.
 const proxyHeaders = {
   "cache-control": "private, no-store",
-  "content-security-policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
   "referrer-policy": "strict-origin-when-cross-origin",
   "x-content-type-options": "nosniff",
@@ -30,6 +30,10 @@ const proxyHeaders = {
 const entries = (headers: Headers, names: string[]) =>
   Object.fromEntries(names.map((name) => [name, headers.get(name)]));
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 beforeEach(() => {
   for (const [name, value] of Object.entries(authEnv)) vi.stubEnv(name, value);
   vi.stubEnv("OPERATIONS_API_ORIGIN", "http://api-private:8000");
@@ -37,18 +41,104 @@ beforeEach(() => {
   vi.stubGlobal("fetch", async () => Response.json(operationalPayload));
 });
 
-test("unit (proxy layer, not the wire): proxy sets the same explicit security headers on every route class", () => {
-  const response = proxy();
-  const actual = Object.fromEntries(
-    [...response.headers].filter(([name]) => !name.startsWith("x-middleware")).sort(),
+const withoutPolicy = (response: Response) =>
+  Object.fromEntries(
+    [...response.headers]
+      .filter(([name]) => !name.startsWith("x-middleware") && name !== "content-security-policy")
+      .sort(),
   );
-  assert.deepEqual(actual, proxyHeaders);
-  // Gaps versus docs/master-plan/testing.md section 4, pinned so a change is deliberate.
+const nonceOf = (policy: string | null) => /'nonce-([^']+)'/.exec(policy ?? "")?.[1];
+const directive = (policy: string | null, name: string) =>
+  policy?.split("; ").find((part) => part === name || part.startsWith(`${name} `));
+
+test("unit (proxy layer, not the wire): proxy sets the same explicit security headers on every route class", () => {
+  vi.stubEnv("BACKOFFICE_ORIGIN", "http://localhost:3107");
+  const response = proxy(new NextRequest("http://localhost:3107/"));
+  assert.deepEqual(withoutPolicy(response), proxyHeaders);
   assert.equal(response.headers.get("strict-transport-security"), null);
+  // Gap versus docs/master-plan/testing.md section 4, pinned so a change is deliberate.
   assert.equal(response.headers.get("x-robots-tag"), null);
-  assert.doesNotMatch(response.headers.get("content-security-policy") ?? "", /nonce|script-src/);
   assert.equal(nextConfig.poweredByHeader, false);
   assert.equal(nextConfig.headers, undefined);
+});
+
+test("unit (proxy layer): the CSP is strict, nonce-based and has no inline script allowance", () => {
+  vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("BACKOFFICE_ORIGIN", "http://localhost:3107");
+  const policy = proxy(new NextRequest("http://localhost:3107/sign-in")).headers.get(
+    "content-security-policy",
+  );
+  const nonce = nonceOf(policy);
+  assert.ok(nonce && nonce.length >= 16);
+  assert.equal(
+    policy,
+    [
+      "default-src 'self'",
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+      `style-src 'self' 'nonce-${nonce}'`,
+      "style-src-attr 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join("; "),
+  );
+  assert.doesNotMatch(directive(policy, "script-src") ?? "", /unsafe-inline|unsafe-eval/);
+  assert.doesNotMatch(directive(policy, "style-src") ?? "", /unsafe-inline/);
+  assert.equal(directive(policy, "upgrade-insecure-requests"), undefined);
+});
+
+test("unit (proxy layer): development adds unsafe-eval to script-src only", () => {
+  vi.stubEnv("NODE_ENV", "development");
+  const policy = proxy(new NextRequest("http://localhost:3107/")).headers.get(
+    "content-security-policy",
+  );
+  assert.match(directive(policy, "script-src") ?? "", /'unsafe-eval'/);
+  assert.doesNotMatch(policy?.replace(directive(policy, "script-src") ?? "", "") ?? "", /eval/);
+});
+
+test("unit (proxy layer): every request gets a fresh nonce and it reaches rendering", () => {
+  const seen = new Set<string>();
+  for (let index = 0; index < 20; index++) {
+    const response = proxy(
+      new NextRequest("http://localhost:3107/", { headers: { "x-nonce": "forged" } }),
+    );
+    const nonce = nonceOf(response.headers.get("content-security-policy"));
+    assert.ok(nonce);
+    assert.notEqual(nonce, "forged");
+    seen.add(nonce);
+    // Request headers override: what Next hands the renderer (it parses the nonce from the CSP).
+    assert.equal(response.headers.get("x-middleware-request-x-nonce"), nonce);
+    assert.equal(
+      response.headers.get("x-middleware-request-content-security-policy"),
+      response.headers.get("content-security-policy"),
+    );
+  }
+  assert.equal(seen.size, 20);
+});
+
+test("unit (proxy layer): HSTS and upgrade-insecure-requests only on https origins", () => {
+  const hsts = "max-age=63072000; includeSubDomains";
+  const run = (origin: string, url: string, headers: Record<string, string> = {}) => {
+    vi.stubEnv("BACKOFFICE_ORIGIN", origin);
+    const response = proxy(new NextRequest(url, { headers }));
+    return [
+      response.headers.get("strict-transport-security"),
+      directive(response.headers.get("content-security-policy"), "upgrade-insecure-requests"),
+    ];
+  };
+  assert.deepEqual(run("https://backoffice.example", "http://internal:3000/"), [
+    hsts,
+    "upgrade-insecure-requests",
+  ]);
+  assert.deepEqual(
+    run("http://localhost:3107", "http://internal:3000/", { "x-forwarded-proto": "https" }),
+    [hsts, "upgrade-insecure-requests"],
+  );
+  assert.deepEqual(run("http://localhost:3107", "http://localhost:3107/"), [null, undefined]);
 });
 
 // Routes the proxy may legitimately skip, with the reason. Everything else must be matched.

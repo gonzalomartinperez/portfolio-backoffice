@@ -62,6 +62,18 @@ The invitation landing response clears the token from the visible URL, uses
 round trip. Effective proxy access logs must redact invitation and OAuth callback query parameters;
 no frontend analytics or session replay is included.
 
+## Response headers
+
+`src/proxy.ts` sets a per-request nonce CSP (`script-src 'self' 'nonce-...' 'strict-dynamic'`,
+`style-src` with the nonce plus `style-src-attr 'unsafe-inline'` for React style attributes,
+`default-src`, `connect-src`, `form-action` `'self'`, `object-src 'none'`,
+`frame-ancestors 'none'`), `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `no-store` and
+`Permissions-Policy` on every matched page and route. `Strict-Transport-Security:
+max-age=63072000; includeSubDomains` (no preload) and `upgrade-insecure-requests` are added
+only when `BACKOFFICE_ORIGIN` is https or `X-Forwarded-Proto` is https. The theme is the
+server-readable `backoffice-theme` cookie rendered into `<html data-theme>`; there is no inline
+script. Reasoning and invitation token transport: [ADR 0015](decisions/0015-csp-nonce-hsts-theme-cookie-invitation-token.md).
+
 ## Verification
 
 - `npx vitest run --project unit tests/unit/auth-config.test.ts`: configuration and token boundaries.

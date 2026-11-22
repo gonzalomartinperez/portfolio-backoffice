@@ -115,7 +115,7 @@ and never resends generation. API unavailability/expiration is also shown inside
 
 ## Headers, origins and runtime configuration
 
-Application `src/proxy.ts` emits `Content-Security-Policy: frame-ancestors 'none'` plus
+Application `src/proxy.ts` emits a nonce-based `Content-Security-Policy` that includes `frame-ancestors 'none'` plus
 `X-Frame-Options: DENY` for `/`. `/embed` emits exact allowed frame ancestors, no XFO,
 and `Cache-Control: private, no-store`. This Next hook only sets page headers; it does not
 proxy API traffic. Browser API remains relative `/api/v1`, routed directly to FastAPI.
